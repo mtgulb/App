@@ -1,5 +1,5 @@
-import { downloadImage } from './images';
-import { parseRecipeFromHtml } from './recipeParser';
+import { deleteImage, downloadImage, imageSize } from './images';
+import { cleanImageCandidates, extractMetaImages, parseRecipeFromHtml } from './recipeParser';
 import type { Recipe } from './types';
 
 export class ImportError extends Error {}
@@ -32,14 +32,9 @@ export async function importRecipeFromUrl(
     );
   }
 
-  const images: string[] = [];
-  if (parsed.imageUrl) {
-    try {
-      images.push(await downloadImage(new URL(parsed.imageUrl, url).toString()));
-    } catch {
-      // Bilde er valgfritt – oppskriften importeres uten.
-    }
-  }
+  const images = await pickBestImage(
+    cleanImageCandidates([...parsed.imageUrls, ...extractMetaImages(html)], url),
+  );
   return {
     title: parsed.title,
     sourceUrl: url,
@@ -48,4 +43,25 @@ export async function importRecipeFromUrl(
     steps: parsed.steps,
     images,
   };
+}
+
+/** Under denne størrelsen er et bilde sannsynligvis et ikon eller en miniatyr. */
+const MIN_IMAGE_BYTES = 12_000;
+const MAX_CANDIDATES = 4;
+
+/** Laster ned de beste kandidatene og beholder det største (et ikon er alltid lite). */
+async function pickBestImage(candidates: string[]): Promise<string[]> {
+  const downloaded: { uri: string; size: number }[] = [];
+  for (const c of candidates.slice(0, MAX_CANDIDATES)) {
+    try {
+      const uri = await downloadImage(c);
+      downloaded.push({ uri, size: imageSize(uri) });
+    } catch {
+      // Hopp over bilder som ikke lar seg hente.
+    }
+  }
+  downloaded.sort((a, b) => b.size - a.size);
+  const best = downloaded[0];
+  for (const d of downloaded) if (d !== best || d.size < MIN_IMAGE_BYTES) deleteImage(d.uri);
+  return best && best.size >= MIN_IMAGE_BYTES ? [best.uri] : [];
 }

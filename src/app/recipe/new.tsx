@@ -1,13 +1,12 @@
 import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
-import { persistImage } from '@/lib/images';
 import { ImportError, importRecipeFromUrl } from '@/lib/importFromUrl';
 import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
+import { pickImages } from '@/lib/pickImages';
 import { addRecipe } from '@/lib/store';
 
 const lines = (s: string) =>
@@ -46,32 +45,15 @@ export default function NewRecipeScreen() {
   }
 
   async function addPhotos(source: 'camera' | 'library') {
-    const perm =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Mangler tilgang', 'Gi tilgang i Innstillinger › appen.');
-      return;
-    }
-    const opts: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsMultipleSelection: source === 'library',
-    };
-    const res =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync(opts)
-        : await ImagePicker.launchImageLibraryAsync(opts);
-    if (res.canceled) return;
     let saved: string[];
     try {
-      saved = res.assets.map((a) => persistImage(a.uri));
-      setImages((prev) => [...prev, ...saved]);
+      saved = await pickImages(source);
     } catch {
       setFormError('Kunne ikke lagre bildet.');
       return;
     }
+    if (saved.length === 0) return;
+    setImages((prev) => [...prev, ...saved]);
     await readText(saved);
   }
 

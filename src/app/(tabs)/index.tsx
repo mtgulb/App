@@ -1,27 +1,26 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RecipeImage } from '@/components/RecipeImage';
 import { EmptyState, LargeTitle } from '@/components/ui';
 import { useStore } from '@/lib/store';
+import type { Recipe } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
 
 const GAP = 14;
 const PAD = 20;
 
+/** Deler listen i rader med to oppskrifter. Hver rad deler bredden likt, så ingenting kan flyte utenfor skjermen. */
+function toRows(recipes: Recipe[]): Recipe[][] {
+  const rows: Recipe[][] = [];
+  for (let i = 0; i < recipes.length; i += 2) rows.push(recipes.slice(i, i + 2));
+  return rows;
+}
+
 export default function RecipesScreen() {
   const t = useTheme();
   const router = useRouter();
   const { recipes } = useStore();
-  const { width } = useWindowDimensions();
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const shown = q
@@ -31,7 +30,32 @@ export default function RecipesScreen() {
           r.ingredients.some((i) => i.toLowerCase().includes(q)),
       )
     : recipes;
-  const cardWidth = (width - PAD * 2 - GAP) / 2;
+
+  function renderCard(item: Recipe) {
+    return (
+      <Pressable
+        key={item.id}
+        accessibilityRole="button"
+        accessibilityLabel={item.title}
+        onPress={() => router.push({ pathname: '/recipe/[id]', params: { id: item.id } })}
+        style={({ pressed }) => [
+          styles.card,
+          shadow,
+          { backgroundColor: t.card, opacity: pressed ? 0.85 : 1 },
+        ]}
+      >
+        <RecipeImage uri={item.images[0]} style={styles.image} />
+        <View style={styles.cardText}>
+          <Text style={[styles.title, { color: t.text }]} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={[styles.meta, { color: t.textSecondary }]}>
+            {item.ingredients.length} ingredienser
+          </Text>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
@@ -42,9 +66,10 @@ export default function RecipesScreen() {
         onAction={() => router.push('/recipe/new')}
       />
       <FlatList
-        numColumns={2}
-        data={shown}
+        data={toRows(shown)}
+        keyExtractor={(row) => row[0].id}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.list}
         ListHeaderComponent={
           recipes.length > 0 ? (
             <TextInput
@@ -62,9 +87,6 @@ export default function RecipesScreen() {
             />
           ) : undefined
         }
-        keyExtractor={(r) => r.id}
-        columnWrapperStyle={{ gap: GAP }}
-        contentContainerStyle={styles.list}
         ListEmptyComponent={
           recipes.length > 0 ? (
             <EmptyState emoji="🔍" title="Ingen treff" text="Prøv et annet søkeord." />
@@ -76,28 +98,11 @@ export default function RecipesScreen() {
             />
           )
         }
-        renderItem={({ item }) => (
-          <Link href={{ pathname: '/recipe/[id]', params: { id: item.id } }} asChild>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={item.title}
-              style={({ pressed }) => [
-                styles.card,
-                shadow,
-                { width: cardWidth, backgroundColor: t.card, opacity: pressed ? 0.85 : 1 },
-              ]}
-            >
-              <RecipeImage uri={item.images[0]} style={styles.image} />
-              <View style={styles.cardText}>
-                <Text style={[styles.title, { color: t.text }]} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.meta, { color: t.textSecondary }]}>
-                  {item.ingredients.length} ingredienser
-                </Text>
-              </View>
-            </Pressable>
-          </Link>
+        renderItem={({ item: row }) => (
+          <View style={styles.row}>
+            {renderCard(row[0])}
+            {row[1] ? renderCard(row[1]) : <View style={styles.spacer} />}
+          </View>
         )}
       />
     </View>
@@ -107,6 +112,9 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: PAD, paddingBottom: 32, gap: GAP, flexGrow: 1 },
+  row: { flexDirection: 'row', gap: GAP },
+  card: { flex: 1, borderRadius: radius, overflow: 'hidden' },
+  spacer: { flex: 1 },
   search: {
     borderWidth: 1,
     borderRadius: 14,
@@ -115,7 +123,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 2,
   },
-  card: { borderRadius: radius, overflow: 'hidden' },
   image: { width: '100%', aspectRatio: 1.1 },
   cardText: { padding: 12, gap: 4, minHeight: 74 },
   title: { fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },

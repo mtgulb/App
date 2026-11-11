@@ -19,3 +19,20 @@ export async function downloadImage(url: string): Promise<string> {
   const file = await File.downloadFileAsync(url, dest);
   return file.uri;
 }
+
+export function imageSize(uri: string): number {
+  try {
+    return new File(uri).size ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function deleteImage(uri: string): void {
+  try {
+    const f = new File(uri);
+    if (f.exists) f.delete();
+  } catch {
+    // Opprydding er best effort.
+  }
+}

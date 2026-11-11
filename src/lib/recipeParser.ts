@@ -3,7 +3,8 @@ export type ParsedRecipe = {
   servings?: string;
   ingredients: string[];
   steps: string[];
-  imageUrl?: string;
+  /** Alle bilde-kandidater fra oppskriftsdata, største først når størrelse er oppgitt. */
+  imageUrls: string[];
 };
 
 const ENTITIES: Record<string, string> = {
@@ -87,11 +88,84 @@ function parseSteps(instructions: unknown): string[] {
   return out;
 }
 
-function parseImage(img: unknown): string | undefined {
-  if (typeof img === 'string') return img;
-  if (Array.isArray(img)) return parseImage(img[0]);
-  if (img && typeof img === 'object') return parseImage((img as Record<string, unknown>).url);
-  return undefined;
+type ImageCandidate = { url: string; area: number };
+
+function collectImages(img: unknown, out: ImageCandidate[]): void {
+  if (typeof img === 'string') {
+    if (img.trim()) out.push({ url: img.trim(), area: 0 });
+  } else if (Array.isArray(img)) {
+    for (const x of img) collectImages(x, out);
+  } else if (img && typeof img === 'object') {
+    const o = img as Record<string, unknown>;
+    const before = out.length;
+    collectImages(o.url ?? o.contentUrl, out);
+    const w = Number(o.width);
+    const h = Number(o.height);
+    if (out.length > before && w > 0 && h > 0) out[out.length - 1].area = w * h;
+  }
+}
+
+function parseImages(img: unknown): string[] {
+  const found: ImageCandidate[] = [];
+  collectImages(img, found);
+  // Stabil sortering: størst oppgitt areal først, ellers original rekkefølge.
+  return found
+    .map((c, i) => ({ ...c, i }))
+    .sort((a, b) => b.area - a.area || a.i - b.i)
+    .map((c) => c.url);
+}
+
+const JUNK_IMAGE = /(logo|icon|favicon|sprite|avatar|placeholder|blank|pixel|badge|banner-ad)/i;
+
+/** Gjør URL-er absolutte, fjerner duplikater, ikoner/logoer og ikke-bildeformater. */
+export function cleanImageCandidates(urls: string[], baseUrl: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const u of urls) {
+    let abs: URL;
+    try {
+      abs = new URL(decodeEntities(u), baseUrl);
+    } catch {
+      continue;
+    }
+    if (abs.protocol !== 'http:' && abs.protocol !== 'https:') continue;
+    if (/\.(svg|ico|gif)(\?|$)/i.test(abs.pathname) || JUNK_IMAGE.test(abs.pathname)) continue;
+    const href = abs.toString();
+    if (!seen.has(href)) {
+      seen.add(href);
+      out.push(href);
+    }
+  }
+  return out;
+}
+
+/** Bilder som siden selv peker ut som hovedbilde (Open Graph / Twitter / image_src). */
+export function extractMetaImages(html: string): string[] {
+  const out: string[] = [];
+  const tags = html.match(/<(meta|link)\b[^>]*>/gi) ?? [];
+  for (const tag of tags) {
+    const attr = (name: string) =>
+      new RegExp(`${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i').exec(tag);
+    const key = (attr('property') ?? attr('name') ?? attr('rel'))
+      ?.slice(1)
+      .find(Boolean)
+      ?.toLowerCase();
+    if (!key) continue;
+    if (
+      [
+        'og:image',
+        'og:image:url',
+        'og:image:secure_url',
+        'twitter:image',
+        'twitter:image:src',
+        'image_src',
+      ].includes(key)
+    ) {
+      const val = (attr('content') ?? attr('href'))?.slice(1).find(Boolean);
+      if (val) out.push(val);
+    }
+  }
+  return out;
 }
 
 /** Henter oppskrift fra schema.org/Recipe JSON-LD i en HTML-side. */
@@ -119,7 +193,7 @@ export function parseRecipeFromHtml(html: string): ParsedRecipe | null {
       ingredients,
       steps,
       servings: y !== undefined ? clean(String(y)) || undefined : undefined,
-      imageUrl: parseImage(r.image),
+      imageUrls: parseImages(r.image),
     };
   }
   return null;
