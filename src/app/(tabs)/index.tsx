@@ -64,6 +64,9 @@ export default function RecipesScreen() {
         actionIcon="plus"
         actionLabel="Ny oppskrift"
         onAction={() => router.push('/recipe/new')}
+        secondaryIcon="person.2"
+        secondaryLabel="Familie og deling"
+        onSecondary={() => router.push('/family')}
       />
       <FlatList
         data={toRows(shown)}

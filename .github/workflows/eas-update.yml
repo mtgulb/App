@@ -37,6 +37,10 @@ jobs:
             j.expo.updates={url:'https://u.expo.dev/$PID'}; fs.writeFileSync('app.json',JSON.stringify(j,null,2));"
           echo "PROJECT_ID=$PID" >> "$GITHUB_ENV"
       - name: Publiser
+        env:
+          # Offentlige verdier (GitHub-variabler, ikke secrets). Tomme = familiedeling er av.
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: |
           eas update --branch preview --platform ios --message "${GITHUB_SHA::7}" --non-interactive --json > update.json
           cat update.json

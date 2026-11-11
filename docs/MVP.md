@@ -15,7 +15,8 @@
 9. **Kjøleskap og forslag** – legg inn hva du har; oppskrifter rangeres etter færrest manglende ingredienser, med «legg manglende på handlelisten». Synonymer (mel/mjøl/hvetemel/flour …) brukes både her og ved sammenslåing. _Skrevet, ikke kjørt på enhet._
 10. **Sveip i lister** – høyre fjerner, venstre redigerer (handleliste og kjøleskap). _Ikke kjørt på enhet._
 11. **Lim inn / skann tekst** – iPhones «Skann tekst» i tastaturet fyller inn teksten; appen deler den opp. _Ikke kjørt på enhet._
-12. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
+12. **Familiedeling (Supabase)** – forberedt, avslått til oppsett (`docs/SUPABASE.md`). Database og tilgangsregler er testet; synkkoden er ikke prøvd mot ekte server.
+13. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
 
 ## Skjermer
 

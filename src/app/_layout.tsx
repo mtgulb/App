@@ -1,9 +1,15 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { initCloud } from '@/lib/cloud/sync';
 import { useTheme } from '@/theme/colors';
 
 export default function RootLayout() {
   const t = useTheme();
+  // Starter familiedeling hvis den er satt opp. Gjør ingenting ellers.
+  useEffect(() => {
+    initCloud();
+  }, []);
   return (
     <>
       <StatusBar style="auto" />

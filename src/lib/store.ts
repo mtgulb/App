@@ -9,7 +9,7 @@ import type {
   ShoppingState,
 } from './types';
 
-type State = {
+export type State = {
   recipes: Recipe[];
   plan: MealPlanEntry[];
   shopping: ShoppingState;
@@ -57,16 +57,34 @@ let state: State = {
   fridge: loadFridge(),
 };
 const listeners = new Set<() => void>();
+type ChangeListener = (prev: State, next: State, remote: boolean) => void;
+const changeListeners = new Set<ChangeListener>();
 
-function commit(next: State) {
+function commit(next: State, remote = false) {
   if (next.recipes !== state.recipes) Storage.setItemSync('recipes', JSON.stringify(next.recipes));
   if (next.plan !== state.plan) Storage.setItemSync('plan', JSON.stringify(next.plan));
   if (next.fridge !== state.fridge) Storage.setItemSync('fridge', JSON.stringify(next.fridge));
   if (next.shopping !== state.shopping) {
     Storage.setItemSync('shopping', JSON.stringify(next.shopping));
   }
+  const prev = state;
   state = next;
   listeners.forEach((l) => l());
+  changeListeners.forEach((l) => l(prev, next, remote));
+}
+
+export const getState = () => state;
+
+/** Lytter på alle endringer. `remote` er true når endringen kom fra synk, ikke fra brukeren. */
+export function onStateChange(fn: ChangeListener): () => void {
+  changeListeners.add(fn);
+  return () => changeListeners.delete(fn);
+}
+
+/** Bruker en endring som kom fra synk. Sendes ikke tilbake til serveren. */
+export function applyRemote(update: (s: State) => State) {
+  const next = update(state);
+  if (next !== state) commit(next, true);
 }
 
 export function useStore(): State {

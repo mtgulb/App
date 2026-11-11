@@ -44,11 +44,18 @@ export function LargeTitle({
   actionIcon,
   actionLabel,
   onAction,
+  secondaryIcon,
+  secondaryLabel,
+  onSecondary,
 }: {
   title: string;
   actionIcon?: 'plus' | 'square.and.arrow.up';
   actionLabel?: string;
   onAction?: () => void;
+  /** Valgfri andre knapp til venstre for hovedknappen. */
+  secondaryIcon?: 'person.2';
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
@@ -57,20 +64,35 @@ export function LargeTitle({
       <Text style={[styles.largeTitle, { color: t.text }]} accessibilityRole="header">
         {title}
       </Text>
-      {actionIcon && onAction ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={actionLabel}
-          onPress={onAction}
-          style={({ pressed }) => [
-            styles.roundButton,
-            shadow,
-            { backgroundColor: t.tint, opacity: pressed ? 0.8 : 1 },
-          ]}
-        >
-          <SymbolView name={actionIcon} tintColor="#FFFFFF" size={22} />
-        </Pressable>
-      ) : null}
+      <View style={styles.titleButtons}>
+        {secondaryIcon && onSecondary ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={secondaryLabel}
+            onPress={onSecondary}
+            style={({ pressed }) => [
+              styles.roundButton,
+              { backgroundColor: t.tintSoft, opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <SymbolView name={secondaryIcon} tintColor={t.tint} size={22} />
+          </Pressable>
+        ) : null}
+        {actionIcon && onAction ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={actionLabel}
+            onPress={onAction}
+            style={({ pressed }) => [
+              styles.roundButton,
+              shadow,
+              { backgroundColor: t.tint, opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <SymbolView name={actionIcon} tintColor="#FFFFFF" size={22} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -276,6 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
+  titleButtons: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   largeTitle: { fontSize: 34, fontWeight: '800', letterSpacing: -0.8 },
   roundButton: {
     width: 44,

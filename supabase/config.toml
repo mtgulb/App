@@ -1,0 +1,2 @@
+# Minimal Supabase CLI-konfigurasjon. Selve prosjektet opprettes i Supabase-dashbordet.
+project_id = "oppskrifter"
