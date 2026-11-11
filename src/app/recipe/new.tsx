@@ -7,6 +7,7 @@ import { Screen } from '@/components/Screen';
 import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { persistImage } from '@/lib/images';
 import { ImportError, importRecipeFromUrl } from '@/lib/importFromUrl';
+import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
 import { addRecipe } from '@/lib/store';
 
 const lines = (s: string) =>
@@ -26,6 +27,8 @@ export default function NewRecipeScreen() {
   const [steps, setSteps] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
+  const [readNote, setReadNote] = useState<string | null>(null);
 
   async function runImport() {
     setImportError(null);
@@ -60,10 +63,41 @@ export default function NewRecipeScreen() {
         ? await ImagePicker.launchCameraAsync(opts)
         : await ImagePicker.launchImageLibraryAsync(opts);
     if (res.canceled) return;
+    let saved: string[];
     try {
-      setImages((prev) => [...prev, ...res.assets.map((a) => persistImage(a.uri))]);
+      saved = res.assets.map((a) => persistImage(a.uri));
+      setImages((prev) => [...prev, ...saved]);
     } catch {
       setFormError('Kunne ikke lagre bildet.');
+      return;
+    }
+    await readText(saved);
+  }
+
+  async function readText(uris: string[]) {
+    setReadNote(null);
+    if (!ocrAvailable()) {
+      setReadNote(
+        'Tekstgjenkjenning er ikke tilgjengelig i denne versjonen av appen. Skriv inn teksten selv.',
+      );
+      return;
+    }
+    setReading(true);
+    try {
+      const r = await recipeFromImages(uris);
+      if (!r || (!r.title && r.ingredients.length === 0 && r.steps.length === 0)) {
+        setReadNote('Fant ingen tekst i bildet. Prøv et skarpere bilde, eller skriv inn selv.');
+        return;
+      }
+      // Fyller bare ut felt som er tomme, så egne rettelser ikke overskrives.
+      setTitle((v) => v || r.title);
+      setIngredients((v) => v || r.ingredients.join('\n'));
+      setSteps((v) => v || r.steps.join('\n'));
+      setReadNote('Tekst lest fra bildet. Sjekk og rett opp før du lagrer.');
+    } catch {
+      setReadNote('Kunne ikke lese teksten i bildet. Skriv inn selv.');
+    } finally {
+      setReading(false);
     }
   }
 
@@ -108,8 +142,8 @@ export default function NewRecipeScreen() {
       <Card>
         <Heading>Fra bilde eller manuelt</Heading>
         <Body secondary>
-          Ta bilde av en oppskrift, eller velg fra bildene dine. Automatisk avlesing av tekst fra
-          bilde er ikke på plass ennå – skriv inn tittel og ingredienser selv.
+          Ta bilde av en oppskrift eller velg fra bildene dine – teksten leses automatisk på
+          telefonen. Du kan også skrive inn selv.
         </Body>
         <View style={styles.buttons}>
           <View style={styles.flex}>
@@ -131,6 +165,8 @@ export default function NewRecipeScreen() {
             </Pressable>
           ))}
         </View>
+        {reading ? <Body secondary>Leser tekst fra bildet …</Body> : null}
+        {readNote ? <Body secondary>{readNote}</Body> : null}
         <Field label="Tittel" value={title} onChangeText={setTitle} placeholder="F.eks. Lasagne" />
         <Field
           label="Ingredienser (én per linje)"

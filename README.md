@@ -1,6 +1,6 @@
 # App
 
-Ekte iOS-app (Expo + React Native + TypeScript + Expo Router). En app for å samle oppskrifter (lenke, bilde, manuelt) og legge middager inn i iPhone-kalenderen med ingredienser. Se `docs/MVP.md`.
+Ekte iOS-app (Expo + React Native + TypeScript + Expo Router). En app for å samle oppskrifter (lenke, bilde, manuelt) og legge middager inn i iPhone-kalenderen med ingredienser. Se `docs/MVP.md`. Testing på iPhone uten PC: `docs/TESTING.md`.
 
 ```bash
 npm install

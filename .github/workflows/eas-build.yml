@@ -26,7 +26,8 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       - run: npm ci
       - name: Bygg
+        if: ${{ !(inputs.submit && inputs.profile == 'production') }}
         run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive --no-wait
-      - name: Submit til TestFlight
+      - name: Bygg og send til TestFlight
         if: ${{ inputs.submit && inputs.profile == 'production' }}
-        run: eas submit --platform ios --profile production --latest --non-interactive
+        run: eas build --platform ios --profile production --non-interactive --no-wait --auto-submit

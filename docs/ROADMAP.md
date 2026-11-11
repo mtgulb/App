@@ -6,7 +6,8 @@
 - [x] iOS-bundle verifisert (`expo export`)
 - [x] Appidé avklart: oppskrifter + middagsplan i kalender (se `docs/MVP.md`)
 - [x] MVP-skjermer og logikk skrevet (lenke-import testet med enhetstest; resten **ikke** kjørt på enhet)
-- [ ] Beslutning: bildegjenkjenning (A/B i `docs/MVP.md`)
+- [x] Bildegjenkjenning: valg B (på enhet), skrevet – ikke kjørt på enhet
+- [ ] Første test på iPhone (se `docs/TESTING.md`)
 - [ ] Development build + test på iPhone
 - [ ] Apple Developer-konto, endelig bundle ID, ikon/splash
 - [ ] TestFlight → App Store (personvern, aldersgrense, tekster – godkjennes av eier)

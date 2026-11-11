@@ -16,12 +16,8 @@ Oppskrifter (liste) · Ny oppskrift · Oppskrift (detalj) · Planlegg middag · 
 
 ## Utsatt
 
-- **Automatisk tolkning av bilde/skjermbilde** (krever AI/OCR via backend – avventer valg, se under).
 - Innkjøpsliste, deling, søk/tagger, skalering av porsjoner, Android-finpuss.
 
-## Åpen beslutning: lese oppskrift fra bilde
+## Beslutning: lese oppskrift fra bilde
 
-API-nøkkel kan ikke ligge i appen. Alternativer:
-
-- **A. Liten backend (f.eks. Supabase Edge Function) som kaller Claude vision.** Best kvalitet, kan også tolke lenker uten schema.org. Løpende kostnad per bilde (typisk øre) + Supabase (gratisnivå finnes).
-- **B. On-device tekstgjenkjenning (iOS Vision/Live Text via egen native modul).** Gratis, men krever mer native arbeid og gir rå tekst som må struktureres.
+Valgt **B**: tekstgjenkjenning på enheten (Apple Vision via `expo-text-extractor`), deretter enkel strukturering til tittel/ingredienser/fremgangsmåte (`src/lib/structureText.ts`). Gratis og bildet forlater ikke telefonen. Krever ekte bygg (ikke Expo Go). Kvaliteten avhenger av bildet – brukeren kan rette opp før lagring. Alternativ A (Claude via backend) kan legges til senere.
