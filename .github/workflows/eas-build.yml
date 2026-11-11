@@ -1,0 +1,32 @@
+name: EAS Build (manuell)
+# Start fra iPhone: GitHub-appen/nettleser -> Actions -> "EAS Build (manuell)" -> Run workflow.
+# Krever repo-secret EXPO_TOKEN og en Expo-konto med Apple Developer-tilkobling.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Byggprofil
+        type: choice
+        options: [development, preview, production]
+        default: preview
+      submit:
+        description: Send til TestFlight etter bygg (kun production)
+        type: boolean
+        default: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - name: Bygg
+        run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive --no-wait
+      - name: Submit til TestFlight
+        if: ${{ inputs.submit && inputs.profile == 'production' }}
+        run: eas submit --platform ios --profile production --latest --non-interactive
