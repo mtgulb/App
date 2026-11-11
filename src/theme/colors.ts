@@ -7,6 +7,7 @@ const light = {
   textSecondary: '#6C6C70',
   tint: '#007AFF',
   border: '#D1D1D6',
+  danger: '#D70015',
 };
 
 const dark: typeof light = {
@@ -16,8 +17,11 @@ const dark: typeof light = {
   textSecondary: '#98989F',
   tint: '#0A84FF',
   border: '#38383A',
+  danger: '#FF453A',
 };
 
 export function useTheme() {
   return useColorScheme() === 'dark' ? dark : light;
 }
+
+export const radius = 14;

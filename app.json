@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Min App",
-    "slug": "min-app",
+    "name": "Oppskrifter",
+    "slug": "oppskrifter",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "minapp",
+    "scheme": "oppskrifter",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
@@ -14,10 +14,25 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Appen trenger tilgang til bildene dine for å legge dem ved oppskrifter.",
+          "cameraPermission": "Appen trenger kameraet for å ta bilde av oppskrifter."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Appen legger middager med ingredienser inn i kalenderen din."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "dark": { "backgroundColor": "#000000" },
+          "dark": {
+            "backgroundColor": "#000000"
+          },
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }

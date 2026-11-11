@@ -1,6 +1,6 @@
 # App
 
-Ekte iOS-app (Expo + React Native + TypeScript + Expo Router). Appidé: ikke definert ennå.
+Ekte iOS-app (Expo + React Native + TypeScript + Expo Router). En app for å samle oppskrifter (lenke, bilde, manuelt) og legge middager inn i iPhone-kalenderen med ingredienser. Se `docs/MVP.md`.
 
 ```bash
 npm install

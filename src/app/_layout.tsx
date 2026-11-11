@@ -3,22 +3,28 @@ import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '@/theme/colors';
 
 export default function RootLayout() {
-  const theme = useTheme();
+  const t = useTheme();
   return (
     <>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
-          headerLargeTitle: true,
-          headerTransparent: false,
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: theme.tint,
-          headerTitleStyle: { color: theme.text },
-          contentStyle: { backgroundColor: theme.background },
+          headerStyle: { backgroundColor: t.background },
+          headerTintColor: t.tint,
+          headerTitleStyle: { color: t.text },
+          contentStyle: { backgroundColor: t.background },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Hjem' }} />
-        <Stack.Screen name="about" options={{ title: 'Om appen', headerLargeTitle: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="recipe/new"
+          options={{ title: 'Ny oppskrift', presentation: 'modal' }}
+        />
+        <Stack.Screen name="recipe/[id]" options={{ title: 'Oppskrift' }} />
+        <Stack.Screen
+          name="recipe/plan"
+          options={{ title: 'Planlegg middag', presentation: 'modal' }}
+        />
       </Stack>
     </>
   );

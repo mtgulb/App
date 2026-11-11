@@ -4,8 +4,9 @@
 
 - [x] Expo + TS + Router-grunnmur, lint/format/typecheck, CI
 - [x] iOS-bundle verifisert (`expo export`)
-- [ ] **Appidé avklart** (blokkerer MVP)
-- [ ] MVP (maks 5 funksjoner, 3–6 skjermer)
+- [x] Appidé avklart: oppskrifter + middagsplan i kalender (se `docs/MVP.md`)
+- [x] MVP-skjermer og logikk skrevet (lenke-import testet med enhetstest; resten **ikke** kjørt på enhet)
+- [ ] Beslutning: bildegjenkjenning (A/B i `docs/MVP.md`)
 - [ ] Development build + test på iPhone
 - [ ] Apple Developer-konto, endelig bundle ID, ikon/splash
 - [ ] TestFlight → App Store (personvern, aldersgrense, tekster – godkjennes av eier)
