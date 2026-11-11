@@ -16,4 +16,14 @@ export type MealPlanEntry = {
   date: string;
   /** ID til hendelsen i iPhone-kalenderen, hvis lagt inn. */
   calendarEventId?: string;
+  /** Antall porsjoner denne dagen. Mangler = oppskriftens grunnlag. */
+  servings?: number;
+};
+
+export type ShoppingExtra = { id: string; text: string; checked: boolean };
+
+export type ShoppingState = {
+  /** Nøkler på formen `${planId}|${ingrediensIndeks}` for avkryssede oppskriftsvarer. */
+  checked: string[];
+  extras: ShoppingExtra[];
 };

@@ -24,6 +24,10 @@ export default function RootLayout() {
         />
         <Stack.Screen name="recipe/[id]" options={{ title: 'Oppskrift' }} />
         <Stack.Screen
+          name="recipe/edit"
+          options={{ title: 'Rediger oppskrift', presentation: 'modal' }}
+        />
+        <Stack.Screen
           name="recipe/plan"
           options={{ title: 'Planlegg middag', presentation: 'modal' }}
         />

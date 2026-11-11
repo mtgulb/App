@@ -46,7 +46,7 @@ export function LargeTitle({
   onAction,
 }: {
   title: string;
-  actionIcon?: 'plus';
+  actionIcon?: 'plus' | 'square.and.arrow.up';
   actionLabel?: string;
   onAction?: () => void;
 }) {
@@ -71,6 +71,53 @@ export function LargeTitle({
           <SymbolView name={actionIcon} tintColor="#FFFFFF" size={22} />
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+export function Stepper({
+  value,
+  onChange,
+  min = 1,
+  max = 50,
+  label,
+  compact,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min?: number;
+  max?: number;
+  label: string;
+  compact?: boolean;
+}) {
+  const t = useTheme();
+  const size = compact ? 32 : 40;
+  const btn = (name: 'minus' | 'plus', disabled: boolean, next: number) => (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${name === 'minus' ? 'Færre' : 'Flere'} ${label}`}
+      disabled={disabled}
+      hitSlop={8}
+      onPress={() => onChange(next)}
+      style={[
+        styles.stepBtn,
+        { width: size, height: size, borderRadius: size / 2, backgroundColor: t.tintSoft },
+        disabled && { opacity: 0.4 },
+      ]}
+    >
+      <SymbolView name={name} tintColor={t.tint} size={compact ? 14 : 18} />
+    </Pressable>
+  );
+  return (
+    <View style={styles.stepper}>
+      {btn('minus', value <= min, value - 1)}
+      <Text
+        accessibilityLabel={`${value} ${label}`}
+        style={[styles.stepValue, { color: t.text }, compact && { fontSize: 15, minWidth: 24 }]}
+      >
+        {value}
+      </Text>
+      {btn('plus', value >= max, value + 1)}
     </View>
   );
 }
@@ -176,6 +223,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   buttonText: { fontSize: 17, fontWeight: '600' },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stepBtn: { alignItems: 'center', justifyContent: 'center' },
+  stepValue: { fontSize: 18, fontWeight: '700', minWidth: 28, textAlign: 'center' },
   chip: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { fontSize: 13, fontWeight: '600' },
   titleRow: {

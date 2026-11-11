@@ -8,7 +8,9 @@
 2. **Legg til fra bilde/kamera og manuelt** – bilder lagres, tekst skrives inn. _Bygget._
 3. **Oppskriftsbibliotek** – liste og detaljside, sletting. _Bygget._
 4. **Planlegg middag → kalender** – dato/tid, hendelse i enhetens kalender (synkes via iCloud/Google) med ingredienser og kildelenke i notatfeltet. _Bygget._
-5. **Middagsplan** – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
+5. **Handleliste** – velg fra/til-dato; alle middager i perioden samles, like varer slås sammen og mengder summeres (g/kg, dl/l, ss/ts regnes om). _Skrevet, ikke kjørt på enhet._
+6. **Porsjoner** – justerbart i oppskriften og per planlagt dag; mengder skaleres, og kalenderhendelsen oppdateres. _Skrevet, ikke kjørt på enhet._
+7. **Middagsplan** – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
 
 ## Skjermer
 

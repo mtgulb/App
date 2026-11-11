@@ -1,5 +1,14 @@
 import { Link, useRouter } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { RecipeImage } from '@/components/RecipeImage';
 import { EmptyState, LargeTitle } from '@/components/ui';
 import { useStore } from '@/lib/store';
@@ -13,6 +22,15 @@ export default function RecipesScreen() {
   const router = useRouter();
   const { recipes } = useStore();
   const { width } = useWindowDimensions();
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? recipes.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.ingredients.some((i) => i.toLowerCase().includes(q)),
+      )
+    : recipes;
   const cardWidth = (width - PAD * 2 - GAP) / 2;
 
   return (
@@ -25,16 +43,38 @@ export default function RecipesScreen() {
       />
       <FlatList
         numColumns={2}
-        data={recipes}
+        data={shown}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          recipes.length > 0 ? (
+            <TextInput
+              accessibilityLabel="Søk i oppskrifter"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Søk på navn eller ingrediens"
+              placeholderTextColor={t.textSecondary}
+              clearButtonMode="while-editing"
+              autoCorrect={false}
+              style={[
+                styles.search,
+                { backgroundColor: t.card, color: t.text, borderColor: t.border },
+              ]}
+            />
+          ) : undefined
+        }
         keyExtractor={(r) => r.id}
         columnWrapperStyle={{ gap: GAP }}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <EmptyState
-            emoji="📖"
-            title="Ingen oppskrifter ennå"
-            text="Trykk på + for å legge inn en lenke, ta bilde eller skrive inn en oppskrift."
-          />
+          recipes.length > 0 ? (
+            <EmptyState emoji="🔍" title="Ingen treff" text="Prøv et annet søkeord." />
+          ) : (
+            <EmptyState
+              emoji="📖"
+              title="Ingen oppskrifter ennå"
+              text="Trykk på + for å legge inn en lenke, ta bilde eller skrive inn en oppskrift."
+            />
+          )
         }
         renderItem={({ item }) => (
           <Link href={{ pathname: '/recipe/[id]', params: { id: item.id } }} asChild>
@@ -67,6 +107,14 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: PAD, paddingBottom: 32, gap: GAP, flexGrow: 1 },
+  search: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 2,
+  },
   card: { borderRadius: radius, overflow: 'hidden' },
   image: { width: '100%', aspectRatio: 1.1 },
   cardText: { padding: 12, gap: 4, minHeight: 74 },

@@ -23,6 +23,7 @@ export default function NewRecipeScreen() {
   const [importError, setImportError] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
+  const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [steps, setSteps] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -108,6 +109,7 @@ export default function NewRecipeScreen() {
     }
     const recipe = addRecipe({
       title: title.trim(),
+      servings: servings.trim() || undefined,
       ingredients: lines(ingredients),
       steps: lines(steps),
       images,
@@ -168,6 +170,13 @@ export default function NewRecipeScreen() {
         {reading ? <Body secondary>Leser tekst fra bildet …</Body> : null}
         {readNote ? <Body secondary>{readNote}</Body> : null}
         <Field label="Tittel" value={title} onChangeText={setTitle} placeholder="F.eks. Lasagne" />
+        <Field
+          label="Porsjoner (grunnlag for mengdene)"
+          value={servings}
+          onChangeText={setServings}
+          keyboardType="number-pad"
+          placeholder="F.eks. 4"
+        />
         <Field
           label="Ingredienser (én per linje)"
           value={ingredients}

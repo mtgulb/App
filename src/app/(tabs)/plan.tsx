@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { Alert, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
-import { EmptyState, LargeTitle } from '@/components/ui';
-import { removeDinnerEvent } from '@/lib/calendar';
-import { getRecipe, removePlanEntry, useStore } from '@/lib/store';
+import { EmptyState, LargeTitle, Stepper } from '@/components/ui';
+import { removeDinnerEvent, updateDinnerEvent } from '@/lib/calendar';
+import { baseServings } from '@/lib/ingredients';
+import { getRecipe, removePlanEntry, setEntryServings, useStore } from '@/lib/store';
 import type { MealPlanEntry } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
 
@@ -36,6 +37,15 @@ export default function PlanScreen() {
     ]);
   }
 
+  async function changeServings(e: MealPlanEntry, n: number) {
+    setEntryServings(e.id, n);
+    const recipe = getRecipe(e.recipeId);
+    if (e.calendarEventId && recipe) {
+      const ok = await updateDinnerEvent(e.calendarEventId, recipe, n);
+      if (!ok) Alert.alert('Kalender', 'Kunne ikke oppdatere ingrediensene i kalenderhendelsen.');
+    }
+  }
+
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
       <LargeTitle title="Middagsplan" />
@@ -56,6 +66,7 @@ export default function PlanScreen() {
         )}
         renderItem={({ item }) => {
           const recipe = getRecipe(item.recipeId);
+          const servings = item.servings ?? (recipe ? baseServings(recipe) : 4);
           return (
             <Pressable
               accessibilityRole="button"
@@ -76,13 +87,21 @@ export default function PlanScreen() {
                 </Text>
               </View>
               <View style={styles.flex}>
-                <Text style={[styles.title, { color: t.text }]}>
+                <Text style={[styles.title, { color: t.text }]} numberOfLines={2}>
                   {recipe?.title ?? 'Slettet oppskrift'}
                 </Text>
                 <Text style={{ color: t.textSecondary }}>
-                  {item.calendarEventId ? 'I kalenderen' : 'Bare i planen'} · hold inne for å fjerne
+                  {item.calendarEventId ? 'I kalenderen' : 'Bare i planen'} · porsjoner
                 </Text>
               </View>
+              {recipe ? (
+                <Stepper
+                  compact
+                  value={servings}
+                  onChange={(n) => changeServings(item, n)}
+                  label="porsjoner"
+                />
+              ) : null}
             </Pressable>
           );
         }}
@@ -101,8 +120,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 2,
   },
-  row: { borderRadius: radius, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  time: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10 },
-  timeText: { fontSize: 16, fontWeight: '700' },
-  title: { fontSize: 17, fontWeight: '700', letterSpacing: -0.2 },
+  row: { borderRadius: radius, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  time: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 10 },
+  timeText: { fontSize: 15, fontWeight: '700' },
+  title: { fontSize: 16, fontWeight: '700', letterSpacing: -0.2 },
 });

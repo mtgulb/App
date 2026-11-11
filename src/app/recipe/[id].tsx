@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
   Alert,
   Linking,
@@ -9,8 +10,9 @@ import {
   View,
 } from 'react-native';
 import { RecipeImage } from '@/components/RecipeImage';
-import { Body, Button, Card, Chip, EmptyState, Heading } from '@/components/ui';
+import { Body, Button, Card, Chip, EmptyState, Heading, Stepper } from '@/components/ui';
 import { removeDinnerEvent } from '@/lib/calendar';
+import { baseServings, hasKnownServings, scaledLines } from '@/lib/ingredients';
 import { deleteRecipe, useStore } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
@@ -22,6 +24,8 @@ export default function RecipeDetail() {
   const hero = { width, height: 300 };
   const { recipes, plan } = useStore();
   const recipe = recipes.find((r) => r.id === id);
+  const [chosen, setChosen] = useState<number | null>(null);
+  const servings = chosen ?? (recipe ? baseServings(recipe) : 4);
 
   if (!recipe) {
     return <EmptyState emoji="🤷" title="Fant ikke oppskriften" text="Den kan ha blitt slettet." />;
@@ -64,20 +68,34 @@ export default function RecipeDetail() {
       <View style={styles.body}>
         <Text style={[styles.title, { color: t.text }]}>{recipe.title}</Text>
         <View style={styles.chips}>
-          {recipe.servings ? <Chip>{recipe.servings} porsjoner</Chip> : null}
           <Chip>{recipe.ingredients.length} ingredienser</Chip>
           {recipe.steps.length > 0 ? <Chip>{recipe.steps.length} steg</Chip> : null}
         </View>
 
         <Button
           title="Planlegg middag"
-          onPress={() => router.push({ pathname: '/recipe/plan', params: { recipeId: recipe.id } })}
+          onPress={() =>
+            router.push({
+              pathname: '/recipe/plan',
+              params: { recipeId: recipe.id, servings: String(servings) },
+            })
+          }
         />
 
         {recipe.ingredients.length > 0 && (
           <Card>
             <Heading>Ingredienser</Heading>
-            {recipe.ingredients.map((i, n) => (
+            <View style={styles.servingsRow}>
+              <Text style={[styles.servingsLabel, { color: t.text }]}>Porsjoner</Text>
+              <Stepper value={servings} onChange={setChosen} label="porsjoner" />
+            </View>
+            {!hasKnownServings(recipe) ? (
+              <Body secondary>
+                Oppskriften oppgir ikke porsjoner – {baseServings(recipe)} er antatt. Endre under
+                «Rediger oppskrift».
+              </Body>
+            ) : null}
+            {scaledLines(recipe, servings).map((i, n) => (
               <View
                 key={n}
                 style={[
@@ -110,6 +128,11 @@ export default function RecipeDetail() {
           <Body secondary>Ingen tekst lagt inn ennå – bare bilder.</Body>
         ) : null}
 
+        <Button
+          title="Rediger oppskrift"
+          kind="secondary"
+          onPress={() => router.push({ pathname: '/recipe/edit', params: { id: recipe.id } })}
+        />
         {recipe.sourceUrl ? (
           <Button
             title="Åpne original"
@@ -127,6 +150,8 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   body: { padding: 20, gap: 16 },
   title: { fontSize: 30, fontWeight: '800', letterSpacing: -0.7 },
+  servingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  servingsLabel: { fontSize: 16, fontWeight: '600' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   ingredient: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   dot: { width: 8, height: 8, borderRadius: 4 },

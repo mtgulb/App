@@ -29,6 +29,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <SymbolView name="calendar" tintColor={color} size={24} />,
         }}
       />
+      <Tabs.Screen
+        name="shopping"
+        options={{
+          title: 'Handleliste',
+          tabBarIcon: ({ color }) => <SymbolView name="cart" tintColor={color} size={24} />,
+        }}
+      />
     </Tabs>
   );
 }

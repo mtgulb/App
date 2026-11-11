@@ -11,9 +11,10 @@
     "typecheck": "npm run typegen && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
     "doctor": "expo-doctor",
-    "typegen": "node scripts/typegen.js"
+    "typegen": "node scripts/typegen.js",
+    "test": "node --experimental-strip-types --no-warnings --test \"tests/*.test.ts\""
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "9.3.0",
@@ -40,6 +41,7 @@
     "react-native-screens": "~4.30.1"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.0",
