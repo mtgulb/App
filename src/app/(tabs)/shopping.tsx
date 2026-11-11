@@ -1,7 +1,18 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
-import { Pressable, SectionList, Share, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActionSheetIOS,
+  Alert,
+  Platform,
+  Pressable,
+  SectionList,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Button, Chip, EmptyState, LargeTitle } from '@/components/ui';
 import {
   baseServings,
@@ -11,10 +22,15 @@ import {
 } from '@/lib/ingredients';
 import {
   addExtra,
+  hideItem,
+  removeCheckedExtras,
   removeExtra,
   resetShopping,
+  restoreItem,
+  setOverride,
   toggleChecked,
   toggleExtra,
+  updateExtra,
   useStore,
 } from '@/lib/store';
 import { radius, shadow, useTheme } from '@/theme/colors';
@@ -22,11 +38,14 @@ import { radius, shadow, useTheme } from '@/theme/colors';
 type Row = {
   key: string;
   text: string;
-  checked: boolean;
+  kind: 'merged' | 'extra' | 'done' | 'hidden';
+  /** ID for egne varer. */
+  id?: string;
+  /** Har varen en egen redigert tekst? */
+  edited?: boolean;
   onToggle: () => void;
-  onLongPress?: () => void;
 };
-type Section = { title: string; data: Row[] };
+type Section = { id: string; title: string; data: Row[]; collapsible?: boolean; count?: number };
 
 const dateFmt = new Intl.DateTimeFormat('nb-NO', {
   weekday: 'short',
@@ -65,35 +84,105 @@ export default function ShoppingScreen() {
     return mergeIngredients(items);
   }, [inRange, recipes]);
 
+  const [doneOpen, setDoneOpen] = useState(false);
+  const [hiddenOpen, setHiddenOpen] = useState(false);
+
+  const mergedRows: Row[] = merged.map((m) => {
+    const key = `m|${m.key}`;
+    return {
+      key,
+      text: shopping.overrides[key] ?? m.text,
+      kind: 'merged',
+      edited: key in shopping.overrides,
+      onToggle: () => toggleChecked(key),
+    };
+  });
+  const isHidden = (r: Row) => shopping.hidden.includes(r.key);
+  const isDone = (r: Row) => shopping.checked.includes(r.key);
+  const extraRows: Row[] = shopping.extras.map((e) => ({
+    key: e.id,
+    id: e.id,
+    text: e.text,
+    kind: 'extra',
+    onToggle: () => toggleExtra(e.id),
+  }));
+
+  const todoMerged = mergedRows.filter((r) => !isHidden(r) && !isDone(r));
+  const todoExtras = extraRows.filter((r) => !shopping.extras.find((e) => e.id === r.id)?.checked);
+  const doneRows: Row[] = [
+    ...mergedRows.filter((r) => !isHidden(r) && isDone(r)),
+    ...extraRows.filter((r) => shopping.extras.find((e) => e.id === r.id)?.checked),
+  ].map((r) => ({ ...r, kind: 'done' as const }));
+  const hiddenRows: Row[] = mergedRows
+    .filter(isHidden)
+    .map((r) => ({ ...r, kind: 'hidden' as const, onToggle: () => restoreItem(r.key) }));
+
   const sections: Section[] = [];
-  if (merged.length > 0) {
+  if (todoMerged.length > 0) {
+    sections.push({ id: 'merged', title: 'Varer fra middagene', data: todoMerged });
+  }
+  if (todoExtras.length > 0) {
+    sections.push({ id: 'extras', title: 'Egne varer', data: todoExtras });
+  }
+  if (doneRows.length > 0) {
     sections.push({
-      title: 'Varer fra middagene',
-      data: merged.map((m) => {
-        const key = `m|${m.key}`;
-        return {
-          key,
-          text: m.text,
-          checked: shopping.checked.includes(key),
-          onToggle: () => toggleChecked(key),
-        };
-      }),
+      id: 'done',
+      title: `Handlet (${doneRows.length})`,
+      collapsible: true,
+      count: doneRows.length,
+      data: doneOpen ? doneRows : [],
     });
   }
-  if (shopping.extras.length > 0) {
+  if (hiddenRows.length > 0) {
     sections.push({
-      title: 'Egne varer',
-      data: shopping.extras.map((e) => ({
-        key: e.id,
-        text: e.text,
-        checked: e.checked,
-        onToggle: () => toggleExtra(e.id),
-        onLongPress: () => removeExtra(e.id),
-      })),
+      id: 'hidden',
+      title: `Har fra før (${hiddenRows.length})`,
+      collapsible: true,
+      count: hiddenRows.length,
+      data: hiddenOpen ? hiddenRows : [],
     });
   }
 
-  const remaining = sections.flatMap((s) => s.data).filter((r) => !r.checked);
+  const remaining = [...todoMerged, ...todoExtras];
+
+  function showMenu(row: Row) {
+    const edit = () => {
+      const apply = (text?: string) => {
+        if (text === undefined) return;
+        if (row.kind === 'extra' && row.id) updateExtra(row.id, text);
+        else setOverride(row.key, text);
+      };
+      if (Platform.OS === 'ios') {
+        Alert.prompt('Rediger vare', undefined, apply, 'plain-text', row.text);
+      }
+    };
+    const actions: { label: string; destructive?: boolean; run: () => void }[] = [
+      { label: 'Rediger', run: edit },
+    ];
+    if (row.kind === 'merged') {
+      actions.push({ label: 'Har fra før – ta bort fra listen', run: () => hideItem(row.key) });
+      if (row.edited)
+        actions.push({ label: 'Tilbakestill tekst', run: () => setOverride(row.key, '') });
+    } else if (row.id) {
+      const id = row.id;
+      actions.push({ label: 'Slett', destructive: true, run: () => removeExtra(id) });
+    }
+    const options = [...actions.map((a) => a.label), 'Avbryt'];
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: row.text,
+          options,
+          cancelButtonIndex: options.length - 1,
+          destructiveButtonIndex:
+            actions.findIndex((a) => a.destructive) >= 0
+              ? actions.findIndex((a) => a.destructive)
+              : undefined,
+        },
+        (i) => actions[i]?.run(),
+      );
+    }
+  }
 
   function setRange(days: number) {
     const start = startOfDay(new Date());
@@ -214,39 +303,98 @@ export default function ShoppingScreen() {
           />
         }
         ListFooterComponent={
-          sections.length > 0 ? (
-            <View style={{ marginTop: 16 }}>
-              <Button title="Nullstill avkrysning" kind="secondary" onPress={resetShopping} />
+          doneRows.length > 0 ? (
+            <View style={styles.footer}>
+              <Button title="Angre alle avkrysninger" kind="secondary" onPress={resetShopping} />
+              {extraRows.some((r) => shopping.extras.find((e) => e.id === r.id)?.checked) ? (
+                <Button
+                  title="Fjern handlede egne varer"
+                  kind="destructive"
+                  onPress={removeCheckedExtras}
+                />
+              ) : null}
             </View>
           ) : undefined
         }
-        renderSectionHeader={({ section }) => (
-          <Text style={[styles.header, { color: t.textSecondary }]}>{section.title}</Text>
-        )}
-        renderItem={({ item }) => (
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: item.checked }}
-            onPress={item.onToggle}
-            onLongPress={item.onLongPress}
-            style={[styles.row, { backgroundColor: t.card, borderColor: t.border }]}
-          >
-            <SymbolView
-              name={item.checked ? 'checkmark.circle.fill' : 'circle'}
-              tintColor={item.checked ? t.tint : t.textSecondary}
-              size={24}
-            />
-            <Text
-              style={[
-                styles.rowText,
-                { color: item.checked ? t.textSecondary : t.text },
-                item.checked && { textDecorationLine: 'line-through' },
-              ]}
+        renderSectionHeader={({ section }) =>
+          section.collapsible ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: section.data.length > 0 }}
+              onPress={() =>
+                section.id === 'done' ? setDoneOpen((o) => !o) : setHiddenOpen((o) => !o)
+              }
+              style={styles.collapseHeader}
             >
-              {item.text}
-            </Text>
-          </Pressable>
-        )}
+              <SymbolView
+                name={section.data.length > 0 ? 'chevron.down' : 'chevron.right'}
+                tintColor={t.textSecondary}
+                size={14}
+              />
+              <Text style={[styles.header, styles.collapseTitle, { color: t.textSecondary }]}>
+                {section.title}
+              </Text>
+            </Pressable>
+          ) : (
+            <Text style={[styles.header, { color: t.textSecondary }]}>{section.title}</Text>
+          )
+        }
+        renderItem={({ item }) => {
+          if (item.kind === 'done' || item.kind === 'hidden') {
+            // Her kan man bare angre via en tydelig knapp – ingen utilsiktede trykk på raden.
+            return (
+              <View
+                style={[
+                  styles.row,
+                  styles.doneRow,
+                  { backgroundColor: t.card, borderColor: t.border },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.rowText,
+                    { color: t.textSecondary },
+                    item.kind === 'done' && { textDecorationLine: 'line-through' },
+                  ]}
+                >
+                  {item.text}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.kind === 'done' ? 'Angre' : 'Legg tilbake'}: ${item.text}`}
+                  onPress={item.onToggle}
+                  style={[styles.undo, { backgroundColor: t.tintSoft }]}
+                >
+                  <Text style={[styles.undoText, { color: t.tint }]}>
+                    {item.kind === 'done' ? 'Angre' : 'Legg tilbake'}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          }
+          return (
+            <View style={[styles.row, { backgroundColor: t.card, borderColor: t.border }]}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: false }}
+                accessibilityLabel={item.text}
+                onPress={item.onToggle}
+                style={styles.rowMain}
+              >
+                <SymbolView name="circle" tintColor={t.textSecondary} size={24} />
+                <Text style={[styles.rowText, { color: t.text }]}>{item.text}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Flere valg for ${item.text}`}
+                hitSlop={10}
+                onPress={() => showMenu(item)}
+              >
+                <SymbolView name="ellipsis.circle" tintColor={t.textSecondary} size={24} />
+              </Pressable>
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -281,4 +429,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   rowText: { flex: 1, fontSize: 16, lineHeight: 22 },
+  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  doneRow: { opacity: 0.85 },
+  undo: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
+  undoText: { fontSize: 14, fontWeight: '700' },
+  collapseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    marginBottom: 4,
+  },
+  collapseTitle: { marginTop: 0, marginBottom: 0 },
+  footer: { gap: 8, marginTop: 16 },
 });

@@ -2,18 +2,22 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  emptyIngredientRow,
+  IngredientEditor,
+  lineFromRow,
+  rowFromLine,
+  StepEditor,
+  stepsFromLines,
+  type IngredientRow,
+  type StepRow,
+} from '@/components/ListEditors';
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { ImportError, importRecipeFromUrl } from '@/lib/importFromUrl';
 import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
 import { pickImages } from '@/lib/pickImages';
 import { addRecipe } from '@/lib/store';
-
-const lines = (s: string) =>
-  s
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
 
 export default function NewRecipeScreen() {
   const router = useRouter();
@@ -23,8 +27,8 @@ export default function NewRecipeScreen() {
 
   const [title, setTitle] = useState('');
   const [servings, setServings] = useState('');
-  const [ingredients, setIngredients] = useState('');
-  const [steps, setSteps] = useState('');
+  const [ingredients, setIngredients] = useState<IngredientRow[]>(() => [emptyIngredientRow()]);
+  const [steps, setSteps] = useState<StepRow[]>(() => stepsFromLines(['']));
   const [images, setImages] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
@@ -74,8 +78,15 @@ export default function NewRecipeScreen() {
       }
       // Fyller bare ut felt som er tomme, så egne rettelser ikke overskrives.
       setTitle((v) => v || r.title);
-      setIngredients((v) => v || r.ingredients.join('\n'));
-      setSteps((v) => v || r.steps.join('\n'));
+      // Fyller bare ut når feltene er tomme, så egne rettelser ikke overskrives.
+      setIngredients((v) =>
+        v.some((x) => x.name.trim()) || r.ingredients.length === 0
+          ? v
+          : r.ingredients.map(rowFromLine),
+      );
+      setSteps((v) =>
+        v.some((x) => x.text.trim()) || r.steps.length === 0 ? v : stepsFromLines(r.steps),
+      );
       setReadNote('Tekst lest fra bildet. Sjekk og rett opp før du lagrer.');
     } catch {
       setReadNote('Kunne ikke lese teksten i bildet. Skriv inn selv.');
@@ -92,8 +103,8 @@ export default function NewRecipeScreen() {
     const recipe = addRecipe({
       title: title.trim(),
       servings: servings.trim() || undefined,
-      ingredients: lines(ingredients),
-      steps: lines(steps),
+      ingredients: ingredients.map(lineFromRow).filter(Boolean),
+      steps: steps.map((x) => x.text.trim()).filter(Boolean),
       images,
     });
     router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
@@ -159,18 +170,10 @@ export default function NewRecipeScreen() {
           keyboardType="number-pad"
           placeholder="F.eks. 4"
         />
-        <Field
-          label="Ingredienser (én per linje)"
-          value={ingredients}
-          onChangeText={setIngredients}
-          multiline
-        />
-        <Field
-          label="Fremgangsmåte (ett steg per linje)"
-          value={steps}
-          onChangeText={setSteps}
-          multiline
-        />
+        <Heading>Ingredienser</Heading>
+        <IngredientEditor rows={ingredients} onChange={setIngredients} />
+        <Heading>Fremgangsmåte</Heading>
+        <StepEditor rows={steps} onChange={setSteps} />
         <ErrorText>{formError}</ErrorText>
         <Button title="Lagre oppskrift" onPress={save} />
       </Card>

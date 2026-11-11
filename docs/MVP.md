@@ -10,7 +10,9 @@
 4. **Planlegg middag → kalender** – dato/tid, hendelse i enhetens kalender (synkes via iCloud/Google) med ingredienser og kildelenke i notatfeltet. _Bygget._
 5. **Handleliste** – velg fra/til-dato; alle middager i perioden samles, like varer slås sammen og mengder summeres (g/kg, dl/l, ss/ts regnes om). _Skrevet, ikke kjørt på enhet._
 6. **Porsjoner** – justerbart i oppskriften og per planlagt dag; mengder skaleres, og kalenderhendelsen oppdateres. _Skrevet, ikke kjørt på enhet._
-7. **Middagsplan** – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
+7. **Redigerbar handleliste** – egne varer, rediger/«har fra før», avkryssede varer i lukket «Handlet»-seksjon med Angre-knapp. _Skrevet, ikke kjørt på enhet._
+8. **Strukturert ingrediensredigering** – felt for mengde, enhet og hva (og ett felt per steg) i stedet for ren tekst. _Skrevet, ikke kjørt på enhet._
+9. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
 
 ## Skjermer
 

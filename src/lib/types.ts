@@ -26,4 +26,8 @@ export type ShoppingState = {
   /** Nøkler på formen `${planId}|${ingrediensIndeks}` for avkryssede oppskriftsvarer. */
   checked: string[];
   extras: ShoppingExtra[];
+  /** Nøkler for varer brukeren har fra før og ikke vil kjøpe. */
+  hidden: string[];
+  /** Egen tekst for sammenslåtte varer, nøkkel → tekst. */
+  overrides: Record<string, string>;
 };

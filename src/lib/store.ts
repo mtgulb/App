@@ -17,9 +17,14 @@ function loadShopping(): ShoppingState {
   try {
     const raw = Storage.getItemSync('shopping');
     const v = raw ? (JSON.parse(raw) as Partial<ShoppingState>) : {};
-    return { checked: v.checked ?? [], extras: v.extras ?? [] };
+    return {
+      checked: v.checked ?? [],
+      extras: v.extras ?? [],
+      hidden: v.hidden ?? [],
+      overrides: v.overrides ?? {},
+    };
   } catch {
-    return { checked: [], extras: [] };
+    return { checked: [], extras: [], hidden: [], overrides: {} };
   }
 }
 
@@ -130,11 +135,57 @@ export function removeExtra(id: string) {
   });
 }
 
-/** Fjerner avkryssede egne varer og nullstiller avkrysning på oppskriftsvarer. */
+export function updateExtra(id: string, text: string) {
+  const t = text.trim();
+  if (!t) return;
+  commit({
+    ...state,
+    shopping: {
+      ...state.shopping,
+      extras: state.shopping.extras.map((e) => (e.id === id ? { ...e, text: t } : e)),
+    },
+  });
+}
+
+/** Marker en vare som «har fra før» – den skjules fra handlelisten. */
+export function hideItem(key: string) {
+  const { hidden } = state.shopping;
+  if (hidden.includes(key)) return;
+  commit({ ...state, shopping: { ...state.shopping, hidden: [...hidden, key] } });
+}
+
+export function restoreItem(key: string) {
+  commit({
+    ...state,
+    shopping: { ...state.shopping, hidden: state.shopping.hidden.filter((k) => k !== key) },
+  });
+}
+
+/** Egen tekst for en sammenslått vare. Tom tekst fjerner endringen. */
+export function setOverride(key: string, text: string) {
+  const overrides = { ...state.shopping.overrides };
+  if (text.trim()) overrides[key] = text.trim();
+  else delete overrides[key];
+  commit({ ...state, shopping: { ...state.shopping, overrides } });
+}
+
+/** Angrer alle avkrysninger. */
 export function resetShopping() {
   commit({
     ...state,
-    shopping: { checked: [], extras: state.shopping.extras.filter((e) => !e.checked) },
+    shopping: {
+      ...state.shopping,
+      checked: [],
+      extras: state.shopping.extras.map((e) => ({ ...e, checked: false })),
+    },
+  });
+}
+
+/** Fjerner handlede egne varer fra listen. */
+export function removeCheckedExtras() {
+  commit({
+    ...state,
+    shopping: { ...state.shopping, extras: state.shopping.extras.filter((e) => !e.checked) },
   });
 }
 

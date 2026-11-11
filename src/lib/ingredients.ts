@@ -9,6 +9,8 @@ export type ParsedIngredient = {
   /** Normalisert nøkkel brukt til å slå sammen like varer. */
   key: string;
   raw: string;
+  /** Mengden slik den sto i teksten, f.eks. «1 1/2» eller «2-3». Tom hvis ingen mengde. */
+  qtyText: string;
 };
 
 const FRACTIONS: Record<string, number> = {
@@ -95,8 +97,10 @@ export function parseIngredient(line: string): ParsedIngredient {
     name: raw,
     key: makeKey(raw),
     raw,
+    qtyText: '',
   };
   let s = raw.replace(/^(ca\.?|circa)\s+/i, '');
+  const start = s;
   const first = parseNumber(s);
   if (!first) return unparsed;
   let qty = first.value;
@@ -110,6 +114,7 @@ export function parseIngredient(line: string): ParsedIngredient {
       s = second.rest;
     }
   }
+  const qtyText = start.slice(0, start.length - s.length).trim();
   s = s.replace(/^\s+/, '');
   let unit: string | null = null;
   const tok = /^([A-Za-zæøåÆØÅ]+)\.?(?=\s|$)/.exec(s);
@@ -120,7 +125,7 @@ export function parseIngredient(line: string): ParsedIngredient {
   const name = s.replace(/^av\s+/i, '').trim();
   if (!name) return unparsed;
   if (qtyMax !== null && qtyMax < qty) [qty, qtyMax] = [qtyMax, qty];
-  return { qty, qtyMax, unit, name, key: makeKey(name), raw };
+  return { qty, qtyMax, unit, name, key: makeKey(name), raw, qtyText };
 }
 
 /** Ett desimal med komma, uten overflødig «,0». */
@@ -243,4 +248,45 @@ export function mergeIngredients(
     out.push({ key, text });
   }
   return out.sort((a, b) => a.key.localeCompare(b.key, 'nb'));
+}
+
+/** Enheter som kan velges i ingrediensredigering. */
+export const UNIT_OPTIONS = [
+  'g',
+  'kg',
+  'dl',
+  'l',
+  'ml',
+  'cl',
+  'ss',
+  'ts',
+  'krm',
+  'stk',
+  'pk',
+  'boks',
+  'fedd',
+  'neve',
+  'klype',
+  'skive',
+  'bunt',
+  'pose',
+] as const;
+
+export type IngredientRow = { id: string; qty: string; unit: string; name: string };
+
+let rowCounter = 0;
+export const newRowId = () => `r${Date.now().toString(36)}${(rowCounter++).toString(36)}`;
+
+/** Deler en ingrediensline i mengde, enhet og navn for redigering. */
+export function rowFromLine(line: string): IngredientRow {
+  const p = parseIngredient(line);
+  if (p.qty === null) return { id: newRowId(), qty: '', unit: '', name: p.raw };
+  return { id: newRowId(), qty: p.qtyText, unit: p.unit ?? '', name: p.name };
+}
+
+/** Setter en rad sammen til en ingrediensline. Tom streng hvis raden mangler navn. */
+export function lineFromRow(row: IngredientRow): string {
+  const name = row.name.trim();
+  if (!name) return '';
+  return [row.qty.trim(), row.unit, name].filter(Boolean).join(' ');
 }

@@ -84,3 +84,29 @@ assert.deepEqual(scaledLines({ servings: '4', ingredients: ['400 g pasta', 'salt
   'salt',
 ]);
 console.log('ingredients OK');
+
+// --- Ingrediensrader (redigering) ---
+import { rowFromLine, lineFromRow, UNIT_OPTIONS } from '../src/lib/ingredients.ts';
+{
+  const r = rowFromLine('1 1/2 dl melk');
+  assert.deepEqual([r.qty, r.unit, r.name], ['1 1/2', 'dl', 'melk']);
+  assert.equal(lineFromRow(r), '1 1/2 dl melk');
+  const r2 = rowFromLine('2-3 ss soyasaus');
+  assert.deepEqual([r2.qty, r2.unit, r2.name], ['2-3', 'ss', 'soyasaus']);
+  const r3 = rowFromLine('salt');
+  assert.deepEqual([r3.qty, r3.unit, r3.name], ['', '', 'salt']);
+  assert.equal(lineFromRow(r3), 'salt');
+  const r4 = rowFromLine('½ stk løk, finhakket');
+  assert.deepEqual([r4.qty, r4.unit, r4.name], ['½', 'stk', 'løk, finhakket']);
+  const r5 = rowFromLine('3 egg');
+  assert.deepEqual([r5.qty, r5.unit, r5.name], ['3', '', 'egg']);
+  // Rader uten navn gir ingen linje; redigert rad parses tilbake riktig
+  assert.equal(lineFromRow({ id: 'x', qty: '2', unit: 'dl', name: '  ' }), '');
+  assert.equal(lineFromRow({ id: 'x', qty: '1,5', unit: 'dl', name: 'fløte' }), '1,5 dl fløte');
+  assert.equal(formatIngredientCheck('1,5 dl fløte', 2), '3 dl fløte');
+  assert.ok(UNIT_OPTIONS.includes('dl'));
+}
+function formatIngredientCheck(line: string, f: number) {
+  return F(P(line), f);
+}
+console.log('ingredient rows OK');

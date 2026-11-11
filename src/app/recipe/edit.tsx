@@ -2,16 +2,19 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  IngredientEditor,
+  lineFromRow,
+  rowFromLine,
+  StepEditor,
+  stepsFromLines,
+  type IngredientRow,
+  type StepRow,
+} from '@/components/ListEditors';
 import { Screen } from '@/components/Screen';
-import { Body, Button, Card, ErrorText, Field } from '@/components/ui';
+import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { pickImages } from '@/lib/pickImages';
 import { getRecipe, updateRecipe } from '@/lib/store';
-
-const lines = (s: string) =>
-  s
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
 
 export default function EditRecipe() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,8 +22,10 @@ export default function EditRecipe() {
   const recipe = getRecipe(id);
   const [title, setTitle] = useState(recipe?.title ?? '');
   const [servings, setServings] = useState(recipe?.servings ?? '');
-  const [ingredients, setIngredients] = useState(recipe?.ingredients.join('\n') ?? '');
-  const [steps, setSteps] = useState(recipe?.steps.join('\n') ?? '');
+  const [ingredients, setIngredients] = useState<IngredientRow[]>(() =>
+    (recipe?.ingredients ?? []).map(rowFromLine),
+  );
+  const [steps, setSteps] = useState<StepRow[]>(() => stepsFromLines(recipe?.steps ?? []));
   const [images, setImages] = useState<string[]>(recipe?.images ?? []);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,8 +48,8 @@ export default function EditRecipe() {
     updateRecipe(id, {
       title: title.trim(),
       servings: servings.trim() || undefined,
-      ingredients: lines(ingredients),
-      steps: lines(steps),
+      ingredients: ingredients.map(lineFromRow).filter(Boolean),
+      steps: steps.map((x) => x.text.trim()).filter(Boolean),
       images,
     });
     router.back();
@@ -83,18 +88,10 @@ export default function EditRecipe() {
           onChangeText={setServings}
           keyboardType="number-pad"
         />
-        <Field
-          label="Ingredienser (én per linje)"
-          value={ingredients}
-          onChangeText={setIngredients}
-          multiline
-        />
-        <Field
-          label="Fremgangsmåte (ett steg per linje)"
-          value={steps}
-          onChangeText={setSteps}
-          multiline
-        />
+        <Heading>Ingredienser</Heading>
+        <IngredientEditor rows={ingredients} onChange={setIngredients} />
+        <Heading>Fremgangsmåte</Heading>
+        <StepEditor rows={steps} onChange={setSteps} />
         <ErrorText>{error}</ErrorText>
         <Button title="Lagre endringer" onPress={save} />
       </Card>

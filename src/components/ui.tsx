@@ -122,6 +122,38 @@ export function Stepper({
   );
 }
 
+export function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  const t = useTheme();
+  return (
+    <View style={[styles.segment, { backgroundColor: t.tintSoft }]} accessibilityRole="tablist">
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            onPress={() => onChange(o.value)}
+            style={[styles.segmentItem, active && { backgroundColor: t.card }]}
+          >
+            <Text style={[styles.segmentText, { color: active ? t.tint : t.textSecondary }]}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function Button({
   title,
   onPress,
@@ -226,6 +258,15 @@ const styles = StyleSheet.create({
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepBtn: { alignItems: 'center', justifyContent: 'center' },
   stepValue: { fontSize: 18, fontWeight: '700', minWidth: 28, textAlign: 'center' },
+  segment: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 3,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  segmentItem: { flex: 1, alignItems: 'center', borderRadius: 10, paddingVertical: 8 },
+  segmentText: { fontSize: 15, fontWeight: '700' },
   chip: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { fontSize: 13, fontWeight: '600' },
   titleRow: {
