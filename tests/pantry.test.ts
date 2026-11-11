@@ -129,3 +129,51 @@ console.log('synonyms OK');
 assert.ok(!matches('gul paprika', 'løk'));
 assert.ok(!matches('spaghetti', 'penne'));
 console.log('synonym guards OK');
+
+// --- Sammensatte ord: laks → laksefilet osv. ---
+import { matchLevel } from '../src/lib/pantry.ts';
+for (const [a, b] of [
+  ['laks', 'laksefilet'],
+  ['laks', 'laksefilet, i skiver'],
+  ['laksefilet', 'laks'],
+  ['laks', 'røkt laks'],
+  ['torsk', 'torskefilet'],
+  ['kylling', 'kyllinglårfilet'],
+  ['kylling', 'kyllingfilet'],
+  ['kylling', 'kyllingbryst'],
+  ['svin', 'svinekotelett'],
+  ['okse', 'oksebiff'],
+  ['okse', 'oksefilet'],
+  ['sei', 'seifilet'],
+  ['and', 'andebryst'],
+  ['ost', 'revet ost'],
+]) {
+  assert.ok(matches(a, b), `${a} bør matche ${b}`);
+  assert.ok(matches(b, a), `${b} bør matche ${a}`);
+}
+// «lignende» er ikke et treff
+assert.equal(matchLevel('rødløk', 'løk'), 'similar');
+assert.equal(matchLevel('løk', 'rødløk'), 'similar');
+assert.equal(matchLevel('peanøttsmør', 'smør'), 'similar');
+assert.equal(matchLevel('cherrytomater', 'tomat'), 'similar');
+assert.equal(matchLevel('mel', 'melk'), null);
+assert.equal(matchLevel('melkesjokolade', 'melk'), null);
+assert.equal(matchLevel('laksefilet', 'torsk'), null);
+assert.ok(!matches('laks', 'laksefett'));
+assert.ok(!matches('kylling', 'kyllingbuljong'));
+
+// Oppskriftsanalyse: lignende telles ikke som «har», og basisvarer antas bare når det bes om
+const lax = analyzeRecipe(
+  mk('Laks', ['400 g laksefilet', '1 rødløk', 'salt', '2 dl fløte']),
+  ['laks', 'løk', 'fløte'],
+  false,
+);
+assert.deepEqual(lax.have, ['400 g laksefilet', '2 dl fløte']);
+assert.deepEqual(
+  lax.similar.map((x) => x.line),
+  ['1 rødløk'],
+);
+assert.deepEqual(lax.missing, ['salt']); // uten antakelse mangler salt
+const lax2 = analyzeRecipe(mk('Laks', ['salt']), [], true);
+assert.deepEqual(lax2.have, ['salt']);
+console.log('compounds OK');

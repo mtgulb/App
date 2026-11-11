@@ -42,7 +42,7 @@ export default function RecipeDetail() {
     ? analyzeRecipe(
         recipe,
         fridge.items.map((i) => i.name),
-        fridge.assumeStaples,
+        false,
       )
     : null;
 
@@ -91,12 +91,24 @@ export default function RecipeDetail() {
           <Card>
             <Heading>Kjøleskapet ditt</Heading>
             <Body>
-              {fit.missing.length === 0
+              {fit.have.length === fit.total
                 ? 'Du har alt du trenger!'
-                : `Du har ${fit.have.length} av ${fit.total} ingredienser. Mangler: ${fit.missing
-                    .map((l) => parseIngredient(l).name.split(',')[0])
-                    .join(', ')}.`}
+                : `Du har ${fit.have.length} av ${fit.total} ingredienser.`}
             </Body>
+            {fit.similar.length > 0 ? (
+              <Body secondary>
+                Lignende (sjekk selv):{' '}
+                {fit.similar
+                  .map((x) => `${parseIngredient(x.line).name.split(',')[0]} – du har ${x.fridge}`)
+                  .join('; ')}
+                .
+              </Body>
+            ) : null}
+            {fit.missing.length > 0 ? (
+              <Body secondary>
+                Mangler: {fit.missing.map((l) => parseIngredient(l).name.split(',')[0]).join(', ')}.
+              </Body>
+            ) : null}
             {fit.missing.length > 0 ? (
               <Button
                 title={`Legg ${fit.missing.length} manglende på handlelisten`}

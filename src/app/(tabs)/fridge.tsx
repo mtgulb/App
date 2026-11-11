@@ -157,14 +157,22 @@ export default function FridgeScreen() {
                 </Text>
                 <View style={styles.chipRow}>
                   <Chip>
-                    {fit.missing.length === 0
+                    {fit.missing.length === 0 && fit.similar.length === 0
                       ? 'Alt du trenger!'
-                      : `Mangler ${fit.missing.length} av ${fit.total}`}
+                      : fit.missing.length === 0
+                        ? `Nesten alt (${fit.similar.length} lignende)`
+                        : `Mangler ${fit.missing.length} av ${fit.total}`}
                   </Chip>
                 </View>
                 {fit.missing.length > 0 ? (
                   <Text style={{ color: t.textSecondary }} numberOfLines={2}>
                     {fit.missing.map((l) => parseIngredient(l).name.split(',')[0]).join(', ')}
+                  </Text>
+                ) : null}
+                {fit.similar.length > 0 ? (
+                  <Text style={{ color: t.textSecondary }} numberOfLines={2}>
+                    Lignende:{' '}
+                    {fit.similar.map((x) => parseIngredient(x.line).name.split(',')[0]).join(', ')}
                   </Text>
                 ) : null}
               </View>
