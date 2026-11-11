@@ -1,27 +1,39 @@
 import { useColorScheme } from 'react-native';
 
 const light = {
-  background: '#F2F2F7',
+  background: '#FBF7F2',
   card: '#FFFFFF',
-  text: '#000000',
-  textSecondary: '#6C6C70',
-  tint: '#007AFF',
-  border: '#D1D1D6',
-  danger: '#D70015',
+  text: '#2B2118',
+  textSecondary: '#7A6E63',
+  tint: '#C8553D',
+  tintSoft: '#F6E3DD',
+  border: '#EADFD3',
+  danger: '#B3261E',
+  placeholder: '#F1E6DA',
 };
 
 const dark: typeof light = {
-  background: '#000000',
-  card: '#1C1C1E',
-  text: '#FFFFFF',
-  textSecondary: '#98989F',
-  tint: '#0A84FF',
-  border: '#38383A',
-  danger: '#FF453A',
+  background: '#17120E',
+  card: '#241D17',
+  text: '#F5EDE4',
+  textSecondary: '#A89B8E',
+  tint: '#E8785F',
+  tintSoft: '#3A2620',
+  border: '#372D25',
+  danger: '#FF7A70',
+  placeholder: '#2E241C',
 };
 
 export function useTheme() {
   return useColorScheme() === 'dark' ? dark : light;
 }
 
-export const radius = 14;
+export const radius = 20;
+
+export const shadow = {
+  shadowColor: '#3B2414',
+  shadowOpacity: 0.1,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 3,
+} as const;

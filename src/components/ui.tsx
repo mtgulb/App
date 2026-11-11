@@ -1,11 +1,20 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { TextInputProps } from 'react-native';
-import { radius, useTheme } from '@/theme/colors';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SymbolView } from 'expo-symbols';
+import { radius, shadow, useTheme } from '@/theme/colors';
 
 export function Card({ children }: { children: ReactNode }) {
   const t = useTheme();
-  return <View style={[styles.card, { backgroundColor: t.card }]}>{children}</View>;
+  return <View style={[styles.card, shadow, { backgroundColor: t.card }]}>{children}</View>;
 }
 
 export function Heading({ children }: { children: ReactNode }) {
@@ -17,6 +26,52 @@ export function Body({ children, secondary }: { children: ReactNode; secondary?:
   const t = useTheme();
   return (
     <Text style={[styles.body, { color: secondary ? t.textSecondary : t.text }]}>{children}</Text>
+  );
+}
+
+export function Chip({ children }: { children: ReactNode }) {
+  const t = useTheme();
+  return (
+    <View style={[styles.chip, { backgroundColor: t.tintSoft }]}>
+      <Text style={[styles.chipText, { color: t.tint }]}>{children}</Text>
+    </View>
+  );
+}
+
+/** Stor sidetittel for faner (uten systemheader), med valgfri rund handlingsknapp. */
+export function LargeTitle({
+  title,
+  actionIcon,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  actionIcon?: 'plus';
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.titleRow, { paddingTop: insets.top + 12 }]}>
+      <Text style={[styles.largeTitle, { color: t.text }]} accessibilityRole="header">
+        {title}
+      </Text>
+      {actionIcon && onAction ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          onPress={onAction}
+          style={({ pressed }) => [
+            styles.roundButton,
+            shadow,
+            { backgroundColor: t.tint, opacity: pressed ? 0.8 : 1 },
+          ]}
+        >
+          <SymbolView name={actionIcon} tintColor="#FFFFFF" size={22} />
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
@@ -34,7 +89,7 @@ export function Button({
   kind?: 'primary' | 'secondary' | 'destructive';
 }) {
   const t = useTheme();
-  const bg = kind === 'primary' ? t.tint : 'transparent';
+  const bg = kind === 'primary' ? t.tint : kind === 'secondary' ? t.tintSoft : 'transparent';
   const fg = kind === 'primary' ? '#FFFFFF' : kind === 'destructive' ? t.danger : t.tint;
   const off = disabled || loading;
   return (
@@ -45,7 +100,7 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, opacity: off ? 0.5 : pressed ? 0.7 : 1 },
+        { backgroundColor: bg, opacity: off ? 0.5 : pressed ? 0.75 : 1 },
       ]}
     >
       {loading ? (
@@ -70,7 +125,7 @@ export function Field(props: TextInputProps & { label: string }) {
         style={[
           styles.input,
           { color: t.text, backgroundColor: t.background, borderColor: t.border },
-          rest.multiline && { minHeight: 110, textAlignVertical: 'top' },
+          rest.multiline && { minHeight: 120, textAlignVertical: 'top' },
           style,
         ]}
       />
@@ -88,28 +143,56 @@ export function ErrorText({ children }: { children?: string | null }) {
   );
 }
 
-export function EmptyState({ title, text }: { title: string; text: string }) {
+export function EmptyState({
+  emoji,
+  title,
+  text,
+}: {
+  emoji?: string;
+  title: string;
+  text: string;
+}) {
   return (
     <View style={styles.empty}>
+      {emoji ? <Text style={styles.emptyEmoji}>{emoji}</Text> : null}
       <Heading>{title}</Heading>
-      <Body secondary>{text}</Body>
+      <Text style={[styles.body, styles.center, { color: useTheme().textSecondary }]}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius, padding: 16, gap: 12 },
-  heading: { fontSize: 20, fontWeight: '700' },
-  body: { fontSize: 16, lineHeight: 22 },
+  card: { borderRadius: radius, padding: 18, gap: 12 },
+  heading: { fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
+  body: { fontSize: 16, lineHeight: 23 },
+  center: { textAlign: 'center' },
   label: { fontSize: 13, fontWeight: '600' },
-  input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, padding: 12, fontSize: 16 },
+  input: { borderWidth: 1, borderRadius: 14, padding: 14, fontSize: 16 },
   button: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   buttonText: { fontSize: 17, fontWeight: '600' },
-  empty: { padding: 32, gap: 8, alignItems: 'center' },
+  chip: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  chipText: { fontSize: 13, fontWeight: '600' },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  largeTitle: { fontSize: 34, fontWeight: '800', letterSpacing: -0.8 },
+  roundButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  empty: { padding: 32, gap: 10, alignItems: 'center', marginTop: 40 },
+  emptyEmoji: { fontSize: 56 },
 });

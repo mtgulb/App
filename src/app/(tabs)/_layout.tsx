@@ -7,17 +7,19 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: t.tint,
-        headerStyle: { backgroundColor: t.background },
-        headerTitleStyle: { color: t.text },
-        tabBarStyle: { backgroundColor: t.card },
+        tabBarInactiveTintColor: t.textSecondary,
+        tabBarStyle: { backgroundColor: t.card, borderTopColor: t.border },
+        tabBarLabelStyle: { fontWeight: '600' },
+        sceneStyle: { backgroundColor: t.background },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Oppskrifter',
-          tabBarIcon: ({ color }) => <SymbolView name="book" tintColor={color} size={24} />,
+          tabBarIcon: ({ color }) => <SymbolView name="fork.knife" tintColor={color} size={24} />,
         }}
       />
       <Tabs.Screen
