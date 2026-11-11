@@ -12,7 +12,10 @@
 6. **Porsjoner** – justerbart i oppskriften og per planlagt dag; mengder skaleres, og kalenderhendelsen oppdateres. _Skrevet, ikke kjørt på enhet._
 7. **Redigerbar handleliste** – egne varer, rediger/«har fra før», avkryssede varer i lukket «Handlet»-seksjon med Angre-knapp. _Skrevet, ikke kjørt på enhet._
 8. **Strukturert ingrediensredigering** – felt for mengde, enhet og hva (og ett felt per steg) i stedet for ren tekst. _Skrevet, ikke kjørt på enhet._
-9. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
+9. **Kjøleskap og forslag** – legg inn hva du har; oppskrifter rangeres etter færrest manglende ingredienser, med «legg manglende på handlelisten». Synonymer (mel/mjøl/hvetemel/flour …) brukes både her og ved sammenslåing. _Skrevet, ikke kjørt på enhet._
+10. **Sveip i lister** – høyre fjerner, venstre redigerer (handleliste og kjøleskap). _Ikke kjørt på enhet._
+11. **Lim inn / skann tekst** – iPhones «Skann tekst» i tastaturet fyller inn teksten; appen deler den opp. _Ikke kjørt på enhet._
+12. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
 
 ## Skjermer
 

@@ -12,8 +12,15 @@ import {
 import { RecipeImage } from '@/components/RecipeImage';
 import { Body, Button, Card, Chip, EmptyState, Heading, Stepper } from '@/components/ui';
 import { removeDinnerEvent } from '@/lib/calendar';
-import { baseServings, hasKnownServings, scaledLines } from '@/lib/ingredients';
-import { deleteRecipe, useStore } from '@/lib/store';
+import {
+  baseServings,
+  formatIngredient,
+  hasKnownServings,
+  parseIngredient,
+  scaledLines,
+} from '@/lib/ingredients';
+import { analyzeRecipe } from '@/lib/pantry';
+import { addExtras, deleteRecipe, useStore } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
 export default function RecipeDetail() {
@@ -22,7 +29,7 @@ export default function RecipeDetail() {
   const t = useTheme();
   const { width } = useWindowDimensions();
   const hero = { width, height: 300 };
-  const { recipes, plan } = useStore();
+  const { recipes, plan, fridge } = useStore();
   const recipe = recipes.find((r) => r.id === id);
   const [chosen, setChosen] = useState<number | null>(null);
   const servings = chosen ?? (recipe ? baseServings(recipe) : 4);
@@ -30,6 +37,14 @@ export default function RecipeDetail() {
   if (!recipe) {
     return <EmptyState emoji="🤷" title="Fant ikke oppskriften" text="Den kan ha blitt slettet." />;
   }
+
+  const fit = recipe
+    ? analyzeRecipe(
+        recipe,
+        fridge.items.map((i) => i.name),
+        fridge.assumeStaples,
+      )
+    : null;
 
   function confirmDelete() {
     Alert.alert('Slette oppskriften?', 'Planlagte middager med denne oppskriften fjernes også.', [
@@ -71,6 +86,33 @@ export default function RecipeDetail() {
           <Chip>{recipe.ingredients.length} ingredienser</Chip>
           {recipe.steps.length > 0 ? <Chip>{recipe.steps.length} steg</Chip> : null}
         </View>
+
+        {fit && fridge.items.length > 0 ? (
+          <Card>
+            <Heading>Kjøleskapet ditt</Heading>
+            <Body>
+              {fit.missing.length === 0
+                ? 'Du har alt du trenger!'
+                : `Du har ${fit.have.length} av ${fit.total} ingredienser. Mangler: ${fit.missing
+                    .map((l) => parseIngredient(l).name.split(',')[0])
+                    .join(', ')}.`}
+            </Body>
+            {fit.missing.length > 0 ? (
+              <Button
+                title={`Legg ${fit.missing.length} manglende på handlelisten`}
+                kind="secondary"
+                onPress={() => {
+                  const f = servings / baseServings(recipe);
+                  addExtras(fit.missing.map((l) => formatIngredient(parseIngredient(l), f)));
+                  Alert.alert(
+                    'Lagt til',
+                    'De manglende varene står nå under «Egne varer» i handlelisten.',
+                  );
+                }}
+              />
+            ) : null}
+          </Card>
+        ) : null}
 
         <Button
           title="Planlegg middag"

@@ -1,3 +1,4 @@
+import { normalizeTokens } from './synonyms.ts';
 import type { Recipe } from './types';
 
 export type ParsedIngredient = {
@@ -80,12 +81,8 @@ function parseNumber(s: string): { value: number; rest: string } | null {
 }
 
 function makeKey(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\(.*?\)/g, '')
-    .split(',')[0]
-    .replace(/\s+/g, ' ')
-    .trim();
+  const key = normalizeTokens(name).join(' ');
+  return key || name.toLowerCase().split(',')[0].trim();
 }
 
 export function parseIngredient(line: string): ParsedIngredient {

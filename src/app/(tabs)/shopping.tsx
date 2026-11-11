@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SwipeRow } from '@/components/SwipeRow';
 import { Button, Chip, EmptyState, LargeTitle } from '@/components/ui';
 import {
   baseServings,
@@ -145,17 +146,25 @@ export default function ShoppingScreen() {
 
   const remaining = [...todoMerged, ...todoExtras];
 
-  function showMenu(row: Row) {
-    const edit = () => {
-      const apply = (text?: string) => {
-        if (text === undefined) return;
-        if (row.kind === 'extra' && row.id) updateExtra(row.id, text);
-        else setOverride(row.key, text);
-      };
-      if (Platform.OS === 'ios') {
-        Alert.prompt('Rediger vare', undefined, apply, 'plain-text', row.text);
-      }
+  function editRow(row: Row) {
+    const apply = (text?: string) => {
+      if (text === undefined) return;
+      if (row.kind === 'extra' && row.id) updateExtra(row.id, text);
+      else setOverride(row.key, text);
     };
+    if (Platform.OS === 'ios') {
+      Alert.prompt('Rediger vare', undefined, apply, 'plain-text', row.text);
+    }
+  }
+
+  /** Sveip mot høyre: egne varer slettes, varer fra middager flyttes til «Har fra før». */
+  function removeRow(row: Row) {
+    if (row.kind === 'extra' && row.id) removeExtra(row.id);
+    else hideItem(row.key);
+  }
+
+  function showMenu(row: Row) {
+    const edit = () => editRow(row);
     const actions: { label: string; destructive?: boolean; run: () => void }[] = [
       { label: 'Rediger', run: edit },
     ];
@@ -278,6 +287,11 @@ export default function ShoppingScreen() {
               );
             })}
 
+            {todoMerged.length + todoExtras.length > 0 ? (
+              <Text style={[styles.hint, { color: t.textSecondary }]}>
+                Sveip mot høyre for å fjerne · mot venstre for å redigere
+              </Text>
+            ) : null}
             <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
               <TextInput
                 accessibilityLabel="Legg til vare"
@@ -373,26 +387,36 @@ export default function ShoppingScreen() {
             );
           }
           return (
-            <View style={[styles.row, { backgroundColor: t.card, borderColor: t.border }]}>
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: false }}
-                accessibilityLabel={item.text}
-                onPress={item.onToggle}
-                style={styles.rowMain}
-              >
-                <SymbolView name="circle" tintColor={t.textSecondary} size={24} />
-                <Text style={[styles.rowText, { color: t.text }]}>{item.text}</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Flere valg for ${item.text}`}
-                hitSlop={10}
-                onPress={() => showMenu(item)}
-              >
-                <SymbolView name="ellipsis.circle" tintColor={t.textSecondary} size={24} />
-              </Pressable>
-            </View>
+            <SwipeRow
+              accessibilityLabel={item.text}
+              right={{
+                label: item.kind === 'extra' ? 'Slett' : 'Har fra før',
+                color: t.danger,
+                run: () => removeRow(item),
+              }}
+              left={{ label: 'Rediger', color: t.tint, run: () => editRow(item) }}
+            >
+              <View style={[styles.row, { backgroundColor: t.card, borderColor: t.border }]}>
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: false }}
+                  accessibilityLabel={item.text}
+                  onPress={item.onToggle}
+                  style={styles.rowMain}
+                >
+                  <SymbolView name="circle" tintColor={t.textSecondary} size={24} />
+                  <Text style={[styles.rowText, { color: t.text }]}>{item.text}</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Flere valg for ${item.text}`}
+                  hitSlop={10}
+                  onPress={() => showMenu(item)}
+                >
+                  <SymbolView name="ellipsis.circle" tintColor={t.textSecondary} size={24} />
+                </Pressable>
+              </View>
+            </SwipeRow>
           );
         }}
       />
@@ -408,6 +432,7 @@ const styles = StyleSheet.create({
   rangeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rangeLabel: { fontSize: 16, fontWeight: '600' },
   quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  hint: { fontSize: 12 },
   summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   summaryItem: { fontSize: 13 },
   addRow: {

@@ -17,6 +17,7 @@ import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { ImportError, importRecipeFromUrl } from '@/lib/importFromUrl';
 import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
 import { pickImages } from '@/lib/pickImages';
+import { structureRecipeText } from '@/lib/structureText';
 import { addRecipe } from '@/lib/store';
 
 export default function NewRecipeScreen() {
@@ -31,8 +32,10 @@ export default function NewRecipeScreen() {
   const [steps, setSteps] = useState<StepRow[]>(() => stepsFromLines(['']));
   const [images, setImages] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
+  const [pasted, setPasted] = useState('');
   const [reading, setReading] = useState(false);
   const [readNote, setReadNote] = useState<string | null>(null);
+  const [pasteNote, setPasteNote] = useState<string | null>(null);
 
   async function runImport() {
     setImportError(null);
@@ -46,6 +49,20 @@ export default function NewRecipeScreen() {
     } finally {
       setImporting(false);
     }
+  }
+
+  /** Gjør innlimt eller skannet tekst om til tittel, ingredienser og steg. */
+  function structurePasted() {
+    const r = structureRecipeText(pasted.split('\n'));
+    if (!r.title && r.ingredients.length === 0 && r.steps.length === 0) {
+      setPasteNote('Fant ikke noe å lese i teksten.');
+      return;
+    }
+    setTitle((v) => v || r.title);
+    setServings((v) => v || r.servings || '');
+    setIngredients(r.ingredients.length ? r.ingredients.map(rowFromLine) : [emptyIngredientRow()]);
+    setSteps(r.steps.length ? stepsFromLines(r.steps) : stepsFromLines(['']));
+    setPasteNote('Teksten er delt opp i ingredienser og steg. Sjekk og rett opp før du lagrer.');
   }
 
   async function addPhotos(source: 'camera' | 'library') {
@@ -132,6 +149,27 @@ export default function NewRecipeScreen() {
           loading={importing}
           disabled={!url.trim()}
         />
+      </Card>
+
+      <Card>
+        <Heading>Lim inn eller skann tekst</Heading>
+        <Body secondary>
+          Lim inn en oppskrift du har kopiert. Eller skann den med kameraet: trykk og hold i feltet
+          og velg «Skann tekst» (kamera-ikonet), så leser iPhone teksten rett inn her.
+        </Body>
+        <Field
+          label="Oppskriftstekst"
+          value={pasted}
+          onChangeText={setPasted}
+          multiline
+          placeholder="Tittel, ingredienser, fremgangsmåte …"
+        />
+        <Button
+          title="Del opp i ingredienser og steg"
+          onPress={structurePasted}
+          disabled={!pasted.trim()}
+        />
+        {pasteNote ? <Body secondary>{pasteNote}</Body> : null}
       </Card>
 
       <Card>

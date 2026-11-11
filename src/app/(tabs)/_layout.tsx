@@ -36,6 +36,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <SymbolView name="cart" tintColor={color} size={24} />,
         }}
       />
+      <Tabs.Screen
+        name="fridge"
+        options={{
+          title: 'Kjøleskap',
+          tabBarIcon: ({ color }) => <SymbolView name="refrigerator" tintColor={color} size={24} />,
+        }}
+      />
     </Tabs>
   );
 }

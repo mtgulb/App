@@ -31,3 +31,11 @@ export type ShoppingState = {
   /** Egen tekst for sammenslåtte varer, nøkkel → tekst. */
   overrides: Record<string, string>;
 };
+
+export type FridgeItem = { id: string; name: string };
+
+export type FridgeState = {
+  items: FridgeItem[];
+  /** Regn salt, pepper, vann og olje som alltid tilstede. */
+  assumeStaples: boolean;
+};
