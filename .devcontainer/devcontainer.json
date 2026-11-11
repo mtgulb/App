@@ -1,9 +1,0 @@
-{
-  "name": "Oppskrifter (Expo)",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-  "postCreateCommand": "npm ci",
-  "forwardPorts": [8081],
-  "customizations": {
-    "codespaces": { "openFiles": ["docs/TESTING.md"] }
-  }
-}
