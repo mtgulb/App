@@ -7,6 +7,17 @@ export type Recipe = {
   steps: string[];
   images: string[];
   createdAt: number;
+  /** Favoritt. */
+  favorite?: boolean;
+  /** Total tid i minutter. */
+  minutes?: number;
+  tags?: string[];
+  /** Egne notater, f.eks. «litt mindre salt neste gang». */
+  notes?: string;
+  /** Vurdering 1–5. */
+  rating?: number;
+  lastCookedAt?: number;
+  cookCount?: number;
 };
 
 export type MealPlanEntry = {
@@ -22,7 +33,12 @@ export type MealPlanEntry = {
 
 export type ShoppingExtra = { id: string; text: string; checked: boolean };
 
+/** En hel oppskrift lagt på handlelisten (uavhengig av middagsplanen). */
+export type ShoppingRecipeAdd = { id: string; recipeId: string; servings: number };
+
 export type ShoppingState = {
+  /** Oppskrifter lagt direkte på handlelisten. */
+  fromRecipes: ShoppingRecipeAdd[];
   /** Nøkler på formen `${planId}|${ingrediensIndeks}` for avkryssede oppskriftsvarer. */
   checked: string[];
   extras: ShoppingExtra[];

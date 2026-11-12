@@ -1,9 +1,30 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import {
+  ActionSheetIOS,
+  FlatList,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { ClipboardBanner } from '@/components/ClipboardBanner';
 import { RecipeImage } from '@/components/RecipeImage';
 import { EmptyState, LargeTitle } from '@/components/ui';
+import {
+  allTags,
+  filterRecipes,
+  hasActiveFilters,
+  NO_FILTERS,
+  SORT_LABELS,
+  sortRecipes,
+  TIME_OPTIONS,
+  type RecipeFilters,
+  type SortMode,
+} from '@/lib/recipeFilter';
 import { useStore } from '@/lib/store';
 import type { Recipe } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
@@ -18,19 +39,66 @@ function toRows(recipes: Recipe[]): Recipe[][] {
   return rows;
 }
 
+function FilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+    >
+      <View style={[styles.filterChip, { backgroundColor: active ? t.tint : t.tintSoft }]}>
+        <Text style={{ color: active ? '#FFFFFF' : t.tint, fontWeight: '600', fontSize: 13 }}>
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function RecipesScreen() {
   const t = useTheme();
   const router = useRouter();
   const { recipes } = useStore();
-  const [query, setQuery] = useState('');
-  const q = query.trim().toLowerCase();
-  const shown = q
-    ? recipes.filter(
-        (r) =>
-          r.title.toLowerCase().includes(q) ||
-          r.ingredients.some((i) => i.toLowerCase().includes(q)),
-      )
-    : recipes;
+  const [filters, setFilters] = useState<RecipeFilters>(NO_FILTERS);
+  const [sort, setSort] = useState<SortMode>('newest');
+  const query = filters.query;
+  const setQuery = (q: string) => setFilters((f) => ({ ...f, query: q }));
+  const tags = useMemo(() => allTags(recipes).slice(0, 8), [recipes]);
+  const shown = useMemo(
+    () => sortRecipes(filterRecipes(recipes, filters), sort),
+    [recipes, filters, sort],
+  );
+
+  function cycleTime() {
+    setFilters((f) => {
+      const i =
+        f.maxMinutes === null
+          ? -1
+          : TIME_OPTIONS.indexOf(f.maxMinutes as (typeof TIME_OPTIONS)[number]);
+      return { ...f, maxMinutes: i + 1 >= TIME_OPTIONS.length ? null : TIME_OPTIONS[i + 1] };
+    });
+  }
+
+  function pickSort() {
+    if (Platform.OS !== 'ios') return;
+    const modes = Object.keys(SORT_LABELS) as SortMode[];
+    const options = [...modes.map((m) => SORT_LABELS[m]), 'Avbryt'];
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: 'Sorter etter', options, cancelButtonIndex: options.length - 1 },
+      (i) => {
+        if (i < modes.length) setSort(modes[i]);
+      },
+    );
+  }
 
   function renderCard(item: Recipe) {
     return (
@@ -92,6 +160,44 @@ export default function RecipesScreen() {
                 ]}
               />
             ) : null}
+            {recipes.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterRow}
+              >
+                <FilterChip
+                  label="♥ Favoritter"
+                  active={filters.favoritesOnly}
+                  onPress={() => setFilters((f) => ({ ...f, favoritesOnly: !f.favoritesOnly }))}
+                />
+                <FilterChip
+                  label={filters.maxMinutes ? `Opptil ${filters.maxMinutes} min` : 'Tid'}
+                  active={filters.maxMinutes !== null}
+                  onPress={cycleTime}
+                />
+                {tags.map((tag) => (
+                  <FilterChip
+                    key={tag}
+                    label={tag}
+                    active={filters.tag === tag}
+                    onPress={() => setFilters((f) => ({ ...f, tag: f.tag === tag ? null : tag }))}
+                  />
+                ))}
+                <FilterChip
+                  label={`Sorter: ${SORT_LABELS[sort]}`}
+                  active={sort !== 'newest'}
+                  onPress={pickSort}
+                />
+                {hasActiveFilters(filters) ? (
+                  <FilterChip
+                    label="Nullstill"
+                    active={false}
+                    onPress={() => setFilters(NO_FILTERS)}
+                  />
+                ) : null}
+              </ScrollView>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
@@ -120,6 +226,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: PAD, paddingBottom: 32, gap: GAP, flexGrow: 1 },
   headerStack: { gap: 12 },
+  filterRow: { gap: 8, paddingRight: 8 },
+  filterChip: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   row: { flexDirection: 'row', gap: GAP },
   card: { flex: 1, borderRadius: radius, overflow: 'hidden' },
   spacer: { flex: 1 },

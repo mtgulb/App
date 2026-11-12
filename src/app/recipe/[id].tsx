@@ -1,11 +1,14 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import {
   Alert,
   Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -21,7 +24,16 @@ import {
 } from '@/lib/ingredients';
 import { analyzeRecipe } from '@/lib/pantry';
 import { defaultServings } from '@/lib/portions';
-import { addExtras, deleteRecipe, useStore } from '@/lib/store';
+import { formatMinutes } from '@/lib/recipeFilter';
+import {
+  addExtras,
+  addRecipeToShopping,
+  deleteRecipe,
+  markCooked,
+  toggleFavorite,
+  updateRecipe,
+  useStore,
+} from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
 export default function RecipeDetail() {
@@ -82,11 +94,61 @@ export default function RecipeDetail() {
       )}
 
       <View style={styles.body}>
-        <Text style={[styles.title, { color: t.text }]}>{recipe.title}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, styles.flex, { color: t.text }]}>{recipe.title}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={recipe.favorite ? 'Fjern fra favoritter' : 'Legg til i favoritter'}
+            accessibilityState={{ selected: !!recipe.favorite }}
+            hitSlop={10}
+            onPress={() => toggleFavorite(recipe.id)}
+          >
+            <SymbolView
+              name={recipe.favorite ? 'heart.fill' : 'heart'}
+              tintColor={recipe.favorite ? t.tint : t.textSecondary}
+              size={28}
+            />
+          </Pressable>
+        </View>
         <View style={styles.chips}>
+          {recipe.minutes ? <Chip>{formatMinutes(recipe.minutes)}</Chip> : null}
           <Chip>{recipe.ingredients.length} ingredienser</Chip>
           {recipe.steps.length > 0 ? <Chip>{recipe.steps.length} steg</Chip> : null}
+          {(recipe.tags ?? []).map((tag) => (
+            <Chip key={tag}>{tag}</Chip>
+          ))}
         </View>
+        <View
+          style={styles.stars}
+          accessibilityRole="adjustable"
+          accessibilityLabel={`Vurdering ${recipe.rating ?? 0} av 5`}
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <Pressable
+              key={n}
+              accessibilityRole="button"
+              accessibilityLabel={`${n} stjerner`}
+              hitSlop={6}
+              onPress={() =>
+                updateRecipe(recipe.id, { rating: recipe.rating === n ? undefined : n })
+              }
+            >
+              <SymbolView
+                name={(recipe.rating ?? 0) >= n ? 'star.fill' : 'star'}
+                tintColor={(recipe.rating ?? 0) >= n ? '#E0A100' : t.textSecondary}
+                size={26}
+              />
+            </Pressable>
+          ))}
+        </View>
+        {recipe.cookCount ? (
+          <Body secondary>
+            Laget {recipe.cookCount} {recipe.cookCount === 1 ? 'gang' : 'ganger'}
+            {recipe.lastCookedAt
+              ? `, sist ${new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'long' }).format(new Date(recipe.lastCookedAt))}`
+              : ''}
+          </Body>
+        ) : null}
 
         {fit && settings.stockSuggestions && fridge.items.length > 0 ? (
           <Card>
@@ -139,6 +201,17 @@ export default function RecipeDetail() {
             }
           />
         ) : null}
+        <Button
+          title="Legg alle ingredienser på handlelisten"
+          kind="secondary"
+          onPress={() => {
+            addRecipeToShopping(recipe.id, servings);
+            Alert.alert(
+              'Lagt til',
+              `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
+            );
+          }}
+        />
         <Button
           title="Planlegg middag"
           onPress={() =>
@@ -207,6 +280,28 @@ export default function RecipeDetail() {
             onPress={() => Linking.openURL(recipe.sourceUrl!)}
           />
         ) : null}
+        <Card>
+          <Heading>Mine notater</Heading>
+          <TextInput
+            accessibilityLabel="Notater"
+            defaultValue={recipe.notes ?? ''}
+            onEndEditing={(e) =>
+              updateRecipe(recipe.id, { notes: e.nativeEvent.text.trim() || undefined })
+            }
+            multiline
+            placeholder="F.eks. «litt mindre salt neste gang»"
+            placeholderTextColor={t.textSecondary}
+            style={[
+              styles.notes,
+              { color: t.text, backgroundColor: t.background, borderColor: t.border },
+            ]}
+          />
+        </Card>
+        <Button
+          title="Merk som laget i dag"
+          kind="secondary"
+          onPress={() => markCooked(recipe.id)}
+        />
         <Button title="Slett oppskrift" kind="destructive" onPress={confirmDelete} />
       </View>
     </ScrollView>
@@ -219,6 +314,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, fontWeight: '800', letterSpacing: -0.7 },
   servingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   servingsLabel: { fontSize: 16, fontWeight: '600' },
+  flex: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  stars: { flexDirection: 'row', gap: 6 },
+  notes: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   ingredient: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   dot: { width: 8, height: 8, borderRadius: 4 },

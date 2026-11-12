@@ -14,6 +14,7 @@ import {
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { pickImages } from '@/lib/pickImages';
+import { parseTags } from '@/lib/recipeFilter';
 import { getRecipe, updateRecipe } from '@/lib/store';
 
 export default function EditRecipe() {
@@ -26,6 +27,8 @@ export default function EditRecipe() {
     (recipe?.ingredients ?? []).map(rowFromLine),
   );
   const [steps, setSteps] = useState<StepRow[]>(() => stepsFromLines(recipe?.steps ?? []));
+  const [minutes, setMinutes] = useState(recipe?.minutes ? String(recipe.minutes) : '');
+  const [tags, setTags] = useState((recipe?.tags ?? []).join(', '));
   const [images, setImages] = useState<string[]>(recipe?.images ?? []);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +54,8 @@ export default function EditRecipe() {
       ingredients: ingredients.map(lineFromRow).filter(Boolean),
       steps: steps.map((x) => x.text.trim()).filter(Boolean),
       images,
+      minutes: parseInt(minutes, 10) > 0 ? parseInt(minutes, 10) : undefined,
+      tags: parseTags(tags),
     });
     router.back();
   }
@@ -82,6 +87,20 @@ export default function EditRecipe() {
           </View>
         </View>
         <Field label="Tittel" value={title} onChangeText={setTitle} />
+        <Field
+          label="Tid i minutter (valgfritt)"
+          value={minutes}
+          onChangeText={setMinutes}
+          keyboardType="number-pad"
+          placeholder="F.eks. 30"
+        />
+        <Field
+          label="Tagger, adskilt med komma (valgfritt)"
+          value={tags}
+          onChangeText={setTags}
+          autoCapitalize="none"
+          placeholder="F.eks. hverdag, barnevennlig"
+        />
         <Field
           label="Porsjoner"
           value={servings}

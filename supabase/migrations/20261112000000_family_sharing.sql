@@ -50,7 +50,7 @@ create table public.plan_entries (
 -- slik at to personer kan krysse av ulike varer samtidig uten å overskrive hverandre.
 create table public.state_items (
   household_id uuid not null references public.households (id) on delete cascade,
-  kind         text not null check (kind in ('checked', 'hidden', 'override', 'extra', 'fridge', 'storage', 'setting')),
+  kind         text not null check (kind in ('checked', 'hidden', 'override', 'extra', 'fridge', 'storage', 'recipeAdd', 'setting')),
   key          text not null,
   value        jsonb not null default '{}'::jsonb,
   deleted      boolean not null default false,

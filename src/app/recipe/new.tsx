@@ -17,6 +17,7 @@ import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { ImportError, importRecipeFromUrl } from '@/lib/importFromUrl';
 import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
 import { pickImages } from '@/lib/pickImages';
+import { parseTags } from '@/lib/recipeFilter';
 import { structureRecipeText } from '@/lib/structureText';
 import { addRecipe } from '@/lib/store';
 
@@ -28,6 +29,8 @@ export default function NewRecipeScreen() {
 
   const [title, setTitle] = useState('');
   const [servings, setServings] = useState('');
+  const [minutes, setMinutes] = useState('');
+  const [tags, setTags] = useState('');
   const [ingredients, setIngredients] = useState<IngredientRow[]>(() => [emptyIngredientRow()]);
   const [steps, setSteps] = useState<StepRow[]>(() => stepsFromLines(['']));
   const [images, setImages] = useState<string[]>([]);
@@ -120,6 +123,8 @@ export default function NewRecipeScreen() {
     const recipe = addRecipe({
       title: title.trim(),
       servings: servings.trim() || undefined,
+      minutes: parseInt(minutes, 10) > 0 ? parseInt(minutes, 10) : undefined,
+      tags: parseTags(tags),
       ingredients: ingredients.map(lineFromRow).filter(Boolean),
       steps: steps.map((x) => x.text.trim()).filter(Boolean),
       images,
@@ -207,6 +212,20 @@ export default function NewRecipeScreen() {
           onChangeText={setServings}
           keyboardType="number-pad"
           placeholder="F.eks. 4"
+        />
+        <Field
+          label="Tid i minutter (valgfritt)"
+          value={minutes}
+          onChangeText={setMinutes}
+          keyboardType="number-pad"
+          placeholder="F.eks. 30"
+        />
+        <Field
+          label="Tagger, adskilt med komma (valgfritt)"
+          value={tags}
+          onChangeText={setTags}
+          autoCapitalize="none"
+          placeholder="F.eks. hverdag, barnevennlig"
         />
         <Heading>Ingredienser</Heading>
         <IngredientEditor rows={ingredients} onChange={setIngredients} />

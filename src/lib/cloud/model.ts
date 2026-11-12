@@ -13,7 +13,7 @@ import type {
 } from '../types.ts';
 
 export type ItemKind =
-  'checked' | 'hidden' | 'override' | 'extra' | 'fridge' | 'storage' | 'setting';
+  'checked' | 'hidden' | 'override' | 'extra' | 'fridge' | 'storage' | 'recipeAdd' | 'setting';
 
 export type StateItem = { kind: ItemKind; key: string; value: Record<string, unknown> };
 export type StateRow = StateItem & { deleted: boolean };
@@ -33,6 +33,13 @@ export type RecipeData = {
   /** Filnavn på bildene. Selve filene ligger i fillagringen, ikke i raden. */
   images: string[];
   createdAt: number;
+  favorite?: boolean;
+  minutes?: number;
+  tags?: string[];
+  notes?: string;
+  rating?: number;
+  lastCookedAt?: number;
+  cookCount?: number;
 };
 
 const baseName = (uri: string) => uri.split('/').pop() ?? uri;
@@ -46,6 +53,13 @@ export function recipeToData(r: Recipe): RecipeData {
     steps: r.steps,
     images: r.images.map(baseName),
     createdAt: r.createdAt,
+    favorite: r.favorite,
+    minutes: r.minutes,
+    tags: r.tags,
+    notes: r.notes,
+    rating: r.rating,
+    lastCookedAt: r.lastCookedAt,
+    cookCount: r.cookCount,
   };
 }
 
@@ -59,6 +73,13 @@ export function dataToRecipe(id: string, d: RecipeData, imageDir: string): Recip
     steps: d.steps ?? [],
     images: (d.images ?? []).map((name) => `${imageDir}/${name}`),
     createdAt: d.createdAt ?? 0,
+    favorite: d.favorite,
+    minutes: d.minutes,
+    tags: d.tags,
+    notes: d.notes,
+    rating: d.rating,
+    lastCookedAt: d.lastCookedAt,
+    cookCount: d.cookCount,
   };
 }
 
@@ -94,6 +115,8 @@ export function stateToItems(shopping: ShoppingState, fridge: FridgeState): Map<
   for (const i of fridge.items) {
     put('fridge', i.id, { name: i.name, place: i.place ?? 'fridge', expires: i.expires ?? null });
   }
+  for (const r of shopping.fromRecipes)
+    put('recipeAdd', r.id, { recipeId: r.recipeId, servings: r.servings });
   for (const x of fridge.storages)
     put('storage', x.id, { name: x.name, freezer: Boolean(x.freezer) });
   put('setting', 'assumeStaples', { value: fridge.assumeStaples });
@@ -178,6 +201,20 @@ export function applyItem(
         ? fridge.storages.map((x) => (x.id === key ? next : x))
         : [...others, next];
       return { shopping, fridge: { ...fridge, storages } };
+    }
+    case 'recipeAdd': {
+      const others = shopping.fromRecipes.filter((x) => x.id !== key);
+      if (deleted) return { shopping: { ...shopping, fromRecipes: others }, fridge };
+      const next = {
+        id: key,
+        recipeId: String(value.recipeId ?? ''),
+        servings: Number(value.servings ?? 4),
+      };
+      const old = shopping.fromRecipes.find((x) => x.id === key);
+      const fromRecipes = old
+        ? shopping.fromRecipes.map((x) => (x.id === key ? next : x))
+        : [...others, next];
+      return { shopping: { ...shopping, fromRecipes }, fridge };
     }
     case 'setting': {
       if (key === 'assumeStaples' && !deleted) {

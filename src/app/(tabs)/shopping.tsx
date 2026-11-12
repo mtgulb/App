@@ -27,6 +27,7 @@ import {
   hideItem,
   removeCheckedExtras,
   removeExtra,
+  removeRecipeFromShopping,
   resetShopping,
   restoreItem,
   setOverride,
@@ -86,8 +87,15 @@ export default function ShoppingScreen() {
       const factor = (entry.servings ?? baseServings(recipe)) / baseServings(recipe);
       return recipe.ingredients.map((line) => ({ parsed: parseIngredient(line), factor }));
     });
-    return mergeIngredients(items);
-  }, [inRange, recipes]);
+    // Oppskrifter lagt direkte på handlelisten tas med uansett datoperiode.
+    const direct = shopping.fromRecipes.flatMap((add) => {
+      const recipe = recipes.find((r) => r.id === add.recipeId);
+      if (!recipe) return [];
+      const factor = add.servings / baseServings(recipe);
+      return recipe.ingredients.map((line) => ({ parsed: parseIngredient(line), factor }));
+    });
+    return mergeIngredients([...items, ...direct]);
+  }, [inRange, recipes, shopping.fromRecipes]);
 
   const [doneOpen, setDoneOpen] = useState(false);
   const [hiddenOpen, setHiddenOpen] = useState(false);
@@ -313,6 +321,25 @@ export default function ShoppingScreen() {
               );
             })}
 
+            {shopping.fromRecipes.map((add) => {
+              const r = recipes.find((x) => x.id === add.recipeId);
+              if (!r) return null;
+              return (
+                <View key={add.id} style={styles.addedRow}>
+                  <Text style={[styles.summaryItem, styles.flex, { color: t.textSecondary }]}>
+                    Lagt til: {r.title} ({add.servings} porsj.)
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
+                    onPress={() => removeRecipeFromShopping(add.id)}
+                  >
+                    <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>Fjern</Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+
             {todoMerged.length + todoExtras.length > 0 ? (
               <Text style={[styles.hint, { color: t.textSecondary }]}>
                 Sveip mot høyre for å fjerne · mot venstre for å redigere
@@ -461,6 +488,7 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12 },
   sortWrap: { marginHorizontal: -20, marginBottom: -4 },
   summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
+  addedRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   summaryItem: { fontSize: 13 },
   addRow: {
     flexDirection: 'row',

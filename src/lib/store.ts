@@ -37,9 +37,10 @@ function loadShopping(): ShoppingState {
       extras: v.extras ?? [],
       hidden: v.hidden ?? [],
       overrides: v.overrides ?? {},
+      fromRecipes: v.fromRecipes ?? [],
     };
   } catch {
-    return { checked: [], extras: [], hidden: [], overrides: {} };
+    return { checked: [], extras: [], hidden: [], overrides: {}, fromRecipes: [] };
   }
 }
 
@@ -120,6 +121,42 @@ export function addRecipe(r: Omit<Recipe, 'id' | 'createdAt'>): Recipe {
   return recipe;
 }
 
+export function toggleFavorite(id: string) {
+  commit({
+    ...state,
+    recipes: state.recipes.map((r) => (r.id === id ? { ...r, favorite: !r.favorite } : r)),
+  });
+}
+
+/** Logger at oppskriften er laget nå. */
+export function markCooked(id: string) {
+  commit({
+    ...state,
+    recipes: state.recipes.map((r) =>
+      r.id === id ? { ...r, lastCookedAt: Date.now(), cookCount: (r.cookCount ?? 0) + 1 } : r,
+    ),
+  });
+}
+
+/** Legger alle ingredientene i en oppskrift på handlelisten. Oppdaterer porsjonene hvis den allerede ligger der. */
+export function addRecipeToShopping(recipeId: string, servings: number) {
+  const existing = state.shopping.fromRecipes.find((x) => x.recipeId === recipeId);
+  const fromRecipes = existing
+    ? state.shopping.fromRecipes.map((x) => (x.recipeId === recipeId ? { ...x, servings } : x))
+    : [...state.shopping.fromRecipes, { id: newId(), recipeId, servings }];
+  commit({ ...state, shopping: { ...state.shopping, fromRecipes } });
+}
+
+export function removeRecipeFromShopping(id: string) {
+  commit({
+    ...state,
+    shopping: {
+      ...state.shopping,
+      fromRecipes: state.shopping.fromRecipes.filter((x) => x.id !== id),
+    },
+  });
+}
+
 export function updateRecipe(id: string, patch: Partial<Omit<Recipe, 'id' | 'createdAt'>>) {
   commit({ ...state, recipes: state.recipes.map((r) => (r.id === id ? { ...r, ...patch } : r)) });
 }
@@ -133,7 +170,11 @@ export function deleteRecipe(id: string) {
     ...state,
     recipes: state.recipes.filter((r) => r.id !== id),
     plan: state.plan.filter((p) => p.recipeId !== id),
-    shopping: { ...state.shopping, checked: pruneChecked(gone) },
+    shopping: {
+      ...state.shopping,
+      checked: pruneChecked(gone),
+      fromRecipes: state.shopping.fromRecipes.filter((x) => x.recipeId !== id),
+    },
   });
 }
 

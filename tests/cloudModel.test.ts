@@ -21,6 +21,13 @@ const recipe: Recipe = {
   steps: ['Stek.'],
   images: ['file:///a/b/recipe-images/img1.jpg'],
   createdAt: 5,
+  favorite: true,
+  minutes: 40,
+  tags: ['hverdag'],
+  notes: 'Mer ost',
+  rating: 4,
+  lastCookedAt: 99,
+  cookCount: 2,
 };
 
 // Oppskrift: bare filnavn lagres, ny telefon bygger sin egen sti
@@ -29,6 +36,7 @@ assert.deepEqual(data.images, ['img1.jpg']);
 const back = dataToRecipe('r1', data, 'file:///ny/mappe');
 assert.deepEqual(back.images, ['file:///ny/mappe/img1.jpg']);
 assert.equal(back.title, 'Lasagne');
+assert.deepEqual({ ...back, images: [] }, { ...recipe, images: [] }); // alle felt overlever rundturen
 
 // Plan: kalenderhendelsen er lokal og skal ikke overskrives av andres endringer
 const entry = {
@@ -49,6 +57,7 @@ const shopping: ShoppingState = {
   hidden: ['m|salt'],
   overrides: { 'm|melk': '2 l lettmelk' },
   extras: [{ id: 'e1', text: 'Kaffe', checked: true }],
+  fromRecipes: [{ id: 'a1', recipeId: 'r1', servings: 6 }],
 };
 const fridge: FridgeState = {
   items: [
@@ -62,7 +71,7 @@ const fridge: FridgeState = {
   assumeStaples: false,
 };
 const items = stateToItems(shopping, fridge);
-let s: ShoppingState = { checked: [], hidden: [], overrides: {}, extras: [] };
+let s: ShoppingState = { checked: [], hidden: [], overrides: {}, extras: [], fromRecipes: [] };
 let f: FridgeState = { items: [], storages: [], assumeStaples: true };
 for (const it of items.values())
   ({ shopping: s, fridge: f } = applyItem(s, f, { ...it, deleted: false }));
@@ -85,6 +94,8 @@ assert.deepEqual(s.checked, []);
 assert.deepEqual(s.extras, []);
 assert.deepEqual(f.items, []);
 assert.deepEqual(s.overrides, {});
+({ shopping: s, fridge: f } = applyItem(s, f, del('recipeAdd', 'a1')));
+assert.deepEqual(s.fromRecipes, []);
 // Lager: sletting tar med varene, men det siste lageret kan aldri slettes
 ({ shopping: s, fridge: f } = applyItem(s, f, del('storage', 'freezer')));
 assert.deepEqual(
