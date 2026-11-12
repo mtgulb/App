@@ -1,6 +1,6 @@
 # Personvernerklæring (UTKAST – må godkjennes av eier og få kontaktinfo før bruk)
 
-Sist oppdatert: [DATO]. Ansvarlig: [NAVN], app@tande-gulbrandsen.no.
+Sist oppdatert: [DATO]. Ansvarlig: [NAVN], panful@tande-gulbrandsen.no.
 
 ## Kort fortalt
 
@@ -32,7 +32,7 @@ Hvis du oppretter en konto, lagrer vi e-postadressen din, en bruker-ID, navnet d
 
 - Data på telefonen slettes når du sletter appen eller enkeltoppskrifter.
 - **Konto:** Innstillinger → Familie og deling → «Slett kontoen min». Da slettes innloggingen og medlemskapet, og «endret av»-opplysninger fjernes. Er du alene i husholdningen, slettes alle delte data. Er andre med, beholder de de delte oppskriftene. Slettingen skjer umiddelbart. [bekreft med ekte server]
-- Du kan også be om sletting ved å kontakte app@tande-gulbrandsen.no.
+- Du kan også be om sletting ved å kontakte panful@tande-gulbrandsen.no.
 
 ## Oppbevaring
 
@@ -40,7 +40,7 @@ Delte data oppbevares så lenge husholdningen finnes. Etter kontosletting finnes
 
 ## Dine rettigheter
 
-Du kan be om innsyn, retting og sletting. Kontakt app@tande-gulbrandsen.no. Du kan klage til Datatilsynet.
+Du kan be om innsyn, retting og sletting. Kontakt panful@tande-gulbrandsen.no. Du kan klage til Datatilsynet.
 
 ## Barn
 

@@ -31,7 +31,7 @@ export default function About() {
       </Card>
       <Card>
         <Heading>{t('about.contact')}</Heading>
-        <LinkText title="app@tande-gulbrandsen.no" url="mailto:app@tande-gulbrandsen.no" />
+        <LinkText title="panful@tande-gulbrandsen.no" url="mailto:panful@tande-gulbrandsen.no" />
       </Card>
       <Card>
         <Heading>{t('about.sources')}</Heading>

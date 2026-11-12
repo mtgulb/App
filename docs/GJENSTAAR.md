@@ -24,7 +24,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 ## C. Kontaktinfo og rettslig
 
-- [ ] 🔴 **[Eier]** Kontakt-e-post (foreløpig `app@tande-gulbrandsen.no`) og **support-URL** (påkrevd i metadata; mangler fortsatt).
+- [ ] 🔴 **[Eier]** Kontakt-e-post (foreløpig `panful@tande-gulbrandsen.no`) og **support-URL** (påkrevd i metadata; mangler fortsatt).
 - [ ] 🔴 **[Begge]** **Personvernerklæring på en offentlig URL.** Utkast finnes i `docs/PERSONVERN.md`. Du gir kontaktinfo og godkjenner; jeg setter den opp som en enkel nettside (f.eks. GitHub Pages, krever at repoet er offentlig eller betalt plan) og legger **lenke i appen**.
 - [x] 🟠 **[Claude]** «Om appen»-skjerm med kilder og lisenser (Open Food Facts krever kreditering), versjon og personvernlenke.
 - [ ] 🟠 **[Eier]** Vurdere enkle brukervilkår (valgfritt).
@@ -89,3 +89,5 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 ## Hva jeg kan starte på med en gang (ingen konto nødvendig)
 
 Backup/eksport og angre, førstegangsveiledning, «Om appen» med kilder, tilgjengelighetsgjennomgang, strekkodeforbedringer, ytelsestest, feilhåndteringsgjennomgang, og utkast til alle App Store-tekster.
+
+- [ ] 🔴 **[Eier]** Navn **Panful** valgt. Sjekk: Patentstyret + EUIPO (klasse 9/42), hva som ligger på panful.com, reserver navnet i App Store Connect, opprett `panful@tande-gulbrandsen.no`, velg bundle ID (forslag `no.tande-gulbrandsen.panful`).
