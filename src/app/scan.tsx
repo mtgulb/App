@@ -149,6 +149,7 @@ export default function ScanScreen() {
             {scanned.productText ? (
               <Text style={{ color: t.textSecondary, fontSize: 13 }} numberOfLines={2}>
                 Produkt: {scanned.productText}
+                {scanned.source === 'found' ? '\nKilde: Open Food Facts (ODbL)' : ''}
               </Text>
             ) : (
               <Text style={{ color: t.textSecondary, fontSize: 13 }}>

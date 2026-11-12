@@ -30,6 +30,7 @@ export default function RootLayout() {
           name="recipe/new"
           options={{ title: 'Ny oppskrift', presentation: 'modal' }}
         />
+        <Stack.Screen name="about" options={{ title: 'Om appen' }} />
         <Stack.Screen name="recipe/[id]" options={{ title: 'Oppskrift' }} />
         <Stack.Screen
           name="recipe/edit"

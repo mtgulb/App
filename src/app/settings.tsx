@@ -286,6 +286,18 @@ export default function SettingsScreen() {
         />
       </Card>
 
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/about')}
+        style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
+      >
+        <View style={styles.flex}>
+          <Text style={[styles.rowTitle, { color: t.text }]}>Om appen</Text>
+          <Text style={{ color: t.textSecondary }}>Versjon, kilder og lisenser</Text>
+        </View>
+        <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
+      </Pressable>
+
       {isCloudConfigured ? (
         <Pressable
           accessibilityRole="button"

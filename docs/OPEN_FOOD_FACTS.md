@@ -1,0 +1,14 @@
+# Open Food Facts – lisens og vilkår
+
+Sjekket mot vilkårene på openfoodfacts.org/data (lest 2026-11-12).
+
+| Krav | Status |
+|---|---|
+| Bruk er gratis, ingen nøkkel | OK |
+| Oppføring av kilde (ODbL) i appens grensesnitt, med lenker | Gjort: «Om appen» (Innstillinger) og «Kilde: Open Food Facts (ODbL)» på skanneskjermen. Ikke prøvd på telefon. |
+| 1 API-kall = 1 ekte skanning, ingen skraping | OK: oppslag bare etter en skanning, skanneren låses til neste. Lært vare slås opp lokalt uten kall. |
+| API-dokumentasjon fulgt, tydelig User-Agent | `FamilieOppskrifter/1.0 (iOS)`. Anbefalt å legge til kontakt-e-post når eier har valgt en offentlig adresse. |
+| Share-Alike | Gjelder ved offentlig bruk/utlevering av en tilpasset database. Appen lagrer kun brukerens egne navnevalg lokalt (ikke OFF-data i bulk, ikke delt, ikke synket). Ingen plikt utløst; må vurderes på nytt hvis lært-lista deles i familiedeling. |
+| Produktbilder (CC-BY-SA) | Appen viser/lagrer ingen produktbilder. |
+| Bidra tilbake (anbefalt) | Ikke gjort: send manglende varer til OFF fra appen kan vurderes senere. |
+| Fortelle OFF om bruken (frivillig) | Eieren kan melde via reuse@openfoodfacts.org. |

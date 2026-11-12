@@ -26,7 +26,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 - [ ] 🔴 **[Eier]** Kontakt-e-post og **support-URL** (påkrevd i metadata).
 - [ ] 🔴 **[Begge]** **Personvernerklæring på en offentlig URL.** Utkast finnes i `docs/PERSONVERN.md`. Du gir kontaktinfo og godkjenner; jeg setter den opp som en enkel nettside (f.eks. GitHub Pages, krever at repoet er offentlig eller betalt plan) og legger **lenke i appen**.
-- [ ] 🟠 **[Claude]** «Om appen»-skjerm med kilder og lisenser (Open Food Facts krever kreditering), versjon og personvernlenke.
+- [x] 🟠 **[Claude]** «Om appen»-skjerm med kilder og lisenser (Open Food Facts krever kreditering), versjon og personvernlenke.
 - [ ] 🟠 **[Eier]** Vurdere enkle brukervilkår (valgfritt).
 - [ ] 🔴 **[Eier]** Besvare Content Rights (appen viser importerte oppskrifter med kilde og lenke).
 
