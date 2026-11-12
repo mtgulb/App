@@ -45,7 +45,7 @@ export function rememberBarcode(code: string, product: BarcodeProduct & { produc
   Storage.setItemSync(LEARNED_KEY, JSON.stringify(learned));
 }
 
-const USER_AGENT = 'FamilieOppskrifter/1.0 (iOS)';
+const USER_AGENT = 'FamilieOppskrifter/1.0 (iOS; app@tande-gulbrandsen.no)';
 
 export async function lookupBarcode(rawCode: string): Promise<LookupResult> {
   const code = normalizeGtin(rawCode);

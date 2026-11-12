@@ -24,7 +24,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 ## C. Kontaktinfo og rettslig
 
-- [ ] 🔴 **[Eier]** Kontakt-e-post og **support-URL** (påkrevd i metadata).
+- [ ] 🔴 **[Eier]** Kontakt-e-post (foreløpig `app@tande-gulbrandsen.no`) og **support-URL** (påkrevd i metadata; mangler fortsatt).
 - [ ] 🔴 **[Begge]** **Personvernerklæring på en offentlig URL.** Utkast finnes i `docs/PERSONVERN.md`. Du gir kontaktinfo og godkjenner; jeg setter den opp som en enkel nettside (f.eks. GitHub Pages, krever at repoet er offentlig eller betalt plan) og legger **lenke i appen**.
 - [x] 🟠 **[Claude]** «Om appen»-skjerm med kilder og lisenser (Open Food Facts krever kreditering), versjon og personvernlenke.
 - [ ] 🟠 **[Eier]** Vurdere enkle brukervilkår (valgfritt).

@@ -29,6 +29,10 @@ export default function About() {
         <Body secondary>Versjon {version}</Body>
       </Card>
       <Card>
+        <Heading>Kontakt</Heading>
+        <LinkText title="app@tande-gulbrandsen.no" url="mailto:app@tande-gulbrandsen.no" />
+      </Card>
+      <Card>
         <Heading>Kilder og lisenser</Heading>
         <Body>
           Strekkodeoppslag bruker data fra Open Food Facts, tilgjengelig under Open Database License
