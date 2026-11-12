@@ -205,10 +205,6 @@ export default function SettingsScreen() {
           value={settings.timerAlerts}
           onChange={(timerAlerts) => updateSettings({ timerAlerts })}
         />
-        <Body secondary>
-          Varsler om endringer fra familien (for eksempel at noen har lagt til noe på handlelisten)
-          kommer senere. De krever varsler fra en server, og er ikke bygget ennå.
-        </Body>
       </Card>
 
       <Card>
@@ -245,19 +241,19 @@ export default function SettingsScreen() {
         />
       </Card>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/family')}
-        style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
-      >
-        <View style={styles.flex}>
-          <Text style={[styles.rowTitle, { color: t.text }]}>Familie og deling</Text>
-          <Text style={{ color: t.textSecondary }}>
-            {isCloudConfigured ? 'Logg inn og del med familien' : 'Ikke satt opp ennå'}
-          </Text>
-        </View>
-        <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
-      </Pressable>
+      {isCloudConfigured ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/family')}
+          style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
+        >
+          <View style={styles.flex}>
+            <Text style={[styles.rowTitle, { color: t.text }]}>Familie og deling</Text>
+            <Text style={{ color: t.textSecondary }}>Logg inn og del med familien</Text>
+          </View>
+          <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
+        </Pressable>
+      ) : null}
     </Screen>
   );
 }

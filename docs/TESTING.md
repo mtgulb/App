@@ -11,6 +11,11 @@ Ingen PC, terminal eller server. GitHub bygger og publiserer appen til Expo, og 
 
 (Aldri send tokenet i chat – bare lim det inn i GitHub-secret.)
 
+## Kanaler
+
+- `preview`: publiseres automatisk ved hver endring (etter at CI er grønn). Brukes i Expo Go nå, og av TestFlight-bygg på preview-kanalen senere.
+- `production`: aldri automatisk. Krever manuell start fra `main`, skrevet **PUBLISER** og godkjenning i GitHub-miljøet `production`.
+
 ## Hver gang du vil teste
 
 Appen publiseres automatisk ved hver endring (GitHub → Actions → «Publiser til Expo Go»).
@@ -21,7 +26,11 @@ Appen publiseres automatisk ved hver endring (GitHub → Actions → «Publiser 
 - Expo Go viser alt unntatt **automatisk tekstlesing fra bilde** (krever eget bygg, se under).
 - Ikke verifisert ennå: at Expo Go i App Store åpner SDK 58-prosjektet, og at publiseringsflyten går gjennom (skymiljøet når ikke Expo).
 
-## Senere: TestFlight (ekte app, inkl. tekstlesing)
+## Praktisk testmetode uten Mac: TestFlight (anbefalt så snart Apple-kontoen finnes)
+
+De fleste funksjoner (tekstgjenkjenning fra bilde, deling fra Safari, widgets) virker bare i et ekte bygg. Se `docs/LANSERING.md`.
+
+## Detaljer om TestFlight (ekte app, inkl. tekstlesing)
 
 Krever Apple Developer Program (ca. 1 000 kr/år) og endelig bundle ID. Bygg startes fra GitHub → Actions → «EAS Build (manuell)».
 Første gangs Apple-sertifikater krever vanligvis interaktiv innlogging; mulig vei uten PC er en App Store Connect API-nøkkel som secret (undersøkes når kontoen finnes).

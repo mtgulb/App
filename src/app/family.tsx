@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import {
   createHousehold,
+  deleteAccount,
   joinHousehold,
   leaveHousehold,
   regenerateInviteCode,
@@ -16,6 +17,24 @@ import { useTheme } from '@/theme/colors';
 
 const timeFmt = new Intl.DateTimeFormat('nb-NO', { hour: '2-digit', minute: '2-digit' });
 const groupCode = (c: string) => (c.length === 10 ? `${c.slice(0, 5)}-${c.slice(5)}` : c);
+
+function confirmDeleteAccount() {
+  Alert.alert(
+    'Slette kontoen?',
+    'Kontoen og dine data på serveren slettes for godt. Er du alene i husholdningen, slettes alt som er delt. Er andre med, beholder de de delte oppskriftene. Din egen kopi på telefonen beholdes. Dette kan ikke angres.',
+    [
+      { text: 'Avbryt', style: 'cancel' },
+      {
+        text: 'Slett kontoen',
+        style: 'destructive',
+        onPress: async () => {
+          if (await deleteAccount())
+            Alert.alert('Kontoen er slettet', 'Kontoen og dataene dine på serveren er fjernet.');
+        },
+      },
+    ],
+  );
+}
 
 export default function FamilyScreen() {
   const cloud = useCloud();
@@ -145,7 +164,8 @@ export default function FamilyScreen() {
           />
         </Card>
         <ErrorText>{cloud.error}</ErrorText>
-        <Button title="Logg ut" kind="destructive" onPress={() => run(signOut)} />
+        <Button title="Logg ut" kind="secondary" onPress={() => run(signOut)} />
+        <Button title="Slett kontoen min" kind="destructive" onPress={confirmDeleteAccount} />
       </Screen>
     );
   }
@@ -233,6 +253,7 @@ export default function FamilyScreen() {
         }
       />
       <Button title="Logg ut" kind="secondary" onPress={() => run(signOut)} />
+      <Button title="Slett kontoen min" kind="destructive" onPress={confirmDeleteAccount} />
     </Screen>
   );
 }

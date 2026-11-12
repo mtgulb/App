@@ -20,6 +20,8 @@ import {
   applyItem,
   dataToPlan,
   dataToRecipe,
+  isPlanData,
+  isRecipeData,
   diffMaps,
   planToData,
   recipeToData,
@@ -88,7 +90,7 @@ export function friendlyError(e: unknown): string {
   if (/valid email|invalid email|Unable to validate email/i.test(m))
     return 'Ugyldig e-postadresse.';
   if (/Email not confirmed/i.test(m))
-    return 'E-posten er ikke bekreftet. Slå av «Confirm email» i Supabase, eller bekreft via e-posten.';
+    return 'E-posten er ikke bekreftet ennå. Sjekk innboksen din.';
   if (/already_member/.test(m)) return 'Du er allerede med i en husholdning.';
   if (/too_many_attempts/.test(m)) return 'For mange forsøk. Prøv igjen om en time.';
   if (/not_owner/.test(m)) return 'Bare eieren kan gjøre dette.';
@@ -271,6 +273,7 @@ function applyRows(c: Ctx, table: Table, rows: DbRow[]) {
       if (table === 'recipes') {
         const id = String(row.id);
         const data = row.data as RecipeData;
+        if (!deleted && !isRecipeData(data)) continue; // ødelagt rad: hopp over, ikke krasj
         if (deleted) {
           c.synced.recipes.delete(id);
           next = { ...next, recipes: next.recipes.filter((r) => r.id !== id) };
@@ -290,6 +293,7 @@ function applyRows(c: Ctx, table: Table, rows: DbRow[]) {
       } else if (table === 'plan_entries') {
         const id = String(row.id);
         const data = row.data as PlanData;
+        if (!deleted && !isPlanData(data)) continue;
         if (deleted) {
           c.synced.plan.delete(id);
           next = { ...next, plan: next.plan.filter((e) => e.id !== id) };
@@ -511,9 +515,7 @@ export const signUp = (email: string, password: string) =>
     if (error) throw error;
     // Uten bekreftelse får vi økt med en gang. Ellers må e-posten bekreftes først.
     if (!data.session) {
-      throw new Error(
-        'Konto opprettet, men e-posten må bekreftes først. Slå av «Confirm email» i Supabase for enklere innlogging.',
-      );
+      throw new Error('Konto opprettet. Bekreft e-posten din, og logg inn etterpå.');
     }
   });
 
@@ -522,6 +524,19 @@ export const signIn = (email: string, password: string) =>
     const { error } = await getClient().auth.signInWithPassword({ email: email.trim(), password });
     if (error) throw error;
   });
+
+/** Sletter kontoen og alle personlige data på serveren. Din egen kopi på telefonen beholdes. */
+export async function deleteAccount(): Promise<boolean> {
+  let ok = false;
+  await run(async () => {
+    const { error } = await getClient().rpc('delete_my_account');
+    if (error) throw error;
+    stopSync();
+    await getClient().auth.signOut();
+    ok = true;
+  });
+  return ok;
+}
 
 export const signOut = () =>
   run(async () => {

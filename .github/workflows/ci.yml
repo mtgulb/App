@@ -1,8 +1,11 @@
 name: CI
+# Kontroller som alltid må bestå før noe bygges eller publiseres:
+# typesjekk, lint, formattering og alle tester (inkl. tilgangsregler i databasen).
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_call:
 jobs:
   check:
     runs-on: ubuntu-latest

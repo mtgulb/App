@@ -3,6 +3,9 @@ import { normalizeUrl } from './urls';
 import { cleanImageCandidates, extractMetaImages, parseRecipeFromPage } from './recipeParser';
 import type { Recipe } from './types';
 
+/** Ingen oppskriftsside er større enn dette; unngår at en enorm side fryser appen. */
+const MAX_HTML_CHARS = 3_000_000;
+
 export class ImportError extends Error {}
 
 export type ImportResult = {
@@ -24,7 +27,7 @@ export async function importRecipeFromUrl(rawUrl: string): Promise<ImportResult>
   try {
     const res = await fetch(url, { headers: { Accept: 'text/html' } });
     if (!res.ok) throw new ImportError(`Siden svarte med feil (${res.status}).`);
-    html = await res.text();
+    html = (await res.text()).slice(0, MAX_HTML_CHARS);
   } catch (e) {
     if (e instanceof ImportError) throw e;
     throw new ImportError('Kunne ikke hente siden. Sjekk nettverket og lenken.');

@@ -221,5 +221,58 @@ await db.exec('reset role');
 assert.equal((await q('select * from households')).length, 0, 'siste medlem sletter husholdningen');
 assert.equal((await q('select * from recipes')).length, 0, 'og alle dataene');
 
+// --- Sletting av konto ---------------------------------------------------
+// Frisk start: ny husholdning med to medlemmer.
+await db.exec('reset role');
+await as(A);
+const [{ create_household: h2 }] = await q(
+  `select create_household('Slettetest', 'A') as create_household`,
+);
+const [{ invite_code: code2 }] = await q('select invite_code from households');
+await as(B);
+await q(`select join_household($1, 'B')`, [code2]);
+await as(A);
+await q(`insert into recipes (household_id, id, data) values ($1, 'del1', '{}')`, [h2]);
+await as(null);
+await fails(
+  () => q('select delete_my_account()'),
+  /permission denied/,
+  'ikke-innlogget kan ikke slette',
+);
+await as(A);
+await q('select delete_my_account()');
+await db.exec('reset role');
+assert.equal(
+  (await q(`select * from auth.users where id = $1`, [A])).length,
+  0,
+  'innloggingen er slettet',
+);
+assert.equal(
+  (await q(`select * from household_members where user_id = $1`, [A])).length,
+  0,
+  'medlemskapet er borte',
+);
+assert.equal(
+  (await q(`select updated_by from recipes where id = 'del1'`))[0].updated_by,
+  null,
+  'ingen spor av hvem som skrev',
+);
+assert.equal(
+  (await q(`select role from household_members where user_id = $1`, [B]))[0].role,
+  'owner',
+  'B overtar som eier',
+);
+assert.equal(
+  (await q(`select count(*)::int as n from recipes`))[0].n,
+  1,
+  'delte data består for de andre',
+);
+await as(B);
+await q('select delete_my_account()');
+await db.exec('reset role');
+assert.equal((await q('select * from households')).length, 0, 'siste medlem sletter husholdningen');
+assert.equal((await q('select * from recipes')).length, 0, 'og dataene');
+assert.equal((await q(`select * from auth.users where id = $1`, [B])).length, 0);
+
 console.log('rls OK');
 await db.close();

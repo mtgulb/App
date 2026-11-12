@@ -65,6 +65,10 @@ language plpgsql
 set search_path = public
 as $$
 begin
+  -- Kontosletting setter dette for å kunne fjerne «endret av» uten at triggeren skriver det tilbake.
+  if current_setting('app.skip_touch', true) = 'on' then
+    return new;
+  end if;
   new.updated_at := now();
   new.updated_by := auth.uid();
   return new;
@@ -291,13 +295,36 @@ begin
 end;
 $$;
 
+-- Sletter brukerens konto og alle personlige data. Kreves av App Store (retningslinje 5.1.1(v)).
+-- Forlater først husholdningen (siste medlem sletter den, ellers overtar eldste medlem som eier),
+-- fjerner hvem-som-endret-markeringer, og sletter så selve innloggingen.
+create function public.delete_my_account() returns void
+language plpgsql security definer
+set search_path = public, auth, pg_temp
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'not_authenticated'; end if;
+  perform public.leave_household();
+  perform set_config('app.skip_touch', 'on', true);  -- gjelder kun denne transaksjonen
+  update public.recipes set updated_by = null where updated_by = uid;
+  update public.plan_entries set updated_by = null where updated_by = uid;
+  update public.state_items set updated_by = null where updated_by = uid;
+  delete from public.join_attempts where user_id = uid;
+  delete from auth.users where id = uid;
+end;
+$$;
+
 revoke execute on function public.create_household(text, text),
                           public.join_household(text, text),
                           public.leave_household(),
+                          public.delete_my_account(),
                           public.regenerate_invite_code(uuid) from public, anon;
 grant execute on function public.create_household(text, text),
                           public.join_household(text, text),
                           public.leave_household(),
+                          public.delete_my_account(),
                           public.regenerate_invite_code(uuid) to authenticated;
 grant execute on function public.is_household_member(uuid),
                           public.is_household_owner(uuid),

@@ -30,7 +30,7 @@ async function targetCalendarId(): Promise<string> {
   const perm = await Calendar.requestCalendarPermissionsAsync();
   if (perm.status !== 'granted') {
     throw new CalendarError(
-      'Appen har ikke tilgang til kalenderen. Åpne Innstillinger, velg appen (i Expo Go: «Expo Go») og slå på tilgang til Kalendere.',
+      'Appen har ikke tilgang til kalenderen. Åpne Innstillinger, velg appen og slå på tilgang til Kalendere.',
       true,
     );
   }

@@ -42,3 +42,11 @@ Databaseskjemaet og tilgangsreglene er testet (`npm test`, filen `tests/rls.test
 - Gratisplanen på Supabase pauses ved lang inaktivitet.
 - Ingen innlogging med Apple/Google ennå (krever eget bygg).
 - Passord kan ikke tilbakestilles fra appen ennå.
+
+## Separate miljøer (test og produksjon)
+
+Opprett **to** Supabase-prosjekter: et for testing og et for produksjon. I GitHub: Settings → Environments → opprett `preview` og `production`, og legg `SUPABASE_URL` og `SUPABASE_ANON_KEY` som **variabler i hvert miljø** med verdiene for riktig prosjekt. Secrets for databasen (`SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`) bør også ligge per miljø. Legg «Required reviewers» på `production`, slik at ingenting går til produksjon uten din godkjenning.
+
+## Kontosletting (påkrevd av Apple)
+
+Knappen «Slett kontoen min» ligger under Innstillinger → Familie og deling. Den kaller `delete_my_account()` (testet i `tests/rls.test.ts`). **Prøv den mot ekte server før innsending.**

@@ -1,6 +1,7 @@
-name: EAS Build (manuell)
-# Start fra iPhone: GitHub-appen/nettleser -> Actions -> "EAS Build (manuell)" -> Run workflow.
-# Krever repo-secret EXPO_TOKEN og en Expo-konto med Apple Developer-tilkobling.
+name: EAS Build og TestFlight (manuell)
+# Krever Apple Developer-konto og EXPO_TOKEN. Start: GitHub → Actions → denne flyten → Run workflow.
+# preview/development: intern distribusjon. production: kun fra main, med skrevet bekreftelse og godkjenning.
+# Innsending til TestFlight/App Store skjer aldri uten at du har skrevet PUBLISER og godkjent miljøet «production».
 on:
   workflow_dispatch:
     inputs:
@@ -13,10 +14,36 @@ on:
         description: Send til TestFlight etter bygg (kun production)
         type: boolean
         default: false
+      confirm:
+        description: Skriv PUBLISER for production-bygg
+        type: string
+        default: ''
 jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
   build:
+    needs: check
     runs-on: ubuntu-latest
+    environment: ${{ inputs.profile == 'production' && 'production' || 'preview' }}
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
     steps:
+      - name: Vern mot utilsiktet produksjonsbygg
+        if: ${{ inputs.profile == 'production' }}
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$CONFIRM" != "PUBLISER" ]; then
+            echo "::error::Production krever at du skriver PUBLISER i bekreftelsesfeltet."
+            exit 1
+          fi
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Production kan bare bygges fra main."
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }

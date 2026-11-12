@@ -1,25 +1,55 @@
-name: Publiser til Expo Go
-# Publiserer appen til Expo (EAS Update) så den kan åpnes i Expo Go på iPhone – uten server/PC.
-# Krever repo-secret EXPO_TOKEN. Start manuelt fra GitHub, eller automatisk ved push.
+name: Publiser oppdatering (EAS Update)
+# preview: automatisk ved push (for testing i Expo Go / TestFlight-bygg på preview-kanalen).
+# production: KUN manuelt, fra main, med skrevet bekreftelse og godkjenning i GitHub-miljøet «production».
+# En oppdatering når bare bygg med samme native fingeravtrykk. Nye native pakker/innstillinger krever nytt bygg.
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        description: Kanal
+        type: choice
+        options: [preview, production]
+        default: preview
+      confirm:
+        description: Skriv PUBLISER for å publisere til production
+        type: string
+        default: ''
   push:
     branches: [main, 'claude/**']
 concurrency:
-  group: eas-update-${{ github.ref }}
+  group: eas-update-${{ github.ref }}-${{ inputs.channel || 'preview' }}
   cancel-in-progress: true
 jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
   publish:
+    needs: check
     runs-on: ubuntu-latest
+    # Miljøet bestemmer hvilke variabler (SUPABASE_URL …) og hvilke godkjenninger som gjelder.
+    environment: ${{ inputs.channel == 'production' && 'production' || 'preview' }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      CHANNEL: ${{ inputs.channel || 'preview' }}
     steps:
+      - name: Vern mot utilsiktet produksjonspublisering
+        if: ${{ inputs.channel == 'production' }}
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "$CONFIRM" != "PUBLISER" ]; then
+            echo "::error::Production krever at du skriver PUBLISER i bekreftelsesfeltet."
+            exit 1
+          fi
+          if [ "$REF" != "refs/heads/main" ]; then
+            echo "::error::Production kan bare publiseres fra main."
+            exit 1
+          fi
       - name: Sjekk at EXPO_TOKEN finnes
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
             echo "## Mangler EXPO_TOKEN" >> "$GITHUB_STEP_SUMMARY"
-            echo "Legg til secret EXPO_TOKEN (se docs/TESTING.md), og kjør workflowen på nytt." >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::EXPO_TOKEN mangler"
+            echo "::error::EXPO_TOKEN mangler (se docs/TESTING.md)"
             exit 1
           fi
       - uses: actions/checkout@v4
@@ -38,25 +68,23 @@ jobs:
           echo "PROJECT_ID=$PID" >> "$GITHUB_ENV"
       - name: Publiser
         env:
-          # Offentlige verdier (GitHub-variabler, ikke secrets). Tomme = familiedeling er av.
+          # Offentlige verdier (GitHub-variabler per miljø, ikke secrets). Tomme = familiedeling er av.
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: |
-          eas update --branch preview --platform ios --message "${GITHUB_SHA::7}" --non-interactive --json > update.json
+          eas update --branch "$CHANNEL" --platform ios --message "${GITHUB_SHA::7}" --non-interactive --json > update.json
           cat update.json
       - name: Lag lenke til Expo Go
         run: |
           GROUP=$(node -e "const u=JSON.parse(require('fs').readFileSync('update.json','utf8'));console.log((Array.isArray(u)?u[0]:u).group)")
           {
-            echo "## Appen er publisert"
+            echo "## Oppdatering publisert til «$CHANNEL»"
             echo
-            echo "1. Installer **Expo Go** fra App Store (hvis du ikke har den)."
-            echo "2. Åpne Safari, lim inn denne adressen og trykk Gå → **Åpne i Expo Go**:"
+            echo "Åpne i Expo Go (Safari → lim inn → Åpne i Expo Go):"
             echo
             echo '```'
             echo "exp://u.expo.dev/${PROJECT_ID}/group/${GROUP}"
             echo '```'
             echo
-            echo "Reservevei: åpne Expo Go → fanen **Projects** hvis den dukker opp der."
-            echo "Merk: automatisk tekstlesing fra bilde virker ikke i Expo Go."
+            echo "Installerte TestFlight-bygg på kanalen «$CHANNEL» henter oppdateringen automatisk ved neste oppstart (hvis native fingeravtrykk er likt)."
           } >> "$GITHUB_STEP_SUMMARY"

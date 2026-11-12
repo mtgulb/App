@@ -244,3 +244,30 @@ export function diffMaps<T>(synced: Map<string, T>, next: Map<string, T>): Diff<
 
 export const toMap = <T extends { id: string }, D>(list: T[], f: (x: T) => D) =>
   new Map<string, D>(list.map((x) => [x.id, f(x)]));
+
+// ---------------------------------------------------------------------------
+// Validering av data fra serveren (kan være ødelagt eller fra en annen versjon)
+// ---------------------------------------------------------------------------
+
+const isObj = (d: unknown): d is Record<string, unknown> => typeof d === 'object' && d !== null;
+const isStrArr = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+
+export function isRecipeData(d: unknown): d is RecipeData {
+  return (
+    isObj(d) &&
+    typeof d.title === 'string' &&
+    d.title.length > 0 &&
+    isStrArr(d.ingredients) &&
+    isStrArr(d.steps) &&
+    (d.images === undefined || isStrArr(d.images))
+  );
+}
+
+export function isPlanData(d: unknown): d is PlanData {
+  return (
+    isObj(d) &&
+    typeof d.recipeId === 'string' &&
+    typeof d.date === 'string' &&
+    !Number.isNaN(Date.parse(d.date))
+  );
+}

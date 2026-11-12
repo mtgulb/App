@@ -136,4 +136,15 @@ assert.deepEqual(diffMaps(synced, next), {
 const rm = toMap([recipe], recipeToData);
 assert.deepEqual(diffMaps(rm, rm), { upserts: [], removed: [] });
 
+// Validering av serverdata
+import { isPlanData, isRecipeData } from '../src/lib/cloud/model.ts';
+assert.ok(isRecipeData(recipeToData(recipe)));
+assert.ok(!isRecipeData(null));
+assert.ok(!isRecipeData({}));
+assert.ok(!isRecipeData({ title: '', ingredients: [], steps: [] })); // tom tittel
+assert.ok(!isRecipeData({ title: 'x', ingredients: 'melk', steps: [] })); // feil type
+assert.ok(!isRecipeData({ title: 'x', ingredients: [1], steps: [] }));
+assert.ok(isPlanData({ recipeId: 'r', date: '2026-11-12T17:00:00.000Z' }));
+assert.ok(!isPlanData({ recipeId: 'r', date: 'ikke en dato' }));
+assert.ok(!isPlanData({ date: '2026-11-12T17:00:00.000Z' }));
 console.log('cloud model OK');
