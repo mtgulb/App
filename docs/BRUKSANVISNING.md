@@ -44,3 +44,35 @@ Opprett `panful@tande-gulbrandsen.no` hos den som driver domenet `tande-gulbrand
 - Første versjon **uten** innlogging og familiedeling (anbefalt)?
 - Prismodell: gratis, engangskjøp eller abonnement?
 - Skal vi legge sidene på eget domene senere? (ikke nødvendig nå)
+
+## 6. Apple-nøkkel og første TestFlight-bygg (gjør dette etter at Apple-kontoen er godkjent)
+
+Alt gjøres i Safari på iPhone. Be om «desktop-versjon av nettstedet» (trykk på «aA» i adressefeltet) hvis en side ser trang ut.
+
+**A. Finn Team ID og kontotype**
+
+1. Gå til developer.apple.com → logg inn → **Account** → **Membership details**.
+2. Skriv ned **Team ID** (10 tegn) og om kontoen er **Individual** eller **Organization**.
+
+**B. Lag en API-nøkkel**
+
+1. Gå til appstoreconnect.apple.com → **Users and Access** → **Integrations** → **App Store Connect API** → **Team Keys**.
+2. Trykk **+** (eller «Generate API Key»). Navn: `GitHub Panful`. Tilgang: **Admin** (_ikke verifisert at «App Manager» holder_).
+3. **Last ned nøkkelfilen (.p8) med en gang.** Den kan bare lastes ned én gang. Lagre den i Filer-appen.
+4. Skriv ned **Key ID** og **Issuer ID** (står øverst på siden).
+
+**C. Legg dem inn i GitHub (som hemmeligheter, aldri i chat)**
+
+1. github.com/mtgulb/App → **Settings** → **Environments** → **production** (opprett hvis den ikke finnes).
+2. Slå på **Required reviewers** og velg deg selv. Da kan ingen produksjonsbygg starte uten at du godkjenner.
+3. Under **Environment secrets**, legg til fire secrets:
+   - `ASC_KEY_P8`: åpne .p8-filen i Filer, kopier **hele** innholdet (inkludert linjene `-----BEGIN PRIVATE KEY-----` og `-----END PRIVATE KEY-----`).
+   - `ASC_KEY_ID`: Key ID.
+   - `ASC_ISSUER_ID`: Issuer ID.
+   - `APPLE_TEAM_ID`: Team ID.
+4. Under **Environment variables**, legg til `APPLE_TEAM_TYPE` = `INDIVIDUAL` (enkeltperson) eller `COMPANY_OR_ORGANIZATION`.
+
+**D. Si fra til Claude.** Skriv «Apple-nøkkelen er lagt inn», så starter jeg første bygg og sier hva som skjer videre. Du får aldri sende selve nøkkelen i chat.
+
+**E. App-oppføring i App Store Connect** (etter at første bygg har registrert bundle ID-en):
+App Store Connect → **Apple Apps** → **+** → **New App**: plattform iOS, navn **Panful**, språk **Norwegian (Bokmål)**, bundle ID `no.tande-gulbrandsen.panful`, SKU `panful-1`.

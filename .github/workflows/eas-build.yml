@@ -29,6 +29,11 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      # Apple (kun i miljøet «production»): nøkkel fra App Store Connect, lagt inn som GitHub-secrets.
+      EXPO_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      EXPO_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      EXPO_APPLE_TEAM_TYPE: ${{ vars.APPLE_TEAM_TYPE }}
     steps:
       - name: Vern mot utilsiktet produksjonsbygg
         if: ${{ inputs.profile == 'production' }}
@@ -52,6 +57,18 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - run: npm ci
+      - name: Skriv App Store Connect-nøkkelen til en midlertidig fil
+        if: ${{ inputs.profile == 'production' }}
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          if [ -z "$ASC_KEY_P8" ] || [ -z "$EXPO_ASC_KEY_ID" ] || [ -z "$EXPO_ASC_ISSUER_ID" ] || [ -z "$EXPO_APPLE_TEAM_ID" ]; then
+            echo "::error::Mangler Apple-secrets (ASC_KEY_P8, ASC_KEY_ID, ASC_ISSUER_ID, APPLE_TEAM_ID) i miljøet production. Se docs/BRUKSANVISNING.md."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc-key.p8"
+          echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/asc-key.p8" >> "$GITHUB_ENV"
       - name: Bygg
         if: ${{ !(inputs.submit && inputs.profile == 'production') }}
         run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive --no-wait
