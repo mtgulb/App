@@ -7,7 +7,7 @@ Norsk (hovedspråk). Tegngrenser fra App Store Connect [ikke verifisert; sjekkes
 | Navn          | 30 (6)    | Panful                                                                                                                             |
 | Undertittel   | 30 (26)   | Oppskrifter og middagsplan                                                                                                         |
 | Kampanjetekst | 170 (130) | Samle oppskrifter fra nettet eller bilder, planlegg ukens middager og lag handlelisten med ett trykk. Alt ligger på telefonen din. |
-| Nøkkelord     | 100 (106) | `oppskrift,middag,handleliste,ukeplan,matplan,kokebok,lager,strekkode,kokemodus,ingredienser`                                      |
+| Nøkkelord     | 100 (91)  | `oppskrift,middag,handleliste,ukeplan,matplan,kokebok,lager,strekkode,kokemodus,ingredienser`                                      |
 | Hva er nytt   | 4000      | Første versjon av Panful.                                                                                                          |
 
 Nøkkelord skilles med komma uten mellomrom, og gjentar ikke navn eller undertittel.
