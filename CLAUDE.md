@@ -49,7 +49,7 @@ Expo SDK 58 · React Native 0.88 · TypeScript (strict) · Expo Router (`src/app
 
 ## Kjente forhold
 
-- Bundle ID `com.example.minapp` er en PLACEHOLDER (ikke reservert). Navnet Panful er ikke varemerkesjekket i Patentstyret/EUIPO og ikke reservert i App Store (krever Apple-konto). Ikon er foreløpig.
+- Bundle ID `no.tande-gulbrandsen.panful` er valgt men ikke registrert hos Apple (krever konto); kan ikke endres etter første innsending. Navnet Panful er ikke varemerkesjekket i Patentstyret/EUIPO og ikke reservert i App Store (krever Apple-konto). Ikon (stekepanne med egg, laget i kode) er nytt men ikke godkjent av eier.
 - Det meste av UI er skrevet uten å være sett på fysisk iPhone. Se `docs/LANSERING.md`.
 - Familiedeling: databasen og reglene er testet lokalt; synkkoden er ikke prøvd mot ekte server.
 - Strekkoder bruker Open Food Facts; dekningen av norske varer er ukjent og måles i appen (Innstillinger).
