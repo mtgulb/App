@@ -1,4 +1,15 @@
 export const settings = {
+  'trash.title': 'Nylig slettet',
+  'trash.subtitle': 'Hent tilbake slettede oppskrifter',
+  'trash.empty': 'Ingen slettede oppskrifter.',
+  'trash.intro': 'Slettede oppskrifter ligger her i 30 dager før de fjernes for godt.',
+  'trash.daysLeft_one': '{count} dag igjen',
+  'trash.daysLeft_other': '{count} dager igjen',
+  'trash.restore': 'Gjenopprett',
+  'trash.purge': 'Slett for godt',
+  'trash.purgeTitle': 'Slette for godt?',
+  'trash.purgeBody': '«{title}» kan ikke hentes tilbake etterpå.',
+  'trash.cancel': 'Avbryt',
   'backup.title': 'Sikkerhetskopi',
   'backup.intro':
     'Alt ligger bare på denne telefonen. Lag en sikkerhetskopi og lagre den i Notater, Filer eller e-post, så kan du hente alt tilbake hvis du bytter telefon eller sletter appen. Bilder du har tatt selv følger ikke med.',

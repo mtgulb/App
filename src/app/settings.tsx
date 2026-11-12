@@ -285,6 +285,18 @@ export default function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
+        onPress={() => router.push('/trash')}
+        style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
+      >
+        <View style={styles.flex}>
+          <Text style={[styles.rowTitle, { color: t.text }]}>{tr('trash.title')}</Text>
+          <Text style={{ color: t.textSecondary }}>{tr('trash.subtitle')}</Text>
+        </View>
+        <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
+      </Pressable>
+
+      <Pressable
+        accessibilityRole="button"
         onPress={() => router.push('/about')}
         style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
       >

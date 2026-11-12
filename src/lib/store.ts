@@ -2,6 +2,7 @@ import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
 import { DEPARTMENTS, normalizeOrder } from './departments';
 import { migrateFridge } from './inventory';
+import { addToTrash, pruneTrash, takeFromTrash, type TrashItem } from './trash';
 import { DEFAULT_SETTINGS, type Settings } from './portions';
 import type {
   FridgeItem,
@@ -70,6 +71,25 @@ let state: State = {
   fridge: loadFridge(),
   settings: loadSettings(),
 };
+
+let trash: TrashItem[] = pruneTrash(load<TrashItem>('trash'), Date.now());
+const trashListeners = new Set<() => void>();
+function setTrash(next: TrashItem[]) {
+  trash = next;
+  Storage.setItemSync('trash', JSON.stringify(next));
+  trashListeners.forEach((l) => l());
+}
+export const getTrash = () => trash;
+export function useTrash(): TrashItem[] {
+  return useSyncExternalStore(
+    (cb) => {
+      trashListeners.add(cb);
+      return () => trashListeners.delete(cb);
+    },
+    () => trash,
+  );
+}
+
 const listeners = new Set<() => void>();
 type ChangeListener = (prev: State, next: State, remote: boolean) => void;
 const changeListeners = new Set<ChangeListener>();
@@ -181,6 +201,17 @@ const pruneChecked = (entryIds: string[]) =>
 
 export function deleteRecipe(id: string) {
   const gone = state.plan.filter((p) => p.recipeId === id).map((p) => p.id);
+  const recipe = state.recipes.find((r) => r.id === id);
+  if (recipe) {
+    setTrash(
+      addToTrash(
+        trash,
+        recipe,
+        state.plan.filter((p) => p.recipeId === id),
+        Date.now(),
+      ),
+    );
+  }
   commit({
     ...state,
     recipes: state.recipes.filter((r) => r.id !== id),
@@ -191,6 +222,23 @@ export function deleteRecipe(id: string) {
       fromRecipes: state.shopping.fromRecipes.filter((x) => x.recipeId !== id),
     },
   });
+}
+
+/** Henter en slettet oppskrift (og middagene dens) tilbake. */
+export function restoreRecipe(id: string) {
+  const { rest, item } = takeFromTrash(trash, id);
+  if (!item) return;
+  setTrash(rest);
+  commit({
+    ...state,
+    recipes: [item.recipe, ...state.recipes],
+    plan: [...state.plan, ...item.plan],
+  });
+}
+
+/** Fjerner en oppskrift fra «Nylig slettet» for godt. */
+export function purgeFromTrash(id: string) {
+  setTrash(trash.filter((x) => x.recipe.id !== id));
 }
 
 export function addPlanEntry(e: Omit<MealPlanEntry, 'id'>): MealPlanEntry {
