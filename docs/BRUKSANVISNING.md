@@ -76,3 +76,21 @@ Alt gjøres i Safari på iPhone. Be om «desktop-versjon av nettstedet» (trykk 
 
 **E. App-oppføring i App Store Connect** (etter at første bygg har registrert bundle ID-en):
 App Store Connect → **Apple Apps** → **+** → **New App**: plattform iOS, navn **Panful**, språk **Norwegian (Bokmål)**, bundle ID `no.tande-gulbrandsen.panful`, SKU `panful-1`.
+
+## 7. Engangsoppsett av Apple-sertifikater (må gjøres interaktivt én gang)
+
+Første automatiske bygg stoppet med «Credentials are not set up». Sertifikatene settes opp med ett interaktivt kall. Det gjøres på PC i nettleseren, uten å installere noe:
+
+1. Gå til github.com/mtgulb/App → grønn **Code**-knapp → fanen **Codespaces** → **Create codespace on main**. Vent til en kodeeditor åpner (1–2 minutter).
+2. Åpne terminalen nederst (meny ☰ → Terminal → New Terminal).
+3. Kjør disse én og én:
+   - `npm ci`
+   - `npx eas-cli login` (Expo-brukernavn og passord)
+   - `npx eas-cli build --platform ios --profile production`
+4. Svar på spørsmålene:
+   - «Do you want to log in to your Apple account?» → **Yes**. Skriv Apple-ID og passord, og tofaktorkoden. Dette skrives bare i terminalen, aldri i chat.
+   - Hvis den spør om team: velg Team ID `7SW398GGKL`.
+   - «Generate a new Apple Distribution Certificate?» → **Yes**. «Generate a new Apple Provisioning Profile?» → **Yes**. Bundle-ID-en `no.tande-gulbrandsen.panful` registreres automatisk.
+5. Når den begynner å bygge (viser en lenke til expo.dev), er oppsettet ferdig. Du kan avbryte med **Ctrl+C**, eller la bygget gå. Sertifikatene ligger nå hos Expo.
+6. Slett codespacet: github.com/codespaces → «⋯» → Delete.
+7. Skriv til Claude: «Sertifikater er satt opp».
