@@ -52,7 +52,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 ## F. Produktgap jeg anbefaler å lukke før publisering
 
-- [ ] 🟠 **[Claude]** **Backup og eksport/import** (i dag finnes alt bare på telefonen; slettes appen, er det borte).
+- [x] 🟠 **[Claude]** **Backup og eksport/import** (gjort via del-meny og utklippstavle; bilder tatt på telefonen følger ikke med; ikke prøvd på telefon) (i dag finnes alt bare på telefonen; slettes appen, er det borte).
 - [ ] 🟠 **[Claude]** **Angre / nylig slettet** for oppskrifter og lister.
 - [ ] 🟠 **[Claude]** **Førstegangsveiledning** (i dag møter nye brukere tomme skjermer).
 - [ ] 🟠 **[Claude]** **Strekkodedatabase**: avgjøres av dekningstest (se strekkoderapporten), evt. flere kilder.

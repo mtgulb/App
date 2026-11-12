@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { BackupCard } from '@/components/BackupCard';
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, Heading, SegmentedControl, Stepper } from '@/components/ui';
 import { getBarcodeStats } from '@/lib/barcode';
@@ -279,6 +280,8 @@ export default function SettingsScreen() {
           onChange={(clipboardHint) => updateSettings({ clipboardHint })}
         />
       </Card>
+
+      <BackupCard />
 
       <Pressable
         accessibilityRole="button"

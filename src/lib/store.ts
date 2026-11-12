@@ -501,6 +501,11 @@ export function resetStaples() {
   commit({ ...state, settings: { ...state.settings, staples: [...DEFAULT_SETTINGS.staples] } });
 }
 
+/** Erstatter alt innhold (gjenoppretting fra sikkerhetskopi). */
+export function restoreState(next: State) {
+  commit(next);
+}
+
 export function updateSettings(patch: Partial<Settings>) {
   commit({ ...state, settings: { ...state.settings, ...patch } });
 }

@@ -1,4 +1,22 @@
 export const settings = {
+  'backup.title': 'Sikkerhetskopi',
+  'backup.intro':
+    'Alt ligger bare på denne telefonen. Lag en sikkerhetskopi og lagre den i Notater, Filer eller e-post, så kan du hente alt tilbake hvis du bytter telefon eller sletter appen. Bilder du har tatt selv følger ikke med.',
+  'backup.create': 'Lag sikkerhetskopi',
+  'backup.restore': 'Gjenopprett fra utklippstavlen',
+  'backup.restoreHint': 'Åpne sikkerhetskopien, kopier all teksten, og trykk på knappen over.',
+  'backup.shareTitle': 'Panful sikkerhetskopi',
+  'backup.failedTitle': 'Kunne ikke lage sikkerhetskopi',
+  'backup.notBackup': 'Utklippstavlen inneholder ikke en sikkerhetskopi fra Panful.',
+  'backup.tooNew': 'Sikkerhetskopien er laget av en nyere versjon. Oppdater appen først.',
+  'backup.corrupt': 'Sikkerhetskopien er ødelagt eller ufullstendig.',
+  'backup.confirmTitle': 'Gjenopprette sikkerhetskopien?',
+  'backup.confirmBody':
+    'Dette erstatter alt i appen nå med innholdet i kopien: {recipes} oppskrifter, {plan} middager, {stock} varer på lager og {shopping} på handlelisten.',
+  'backup.confirmYes': 'Erstatt alt',
+  'backup.cancel': 'Avbryt',
+  'backup.doneTitle': 'Gjenopprettet',
+  'backup.doneBody': 'Innholdet fra sikkerhetskopien er lagt inn.',
   // Innstillinger
   'settings.household': 'Husholdning',
   'settings.householdInfo':
