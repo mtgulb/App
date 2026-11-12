@@ -5,7 +5,7 @@
 import * as Notifications from 'expo-notifications';
 import { getState, onStateChange } from './store';
 import { freezerIds } from './inventory';
-import { planReminders } from './reminders';
+import { planExpiryReminders, planReminders } from './reminders';
 
 const PREFIX = 'rem-';
 let handlerSet = false;
@@ -84,15 +84,18 @@ export async function syncReminders() {
       if (n.identifier.startsWith(PREFIX))
         await Notifications.cancelScheduledNotificationAsync(n.identifier);
     }
-    if (!s.settings.remindEvening && !s.settings.remindToday) return;
+    if (!s.settings.remindEvening && !s.settings.remindToday && !s.settings.remindExpiry) return;
     if (!(await notificationsAllowed())) return;
-    const reminders = planReminders({
-      plan: s.plan,
-      recipes: s.recipes,
-      inventory: s.fridge.items,
-      freezerIds: freezerIds(s.fridge.storages),
-      settings: s.settings,
-    });
+    const reminders = [
+      ...planReminders({
+        plan: s.plan,
+        recipes: s.recipes,
+        inventory: s.fridge.items,
+        freezerIds: freezerIds(s.fridge.storages),
+        settings: s.settings,
+      }),
+      ...planExpiryReminders({ inventory: s.fridge.items, settings: s.settings }),
+    ];
     for (const r of reminders) {
       await Notifications.scheduleNotificationAsync({
         identifier: PREFIX + r.id,

@@ -1,5 +1,6 @@
 import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
+import { DEPARTMENTS, normalizeOrder } from './departments';
 import { migrateFridge } from './inventory';
 import { DEFAULT_SETTINGS, type Settings } from './portions';
 import type {
@@ -392,6 +393,51 @@ export function removeStorage(id: string): boolean {
     },
   });
   return true;
+}
+
+/** Oppretter en butikk med standard rekkefølge. Returnerer id. */
+export function addStoreProfile(name: string): string | null {
+  const n = name.trim();
+  if (!n) return null;
+  const id = newId();
+  commit({
+    ...state,
+    settings: {
+      ...state.settings,
+      stores: [...state.settings.stores, { id, name: n, order: [...DEPARTMENTS] }],
+      activeStoreId: id,
+    },
+  });
+  return id;
+}
+
+export function updateStoreProfile(id: string, patch: { name?: string; order?: string[] }) {
+  commit({
+    ...state,
+    settings: {
+      ...state.settings,
+      stores: state.settings.stores.map((x) =>
+        x.id === id
+          ? {
+              ...x,
+              name: patch.name?.trim() ? patch.name.trim() : x.name,
+              order: patch.order ? normalizeOrder(patch.order) : x.order,
+            }
+          : x,
+      ),
+    },
+  });
+}
+
+export function removeStoreProfile(id: string) {
+  commit({
+    ...state,
+    settings: {
+      ...state.settings,
+      stores: state.settings.stores.filter((x) => x.id !== id),
+      activeStoreId: state.settings.activeStoreId === id ? null : state.settings.activeStoreId,
+    },
+  });
 }
 
 export function updateSettings(patch: Partial<Settings>) {

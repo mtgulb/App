@@ -1,4 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
 import {
@@ -15,7 +16,7 @@ import {
 } from 'react-native';
 import { SwipeRow } from '@/components/SwipeRow';
 import { Button, Chip, EmptyState, LargeTitle, SegmentedControl } from '@/components/ui';
-import { DEPARTMENTS, departmentOf, type Department } from '@/lib/departments';
+import { departmentOf, orderFor, type Department } from '@/lib/departments';
 import {
   baseServings,
   mergeIngredients,
@@ -64,6 +65,7 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
 
 export default function ShoppingScreen() {
   const t = useTheme();
+  const router = useRouter();
   const { recipes, plan, shopping, settings } = useStore();
   const [draft, setDraft] = useState('');
   const [from, setFrom] = useState(() => startOfDay(new Date()));
@@ -135,7 +137,7 @@ export default function ShoppingScreen() {
   const sections: Section[] = [];
   if (settings.shoppingSort === 'department') {
     // Etter avdeling: i den rekkefølgen man går gjennom butikken.
-    for (const dep of DEPARTMENTS) {
+    for (const dep of orderFor(settings.stores, settings.activeStoreId)) {
       const data = [...todoMerged, ...todoExtras]
         .filter((r) => r.dept === dep)
         .sort((a, b) => a.text.localeCompare(b.text, 'nb'));
@@ -305,6 +307,41 @@ export default function ShoppingScreen() {
                 ]}
               />
             </View>
+            {settings.shoppingSort === 'department' ? (
+              <View style={styles.storeRow}>
+                <Text style={[styles.hint, { color: t.textSecondary }]}>Butikk:</Text>
+                {[{ id: null as string | null, name: 'Standard' }, ...settings.stores].map((st) => (
+                  <Pressable
+                    key={st.id ?? 'std'}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: settings.activeStoreId === st.id }}
+                    onPress={() => updateSettings({ activeStoreId: st.id })}
+                  >
+                    <View
+                      style={[
+                        styles.storeChip,
+                        { backgroundColor: settings.activeStoreId === st.id ? t.tint : t.tintSoft },
+                      ]}
+                    >
+                      <Text
+                        style={{
+                          color: settings.activeStoreId === st.id ? '#FFFFFF' : t.tint,
+                          fontWeight: '600',
+                          fontSize: 13,
+                        }}
+                      >
+                        {st.name}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+                <Pressable accessibilityRole="button" onPress={() => router.push('/stores')}>
+                  <Text style={{ color: t.tint, fontWeight: '700', fontSize: 13 }}>
+                    Rediger butikker
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
             <Text style={[styles.summary, { color: t.textSecondary }]}>
               {inRange.length === 0
                 ? `Ingen middager ${dateFmt.format(from)} – ${dateFmt.format(to)}`
@@ -488,6 +525,8 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12 },
   sortWrap: { marginHorizontal: -20, marginBottom: -4 },
   summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
+  storeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  storeChip: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
   addedRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   summaryItem: { fontSize: 13 },
   addRow: {

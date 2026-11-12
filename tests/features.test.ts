@@ -113,7 +113,7 @@ import { planReminders } from '../src/lib/reminders.ts';
       recipes: [recipe],
       inventory: inv,
       freezerIds: ['freezer'],
-      settings: { remindEvening: false, remindToday: false },
+      settings: { ...DEFAULT_SETTINGS, remindEvening: false, remindToday: false },
       now: nowR,
     }),
     [],
@@ -123,7 +123,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     recipes: [recipe],
     inventory: inv,
     freezerIds: ['freezer'],
-    settings: { remindEvening: true, remindToday: true },
+    settings: { ...DEFAULT_SETTINGS, remindEvening: true, remindToday: true },
     now: nowR,
   });
   assert.equal(both.length, 2);
@@ -140,7 +140,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     recipes: [recipe],
     inventory: [],
     freezerIds: [],
-    settings: { remindEvening: false, remindToday: true },
+    settings: { ...DEFAULT_SETTINGS, remindEvening: false, remindToday: true },
     now: nowR,
   });
   assert.equal(early[0].at.getHours(), 11);
@@ -150,7 +150,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     recipes: [recipe],
     inventory: [],
     freezerIds: [],
-    settings: { remindEvening: true, remindToday: false },
+    settings: { ...DEFAULT_SETTINGS, remindEvening: true, remindToday: false },
     now: nowR,
   });
   assert.match(noFreezer[0].body, /Sjekk/);
@@ -262,3 +262,90 @@ import {
   assert.deepEqual(suggestionBasis(stock, getSession(), today).names, ['melk', 'laks']);
 }
 console.log('session OK');
+
+// --- Egen butikkrekkefølge ---
+import { DEPARTMENTS, moveDepartment, normalizeOrder, orderFor } from '../src/lib/departments.ts';
+{
+  assert.deepEqual(normalizeOrder([...DEPARTMENTS]), [...DEPARTMENTS]);
+  // Manglende avdelinger legges sist, ukjente og dubletter fjernes
+  const n = normalizeOrder(['Meieri og egg', 'Meieri og egg', 'Ukjent', 'Frys']);
+  assert.deepEqual(n.slice(0, 2), ['Meieri og egg', 'Frys']);
+  assert.equal(n.length, DEPARTMENTS.length);
+  assert.equal(new Set(n).size, n.length);
+  // Flytte
+  const base = [...DEPARTMENTS];
+  const up = moveDepartment(base, 2, -1);
+  assert.equal(up[1], DEPARTMENTS[2]);
+  assert.equal(up[2], DEPARTMENTS[1]);
+  assert.equal(moveDepartment(base, 0, -1), base); // kan ikke flyttes ut av listen
+  assert.equal(moveDepartment(base, base.length - 1, 1), base);
+  assert.deepEqual(base, [...DEPARTMENTS]); // originalen røres ikke
+  // Butikkvalg
+  const stores = [{ id: 'k', name: 'Kiwi', order: ['Meieri og egg', 'Frukt og grønt'] as never }];
+  assert.deepEqual(orderFor(stores, null), DEPARTMENTS); // ingen valgt = standard
+  assert.deepEqual(orderFor(stores, 'finnes-ikke'), DEPARTMENTS);
+  assert.equal(orderFor(stores, 'k')[0], 'Meieri og egg');
+  assert.equal(orderFor(stores, 'k').length, DEPARTMENTS.length);
+}
+console.log('store order OK');
+
+// --- Egne klokkeslett og utløpsvarsler ---
+import { parseHm, planExpiryReminders } from '../src/lib/reminders.ts';
+{
+  assert.deepEqual(parseHm('07:45', [20, 0]), [7, 45]);
+  assert.deepEqual(parseHm('25:00', [20, 0]), [20, 0]);
+  assert.deepEqual(parseHm('tull', [9, 0]), [9, 0]);
+
+  const recipe = {
+    id: 'r',
+    title: 'Pasta',
+    ingredients: ['pasta'],
+    steps: [],
+    images: [],
+    createdAt: 0,
+    servings: '4',
+  };
+  const nowT = new Date(2026, 10, 12, 10, 0);
+  const plan = [{ id: 'p', recipeId: 'r', date: new Date(2026, 10, 15, 18, 0).toISOString() }];
+  const custom = planReminders({
+    plan,
+    recipes: [recipe],
+    inventory: [],
+    freezerIds: [],
+    settings: {
+      ...DEFAULT_SETTINGS,
+      remindEvening: true,
+      remindEveningTime: '18:30',
+      remindToday: true,
+      remindTodayTime: '12:00',
+    },
+    now: nowT,
+  });
+  assert.equal(custom[0].at.getHours(), 18);
+  assert.equal(custom[0].at.getMinutes(), 30);
+  assert.equal(custom[1].at.getHours(), 12);
+
+  const inv = [
+    { id: '1', name: 'melk', expires: '2026-11-16' },
+    { id: '2', name: 'ost', expires: '2026-11-16' },
+    { id: '3', name: 'laks', expires: '2026-11-20' },
+    { id: '4', name: 'egg' }, // uten dato: aldri varsel
+    { id: '5', name: 'gammel', expires: '2026-11-01' }, // utløpt: ikke varsle
+  ];
+  // Av som standard
+  assert.deepEqual(
+    planExpiryReminders({ inventory: inv, settings: DEFAULT_SETTINGS, now: nowT }),
+    [],
+  );
+  const ex = planExpiryReminders({
+    inventory: inv,
+    settings: { ...DEFAULT_SETTINGS, remindExpiry: true, expiryDays: 2, expiryTime: '08:00' },
+    now: nowT,
+  });
+  assert.equal(ex.length, 2); // ett per dag
+  assert.equal(ex[0].at.getDate(), 14); // 2 dager før 16.
+  assert.equal(ex[0].at.getHours(), 8);
+  assert.match(ex[0].body, /melk, ost/);
+  assert.equal(ex[1].title, 'laks går snart ut');
+}
+console.log('notification settings OK');

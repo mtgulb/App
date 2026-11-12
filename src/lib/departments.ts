@@ -232,3 +232,36 @@ export function departmentOf(name: string): Department {
   }
   return 'Annet';
 }
+
+/** En butikk med egen rekkefølge på avdelingene, slik at listen følger veien du går i butikken. */
+export type StoreProfile = { id: string; name: string; order: Department[] };
+
+/** Gjør en rekkefølge gyldig: ukjente fjernes, dubletter fjernes, manglende avdelinger legges sist. */
+export function normalizeOrder(order: readonly string[]): Department[] {
+  const known = new Set<string>(DEPARTMENTS);
+  const seen = new Set<string>();
+  const out: Department[] = [];
+  for (const d of order) {
+    if (known.has(d) && !seen.has(d)) {
+      seen.add(d);
+      out.push(d as Department);
+    }
+  }
+  for (const d of DEPARTMENTS) if (!seen.has(d)) out.push(d);
+  return out;
+}
+
+/** Flytter en avdeling opp (-1) eller ned (+1). Utenfor kantene skjer ingenting. */
+export function moveDepartment(order: Department[], index: number, delta: -1 | 1): Department[] {
+  const to = index + delta;
+  if (index < 0 || index >= order.length || to < 0 || to >= order.length) return order;
+  const next = [...order];
+  [next[index], next[to]] = [next[to], next[index]];
+  return next;
+}
+
+/** Rekkefølgen for valgt butikk, eller standardrekkefølgen. */
+export function orderFor(stores: StoreProfile[], activeId: string | null): readonly Department[] {
+  const store = stores.find((s) => s.id === activeId);
+  return store ? normalizeOrder(store.order) : DEPARTMENTS;
+}

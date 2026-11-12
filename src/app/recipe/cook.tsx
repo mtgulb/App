@@ -85,12 +85,16 @@ export default function CookMode() {
   const lines = scaledLines(recipe, servings);
 
   async function start(label: string, seconds: number) {
-    if (!(await notificationsAllowed())) await requestNotifications(); // spørres først når du starter en tidtaker
-    const notificationId = await scheduleTimerNotification(
-      seconds,
-      'Tidtaker ferdig',
-      `${recipe!.title}: ${label}`,
-    );
+    let notificationId: string | null = null;
+    if (settings.timerAlerts) {
+      // Spørres først når du starter en tidtaker, og bare hvis du ikke har slått det av.
+      if (!(await notificationsAllowed())) await requestNotifications();
+      notificationId = await scheduleTimerNotification(
+        seconds,
+        'Tidtaker ferdig',
+        `${recipe!.title}: ${label}`,
+      );
+    }
     setNow(clock());
     setAllTimers([
       ...timersRef.current,
