@@ -44,9 +44,12 @@ export default function NewRecipeScreen() {
     setImportError(null);
     setImporting(true);
     try {
-      const data = await importRecipeFromUrl(url);
+      const { data, needsReview } = await importRecipeFromUrl(url);
       const recipe = addRecipe(data);
-      router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
+      // Gjettet ut fra sidens tekst: la brukeren sjekke før de bruker den.
+      if (needsReview)
+        router.replace({ pathname: '/recipe/edit', params: { id: recipe.id, review: '1' } });
+      else router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
     } catch (e) {
       setImportError(e instanceof ImportError ? e.message : 'Noe gikk galt under importen.');
     } finally {

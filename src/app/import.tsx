@@ -31,8 +31,12 @@ export default function ImportScreen() {
           router.replace({ pathname: '/recipe/[id]', params: { id: existing.id } });
           return;
         }
-        const recipe = addRecipe(await importRecipeFromUrl(url));
-        if (!cancelled) router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
+        const { data, needsReview } = await importRecipeFromUrl(url);
+        const recipe = addRecipe(data);
+        if (cancelled) return;
+        if (needsReview)
+          router.replace({ pathname: '/recipe/edit', params: { id: recipe.id, review: '1' } });
+        else router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof ImportError ? e.message : 'Noe gikk galt under importen.');

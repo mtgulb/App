@@ -18,7 +18,7 @@ import { parseTags } from '@/lib/recipeFilter';
 import { getRecipe, updateRecipe } from '@/lib/store';
 
 export default function EditRecipe() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, review } = useLocalSearchParams<{ id: string; review?: string }>();
   const router = useRouter();
   const recipe = getRecipe(id);
   const [title, setTitle] = useState(recipe?.title ?? '');
@@ -62,6 +62,15 @@ export default function EditRecipe() {
 
   return (
     <Screen>
+      {review ? (
+        <Card>
+          <Heading>Sjekk oppskriften</Heading>
+          <Body secondary>
+            Siden hadde ikke oppskriftsdata, så ingredienser og fremgangsmåte er lest ut fra
+            teksten. Sjekk at det stemmer, og rett opp det som er feil, før du bruker den.
+          </Body>
+        </Card>
+      ) : null}
       <Card>
         <Body secondary>
           Bilder – trykk på et bilde for å fjerne det. Første bilde vises på forsiden.

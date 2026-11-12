@@ -1,13 +1,17 @@
 import { deleteImage, downloadImage, imageSize } from './images';
 import { normalizeUrl } from './urls';
-import { cleanImageCandidates, extractMetaImages, parseRecipeFromHtml } from './recipeParser';
+import { cleanImageCandidates, extractMetaImages, parseRecipeFromPage } from './recipeParser';
 import type { Recipe } from './types';
 
 export class ImportError extends Error {}
 
-export async function importRecipeFromUrl(
-  rawUrl: string,
-): Promise<Omit<Recipe, 'id' | 'createdAt'>> {
+export type ImportResult = {
+  data: Omit<Recipe, 'id' | 'createdAt'>;
+  /** Oppskriften er gjettet ut fra sidens tekst og må sjekkes av brukeren. */
+  needsReview: boolean;
+};
+
+export async function importRecipeFromUrl(rawUrl: string): Promise<ImportResult> {
   let url = rawUrl.trim();
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
   try {
@@ -26,7 +30,7 @@ export async function importRecipeFromUrl(
     throw new ImportError('Kunne ikke hente siden. Sjekk nettverket og lenken.');
   }
 
-  const parsed = parseRecipeFromHtml(html);
+  const parsed = parseRecipeFromPage(html);
   if (!parsed) {
     throw new ImportError(
       'Fant ingen oppskrift på siden. Du kan legge den inn manuelt eller fra bilde.',
@@ -37,12 +41,17 @@ export async function importRecipeFromUrl(
     cleanImageCandidates([...parsed.imageUrls, ...extractMetaImages(html)], url),
   );
   return {
-    title: parsed.title,
-    sourceUrl: url,
-    servings: parsed.servings,
-    ingredients: parsed.ingredients,
-    steps: parsed.steps,
-    images,
+    needsReview: parsed.quality === 'text',
+    data: {
+      title: parsed.title,
+      sourceUrl: url,
+      servings: parsed.servings,
+      minutes: parsed.minutes,
+      tags: parsed.tags && parsed.tags.length ? parsed.tags : undefined,
+      ingredients: parsed.ingredients,
+      steps: parsed.steps,
+      images,
+    },
   };
 }
 
