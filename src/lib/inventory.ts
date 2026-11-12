@@ -1,13 +1,8 @@
-import type { FridgeItem } from './types.ts';
+import type { FridgeItem, FridgeState, StorageDef } from './types.ts';
 
-export const PLACES = [
-  { id: 'fridge', label: 'Kjøleskap' },
-  { id: 'freezer', label: 'Fryser' },
-  { id: 'pantry', label: 'Skap' },
-] as const;
-export type Place = (typeof PLACES)[number]['id'];
-
-export const placeOf = (item: Pick<FridgeItem, 'place'>): Place => item.place ?? 'fridge';
+/** Ids til lagrene som er frysere (brukes av påminnelser). */
+export const freezerIds = (storages: { id: string; freezer?: boolean }[]) =>
+  storages.filter((x) => x.freezer).map((x) => x.id);
 
 const ymd = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -62,4 +57,32 @@ export function expiryLabel(date: string, now: Date = new Date()): string {
   if (d === 0) return 'Utløper i dag';
   if (d === 1) return 'Utløper i morgen';
   return `Utløper om ${d} dager`;
+}
+
+const LEGACY_STORAGES: StorageDef[] = [
+  { id: 'fridge', name: 'Kjøleskap' },
+  { id: 'freezer', name: 'Fryser', freezer: true },
+  { id: 'pantry', name: 'Skap' },
+];
+
+/** Nye brukere starter med ett felles lager. Eldre data (kjøleskap/fryser/skap) flyttes over uten tap. */
+export function migrateFridge(v: Partial<FridgeState>): FridgeState {
+  const items = (v.items ?? []).map((i) => ({ ...i, place: i.place ?? 'fridge' }));
+  let storages = v.storages;
+  if (!storages || storages.length === 0) {
+    const used = new Set(items.map((i) => i.place));
+    storages =
+      used.size === 0
+        ? [{ id: 'main', name: 'Lager' }]
+        : LEGACY_STORAGES.filter((l) => used.has(l.id));
+    if (storages.length === 0) storages = [{ id: 'main', name: 'Lager' }];
+  }
+  const first = storages[0].id;
+  // Varer som peker på et lager som ikke finnes lenger, havner i det første.
+  const known = new Set(storages.map((x) => x.id));
+  return {
+    items: items.map((i) => (known.has(i.place!) ? i : { ...i, place: first })),
+    storages,
+    assumeStaples: v.assumeStaples ?? true,
+  };
 }

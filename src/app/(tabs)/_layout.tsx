@@ -43,6 +43,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => <SymbolView name="refrigerator" tintColor={color} size={24} />,
         }}
       />
+      <Tabs.Screen
+        name="suggest"
+        options={{
+          title: 'Forslag',
+          tabBarIcon: ({ color }) => <SymbolView name="lightbulb" tintColor={color} size={24} />,
+        }}
+      />
     </Tabs>
   );
 }

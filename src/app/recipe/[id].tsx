@@ -88,9 +88,9 @@ export default function RecipeDetail() {
           {recipe.steps.length > 0 ? <Chip>{recipe.steps.length} steg</Chip> : null}
         </View>
 
-        {fit && fridge.items.length > 0 ? (
+        {fit && settings.stockSuggestions && fridge.items.length > 0 ? (
           <Card>
-            <Heading>Kjøleskapet ditt</Heading>
+            <Heading>Lageret ditt</Heading>
             <Body>
               {fit.have.length === fit.total
                 ? 'Du har alt du trenger!'

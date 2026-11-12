@@ -7,7 +7,6 @@ import {
   expiringSoon,
   expiryLabel,
   expiryState,
-  placeOf,
 } from '../src/lib/inventory.ts';
 import {
   DEFAULT_SETTINGS,
@@ -66,7 +65,6 @@ assert.deepEqual(
 );
 assert.equal(expiryLabel('2026-11-13', now), 'Utløper i morgen');
 assert.equal(expiryLabel('2026-11-09', now), 'Utløpt for 3 dager siden');
-assert.equal(placeOf({}), 'fridge'); // gamle varer havner i kjøleskapet
 
 // --- Porsjoner for husholdningen ---
 assert.equal(householdPortions({ adults: 2, children: 0, childFactor: 0.5 }), 2);
@@ -114,6 +112,7 @@ import { planReminders } from '../src/lib/reminders.ts';
       plan,
       recipes: [recipe],
       inventory: inv,
+      freezerIds: ['freezer'],
       settings: { remindEvening: false, remindToday: false },
       now: nowR,
     }),
@@ -123,6 +122,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     plan,
     recipes: [recipe],
     inventory: inv,
+    freezerIds: ['freezer'],
     settings: { remindEvening: true, remindToday: true },
     now: nowR,
   });
@@ -139,6 +139,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     plan: [{ id: 'e', recipeId: 'r', date: new Date(2026, 10, 14, 12, 0).toISOString() }],
     recipes: [recipe],
     inventory: [],
+    freezerIds: [],
     settings: { remindEvening: false, remindToday: true },
     now: nowR,
   });
@@ -148,6 +149,7 @@ import { planReminders } from '../src/lib/reminders.ts';
     plan,
     recipes: [recipe],
     inventory: [],
+    freezerIds: [],
     settings: { remindEvening: true, remindToday: false },
     now: nowR,
   });
@@ -165,3 +167,98 @@ assert.equal(normalizeUrl('matprat.no/oppskrifter/laks'), 'matprat.no/oppskrifte
 assert.equal(normalizeUrl('https://x.no/a?b=2&a=1&fbclid=z'), 'x.no/a?a=1&b=2');
 assert.notEqual(normalizeUrl('https://x.no/a'), normalizeUrl('https://x.no/b'));
 console.log('urls OK');
+
+// --- Lager: migrering og egne lager ---
+import { freezerIds, migrateFridge } from '../src/lib/inventory.ts';
+{
+  // Nye brukere: ett felles lager
+  const fresh = migrateFridge({});
+  assert.deepEqual(fresh.storages, [{ id: 'main', name: 'Lager' }]);
+  assert.equal(fresh.assumeStaples, true);
+  // Eldre data: kjøleskap/fryser/skap beholdes, varer uten sted havner i kjøleskapet
+  const old = migrateFridge({
+    items: [
+      { id: '1', name: 'melk' },
+      { id: '2', name: 'laks', place: 'freezer' },
+    ],
+    assumeStaples: false,
+  } as never);
+  assert.deepEqual(
+    old.storages.map((x) => x.id),
+    ['fridge', 'freezer'],
+  );
+  assert.equal(old.items[0].place, 'fridge');
+  assert.deepEqual(freezerIds(old.storages), ['freezer']);
+  assert.equal(old.assumeStaples, false);
+  // Varer som peker på et lager som ikke finnes, flyttes til det første
+  const broken = migrateFridge({
+    items: [{ id: '1', name: 'x', place: 'borte' }],
+    storages: [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ],
+    assumeStaples: true,
+  });
+  assert.equal(broken.items[0].place, 'a');
+  // Allerede migrert data røres ikke
+  assert.deepEqual(migrateFridge(broken), broken);
+}
+console.log('storage migration OK');
+
+// --- Midlertidig økt, adskilt fra lageret ---
+import {
+  addSessionItems,
+  endSession,
+  getSession,
+  removeSessionItem,
+  setUseStock,
+  suggestionBasis,
+  toggleStorageIncluded,
+} from '../src/lib/session.ts';
+{
+  const stock = {
+    items: [
+      { id: '1', name: 'melk', place: 'a', expires: '2026-11-13' },
+      { id: '2', name: 'laks', place: 'b' },
+    ],
+  };
+  const today = new Date(2026, 10, 12);
+  endSession();
+  addSessionItems('egg, ost,  egg , ');
+  assert.deepEqual(
+    getSession().items.map((i) => i.name),
+    ['egg', 'ost'],
+  ); // delt på komma, uten dubletter
+  // Lager og midlertidige varer slås sammen i forslagene
+  let b = suggestionBasis(stock, getSession(), today);
+  assert.deepEqual(b.names, ['melk', 'laks', 'egg', 'ost']);
+  assert.deepEqual(b.soon, ['melk']); // bare lagervarer teller som «snart ut»
+  // Velg bort et lager
+  toggleStorageIncluded('b');
+  b = suggestionBasis(stock, getSession(), today);
+  assert.deepEqual(b.names, ['melk', 'egg', 'ost']);
+  toggleStorageIncluded('b'); // slå på igjen
+  // Uten lager: bare det man skrev inn
+  setUseStock(false);
+  b = suggestionBasis(stock, getSession(), today);
+  assert.deepEqual(b.names, ['egg', 'ost']);
+  assert.deepEqual(b.soon, []);
+  // Samme vare på lager og i økten telles én gang
+  setUseStock(true);
+  addSessionItems('Melk');
+  assert.equal(
+    suggestionBasis(stock, getSession(), today).names.filter((n) => n.toLowerCase() === 'melk')
+      .length,
+    1,
+  );
+  // Fjerne enkeltvare
+  removeSessionItem(getSession().items.find((i) => i.name === 'ost')!.id);
+  assert.ok(!getSession().items.some((i) => i.name === 'ost'));
+  // Avslutte økten nullstiller alt midlertidig – og lageret er uendret
+  const before = JSON.stringify(stock);
+  endSession();
+  assert.deepEqual(getSession(), { items: [], useStock: true, excluded: [] });
+  assert.equal(JSON.stringify(stock), before);
+  assert.deepEqual(suggestionBasis(stock, getSession(), today).names, ['melk', 'laks']);
+}
+console.log('session OK');

@@ -1,5 +1,6 @@
 import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
+import { migrateFridge } from './inventory';
 import { DEFAULT_SETTINGS, type Settings } from './portions';
 import type {
   FridgeItem,
@@ -45,10 +46,9 @@ function loadShopping(): ShoppingState {
 function loadFridge(): FridgeState {
   try {
     const raw = Storage.getItemSync('fridge');
-    const v = raw ? (JSON.parse(raw) as Partial<FridgeState>) : {};
-    return { items: v.items ?? [], assumeStaples: v.assumeStaples ?? true };
+    return migrateFridge(raw ? (JSON.parse(raw) as Partial<FridgeState>) : {});
   } catch {
-    return { items: [], assumeStaples: true };
+    return migrateFridge({});
   }
 }
 
@@ -248,18 +248,13 @@ export function removeCheckedExtras() {
 }
 
 /** Legger til varer på lager. Kommaseparert tekst gir flere varer; dubletter på samme sted hoppes over. */
-export function addFridgeItems(
-  text: string,
-  opts: { place?: FridgeItem['place']; expires?: string } = {},
-) {
-  const place = opts.place ?? 'fridge';
+export function addFridgeItems(text: string, opts: { place?: string; expires?: string } = {}) {
+  const place = opts.place ?? state.fridge.storages[0].id;
   const names = text
     .split(/[,\n]/)
     .map((n) => n.trim())
     .filter(Boolean);
-  const existing = new Set(
-    state.fridge.items.map((i) => `${i.place ?? 'fridge'}|${i.name.toLowerCase()}`),
-  );
+  const existing = new Set(state.fridge.items.map((i) => `${i.place}|${i.name.toLowerCase()}`));
   const added: FridgeItem[] = [];
   for (const name of names) {
     const key = `${place}|${name.toLowerCase()}`;
@@ -281,7 +276,7 @@ export function removeFridgeItem(id: string) {
 /** Endrer navn, sted eller utløpsdato. `expires: null` fjerner datoen. */
 export function updateFridgeItem(
   id: string,
-  patch: { name?: string; place?: FridgeItem['place']; expires?: string | null },
+  patch: { name?: string; place?: string; expires?: string | null },
 ) {
   commit({
     ...state,
@@ -300,14 +295,62 @@ export function updateFridgeItem(
   });
 }
 
-export function clearFridge(place?: FridgeItem['place']) {
+export function clearFridge(place?: string) {
   commit({
     ...state,
     fridge: {
       ...state.fridge,
-      items: place ? state.fridge.items.filter((i) => (i.place ?? 'fridge') !== place) : [],
+      items: place ? state.fridge.items.filter((i) => i.place !== place) : [],
     },
   });
+}
+
+/** Oppretter et nytt lager. Returnerer id. */
+export function addStorage(name: string, freezer = false): string | null {
+  const n = name.trim();
+  if (!n) return null;
+  const id = newId();
+  commit({
+    ...state,
+    fridge: {
+      ...state.fridge,
+      storages: [...state.fridge.storages, { id, name: n, ...(freezer ? { freezer: true } : {}) }],
+    },
+  });
+  return id;
+}
+
+export function updateStorage(id: string, patch: { name?: string; freezer?: boolean }) {
+  commit({
+    ...state,
+    fridge: {
+      ...state.fridge,
+      storages: state.fridge.storages.map((x) => {
+        if (x.id !== id) return x;
+        const next = { ...x };
+        if (patch.name?.trim()) next.name = patch.name.trim();
+        if (patch.freezer !== undefined) {
+          if (patch.freezer) next.freezer = true;
+          else delete next.freezer;
+        }
+        return next;
+      }),
+    },
+  });
+}
+
+/** Sletter et lager og varene i det. Det siste lageret kan ikke slettes. */
+export function removeStorage(id: string): boolean {
+  if (state.fridge.storages.length <= 1) return false;
+  commit({
+    ...state,
+    fridge: {
+      ...state.fridge,
+      storages: state.fridge.storages.filter((x) => x.id !== id),
+      items: state.fridge.items.filter((i) => i.place !== id),
+    },
+  });
+  return true;
 }
 
 export function updateSettings(patch: Partial<Settings>) {

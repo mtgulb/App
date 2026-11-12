@@ -35,14 +35,23 @@ export type ShoppingState = {
 export type FridgeItem = {
   id: string;
   name: string;
-  /** Kjøleskap (standard), fryser eller skap. */
-  place?: 'fridge' | 'freezer' | 'pantry';
+  /** Id til lageret varen ligger i. */
+  place?: string;
   /** Valgfri utløpsdato, YYYY-MM-DD. */
   expires?: string;
 };
 
+/** Et lager brukeren selv oppretter: «Kjøleskap», «Fryser», «Kjeller» eller bare ett felles «Lager». */
+export type StorageDef = {
+  id: string;
+  name: string;
+  /** Fryser: brukes til påminnelser om å tine. */
+  freezer?: boolean;
+};
+
 export type FridgeState = {
   items: FridgeItem[];
+  storages: StorageDef[];
   /** Regn salt, pepper, vann og olje som alltid tilstede. */
   assumeStaples: boolean;
 };

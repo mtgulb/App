@@ -55,11 +55,15 @@ const fridge: FridgeState = {
     { id: 'f1', name: 'egg', place: 'fridge' },
     { id: 'f2', name: 'laks', place: 'freezer', expires: '2027-01-01' },
   ],
+  storages: [
+    { id: 'fridge', name: 'Kjøleskap' },
+    { id: 'freezer', name: 'Fryser', freezer: true },
+  ],
   assumeStaples: false,
 };
 const items = stateToItems(shopping, fridge);
 let s: ShoppingState = { checked: [], hidden: [], overrides: {}, extras: [] };
-let f: FridgeState = { items: [], assumeStaples: true };
+let f: FridgeState = { items: [], storages: [], assumeStaples: true };
 for (const it of items.values())
   ({ shopping: s, fridge: f } = applyItem(s, f, { ...it, deleted: false }));
 assert.deepEqual(s, shopping);
@@ -81,6 +85,14 @@ assert.deepEqual(s.checked, []);
 assert.deepEqual(s.extras, []);
 assert.deepEqual(f.items, []);
 assert.deepEqual(s.overrides, {});
+// Lager: sletting tar med varene, men det siste lageret kan aldri slettes
+({ shopping: s, fridge: f } = applyItem(s, f, del('storage', 'freezer')));
+assert.deepEqual(
+  f.storages.map((x) => x.id),
+  ['fridge'],
+);
+const keepLast = applyItem(s, f, del('storage', 'fridge'));
+assert.equal(keepLast.fridge, f);
 assert.deepEqual(s.hidden, ['m|salt']); // urørt
 
 // Uendret rad gir samme objekt (ingen unødvendig oppdatering)

@@ -121,6 +121,16 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
+        <Heading>Lager</Heading>
+        <Row
+          title="Foreslå oppskrifter ut fra lageret"
+          detail="Gjelder fanen Lager og oppskriftssiden. Fanen Forslag virker uansett."
+          value={settings.stockSuggestions}
+          onChange={(stockSuggestions) => updateSettings({ stockSuggestions })}
+        />
+      </Card>
+
+      <Card>
         <Heading>Import</Heading>
         <Row
           title="Foreslå import av kopierte lenker"

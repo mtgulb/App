@@ -9,9 +9,11 @@ import type {
   Recipe,
   ShoppingExtra,
   ShoppingState,
+  StorageDef,
 } from '../types.ts';
 
-export type ItemKind = 'checked' | 'hidden' | 'override' | 'extra' | 'fridge' | 'setting';
+export type ItemKind =
+  'checked' | 'hidden' | 'override' | 'extra' | 'fridge' | 'storage' | 'setting';
 
 export type StateItem = { kind: ItemKind; key: string; value: Record<string, unknown> };
 export type StateRow = StateItem & { deleted: boolean };
@@ -92,6 +94,8 @@ export function stateToItems(shopping: ShoppingState, fridge: FridgeState): Map<
   for (const i of fridge.items) {
     put('fridge', i.id, { name: i.name, place: i.place ?? 'fridge', expires: i.expires ?? null });
   }
+  for (const x of fridge.storages)
+    put('storage', x.id, { name: x.name, freezer: Boolean(x.freezer) });
   put('setting', 'assumeStaples', { value: fridge.assumeStaples });
   return m;
 }
@@ -149,6 +153,31 @@ export function applyItem(
       const old = fridge.items.find((i) => i.id === key);
       const items = old ? fridge.items.map((i) => (i.id === key ? next : i)) : [...others, next];
       return { shopping, fridge: { ...fridge, items } };
+    }
+    case 'storage': {
+      const others = fridge.storages.filter((x) => x.id !== key);
+      if (deleted) {
+        // Aldri la en husholdning stå uten lager.
+        if (others.length === 0) return { shopping, fridge };
+        return {
+          shopping,
+          fridge: {
+            ...fridge,
+            storages: others,
+            items: fridge.items.filter((i) => i.place !== key),
+          },
+        };
+      }
+      const next: StorageDef = {
+        id: key,
+        name: String(value.name ?? ''),
+        ...(value.freezer ? { freezer: true } : {}),
+      };
+      const old = fridge.storages.find((x) => x.id === key);
+      const storages = old
+        ? fridge.storages.map((x) => (x.id === key ? next : x))
+        : [...others, next];
+      return { shopping, fridge: { ...fridge, storages } };
     }
     case 'setting': {
       if (key === 'assumeStaples' && !deleted) {

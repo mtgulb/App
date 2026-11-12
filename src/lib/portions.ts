@@ -12,6 +12,8 @@ export type Settings = {
   remindEvening: boolean;
   remindToday: boolean;
   clipboardHint: boolean;
+  /** Foreslå oppskrifter ut fra det som ligger på lageret. */
+  stockSuggestions: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -23,6 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   remindEvening: false,
   remindToday: false,
   clipboardHint: true,
+  stockSuggestions: true,
 };
 
 /** Antall porsjoner husholdningen trenger. Rundes opp, så ingen blir sultne. */

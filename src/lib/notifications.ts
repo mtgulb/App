@@ -4,6 +4,7 @@
  */
 import * as Notifications from 'expo-notifications';
 import { getState, onStateChange } from './store';
+import { freezerIds } from './inventory';
 import { planReminders } from './reminders';
 
 const PREFIX = 'rem-';
@@ -89,6 +90,7 @@ export async function syncReminders() {
       plan: s.plan,
       recipes: s.recipes,
       inventory: s.fridge.items,
+      freezerIds: freezerIds(s.fridge.storages),
       settings: s.settings,
     });
     for (const r of reminders) {

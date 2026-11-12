@@ -1,5 +1,4 @@
 import { baseServings, parseIngredient } from './ingredients.ts';
-import { placeOf } from './inventory.ts';
 import { matchLevel } from './pantry.ts';
 import type { Settings } from './portions.ts';
 import type { FridgeItem, MealPlanEntry, Recipe } from './types.ts';
@@ -17,14 +16,16 @@ export function planReminders(input: {
   plan: MealPlanEntry[];
   recipes: Recipe[];
   inventory: FridgeItem[];
+  /** Ids til lagre som er frysere. */
+  freezerIds: string[];
   settings: Pick<Settings, 'remindEvening' | 'remindToday'>;
   now?: Date;
 }): PlannedReminder[] {
-  const { plan, recipes, inventory, settings } = input;
+  const { plan, recipes, inventory, freezerIds, settings } = input;
   const now = input.now ?? new Date();
   if (!settings.remindEvening && !settings.remindToday) return [];
 
-  const freezer = inventory.filter((i) => placeOf(i) === 'freezer');
+  const freezer = inventory.filter((i) => i.place !== undefined && freezerIds.includes(i.place));
   const horizon = new Date(now.getTime() + HORIZON_DAYS * 86_400_000);
   const out: PlannedReminder[] = [];
 

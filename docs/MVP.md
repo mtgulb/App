@@ -16,7 +16,8 @@
 10. **Sveip i lister** – høyre fjerner, venstre redigerer (handleliste og kjøleskap). _Ikke kjørt på enhet._
 11. **Lim inn / skann tekst** – iPhones «Skann tekst» i tastaturet fyller inn teksten; appen deler den opp. _Ikke kjørt på enhet._
 12. **Familiedeling (Supabase)** – forberedt, avslått til oppsett (`docs/SUPABASE.md`). Database og tilgangsregler er testet; synkkoden er ikke prøvd mot ekte server.
-13. **Lager** (kjøleskap/fryser/skap) med valgfri utløpsdato og «bruk opp snart». _Ikke kjørt på enhet._
+13. **Lager** – permanente varer i egne lager du oppretter selv (ett felles eller flere), valgfri utløpsdato (hurtigvalg eller egen dato), og forslag fra lageret som kan slås av/på. _Ikke kjørt på enhet._
+    13b. **Forslag** («Hva kan jeg lage?») – midlertidig økt: hent inn lageret og/eller skriv inn ting akkurat nå. Det som skrives inn lagres aldri på lageret og forsvinner når økten avsluttes. _Ikke kjørt på enhet._
 14. **Innstillinger**: voksne/barn (alle oppskrifter tilpasser seg), sortering av handleliste etter avdeling (valg), valgfrie påminnelser (av som standard). _Ikke kjørt på enhet._
 15. **Kokemodus** med steg for steg, skjerm på, tidtakere fra stegene. _Ikke kjørt på enhet._
 16. **Kopiert lenke → importer** og dypkobling `oppskrifter://import`. Deling fra Safari krever ekte bygg (`docs/DELING.md`).
