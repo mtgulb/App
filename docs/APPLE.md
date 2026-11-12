@@ -56,7 +56,7 @@ Tredjeparter: strekkodenummer sendes til Open Food Facts (ingen kontoinformasjon
 
 ## 6. Teknisk: EAS og Apple
 
-- `eas.json` har kanalene `development`, `preview` og `production` og `autoIncrement` for production.
+- `eas.json` har kanalene `preview` og `production` og `autoIncrement` for production.
 - `runtimeVersion` bruker `fingerprint`: oppdateringer (EAS Update) når bare bygg med samme native innhold. Nye native pakker eller native konfigurasjon gir nytt fingeravtrykk og krever **nytt bygg**.
 - Første iOS-bygg krever sertifikater. `--non-interactive` kan ikke sette opp en App Store Connect API-nøkkel selv [ikke verifisert, forumkilde]; veien uten Mac er å opprette en API-nøkkel i App Store Connect og legge den inn via `eas credentials` (kan gjøres fra en nettleser-terminal) eller som `ascApiKey…` i `eas.json`.
 - TestFlight: opptil 100 interne testere og 10 000 eksterne. Første bygg til ekstern gruppe går gjennom Beta App Review. Bygg kan testes i 90 dager. [verifisert]

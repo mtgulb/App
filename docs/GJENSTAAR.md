@@ -92,3 +92,6 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 Backup/eksport og angre, førstegangsveiledning, «Om appen» med kilder, tilgjengelighetsgjennomgang, strekkodeforbedringer, ytelsestest, feilhåndteringsgjennomgang, og utkast til alle App Store-tekster.
 
 - [ ] 🔴 **[Eier]** Navn **Panful** valgt. Sjekk: Patentstyret + EUIPO (klasse 9/42), hva som ligger på panful.com, reserver navnet i App Store Connect, opprett `panful@tande-gulbrandsen.no`, velg bundle ID (forslag `no.tande-gulbrandsen.panful`).
+
+- [x] Versjon satt til `1.0.0`. Unødvendige tillatelsestekster (mikrofon, påminnelser) fjernet fra bygget; eneste gjenværende utviklerstreng (lokalt nettverk) erstattet med norsk tekst. Verifisert ved å lese ut Info.plist-verdiene, ikke i et ekte bygg.
+- [ ] 🔴 **[Begge]** Etter at appen er opprettet i App Store Connect: legg appens numeriske **Apple ID** (App Information) i `eas.json` under `submit.production.ios.ascAppId`, ellers kan ikke innsending kjøres uten innlogging.

@@ -1,6 +1,6 @@
 name: EAS Build og TestFlight (manuell)
 # Krever Apple Developer-konto og EXPO_TOKEN. Start: GitHub → Actions → denne flyten → Run workflow.
-# preview/development: intern distribusjon. production: kun fra main, med skrevet bekreftelse og godkjenning.
+# preview: intern distribusjon. production: kun fra main, med skrevet bekreftelse og godkjenning.
 # Innsending til TestFlight/App Store skjer aldri uten at du har skrevet PUBLISER og godkjent miljøet «production».
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
       profile:
         description: Byggprofil
         type: choice
-        options: [development, preview, production]
+        options: [preview, production]
         default: preview
       submit:
         description: Send til TestFlight etter bygg (kun production)
