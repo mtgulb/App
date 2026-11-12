@@ -154,3 +154,8 @@ assert.ok(isPlanData({ recipeId: 'r', date: '2026-11-12T17:00:00.000Z' }));
 assert.ok(!isPlanData({ recipeId: 'r', date: 'ikke en dato' }));
 assert.ok(!isPlanData({ date: '2026-11-12T17:00:00.000Z' }));
 console.log('cloud model OK');
+
+// Familiedeling er av i versjon 1: ingenting skal vises eller kalles
+import { FAMILY_SHARING_ENABLED, isCloudConfigured } from '../src/lib/cloud/config.ts';
+assert.equal(FAMILY_SHARING_ENABLED, false);
+assert.equal(isCloudConfigured, false);

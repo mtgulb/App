@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/Screen';
@@ -13,6 +14,7 @@ import {
   signUp,
   useCloud,
 } from '@/lib/cloud/sync';
+import { isCloudConfigured } from '@/lib/cloud/config';
 import { useTheme } from '@/theme/colors';
 import { dateTag, t as tr } from '@/i18n';
 
@@ -33,6 +35,11 @@ function confirmDeleteAccount() {
 }
 
 export default function FamilyScreen() {
+  if (!isCloudConfigured) return <Redirect href="/" />;
+  return <FamilyContent />;
+}
+
+function FamilyContent() {
   const cloud = useCloud();
   const t = useTheme();
   const [email, setEmail] = useState('');

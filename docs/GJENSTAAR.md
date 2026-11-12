@@ -6,7 +6,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 ## A. Beslutninger (styrer resten)
 
-- [ ] 🔴 **[Eier]** **v1 med eller uten innlogging/familiedeling?** _Anbefaling: uten._ Det fjerner kontosletting, demokonto, e-postbekreftelse, Supabase-drift og mye personvernarbeid fra første innsending. Familiedeling kommer i 1.1.
+- [x] 🔴 **[Eier]** **v1 uten innlogging/familiedeling (avgjort 2026-11-12).** Skjult med hovedbryter `FAMILY_SHARING_ENABLED = false` i `src/lib/cloud/config.ts`; skjermen `family` sender tilbake til forsiden; ingen kall til server. Slås på i 1.1 etter oppsett og test. _Opprinnelig anbefaling:_ Det fjerner kontosletting, demokonto, e-postbekreftelse, Supabase-drift og mye personvernarbeid fra første innsending. Familiedeling kommer i 1.1.
 - [ ] 🔴 **[Eier]** **Appnavn.** Må være ledig i App Store (2–30 tegn). «Oppskrifter» er trolig opptatt. Gi 3 forslag, så sjekker vi tilgjengelighet i App Store Connect.
 - [ ] 🔴 **[Eier]** **Endelig bundle ID**, f.eks. `no.dittnavn.appnavn`. Kan ikke endres etter publisering.
 - [ ] 🔴 **[Eier]** **Prismodell.** v1 forutsettes gratis uten kjøp. (Betalt senere = kjøp i appen via Apple.)

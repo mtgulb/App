@@ -4,7 +4,7 @@ Eier jobber fra iPhone (ingen PC/Mac). Svar på norsk, som til en produkteier. G
 
 ## Appen
 
-Norsk familie-app for oppskrifter og middagsplanlegging (navn: **Panful**, valgt av eier; .com-domenet er opptatt, kontakt `panful@tande-gulbrandsen.no`). Native iOS (Expo/React Native), lokal-først. Funksjoner: import av oppskrift (lenke, bilde, manuelt), strukturerte ingredienser, middagsplan med kalender (liste/måned), handleliste (sammenslått, avdelinger, egne butikker), lager i egne lager med valgfri utløpsdato, «Forslag» (midlertidig økt), kokemodus med tidtakere, favoritter/tagger/tid/vurdering/notater, strekkodeskanning, valgfrie varsler, voksne/barn → porsjoner, familiedeling (Supabase, **avslått til oppsett**).
+Norsk familie-app for oppskrifter og middagsplanlegging (navn: **Panful**, valgt av eier; .com-domenet er opptatt, kontakt `panful@tande-gulbrandsen.no`). Native iOS (Expo/React Native), lokal-først. Funksjoner: import av oppskrift (lenke, bilde, manuelt), strukturerte ingredienser, middagsplan med kalender (liste/måned), handleliste (sammenslått, avdelinger, egne butikker), lager i egne lager med valgfri utløpsdato, «Forslag» (midlertidig økt), kokemodus med tidtakere, favoritter/tagger/tid/vurdering/notater, strekkodeskanning, valgfrie varsler, voksne/barn → porsjoner, familiedeling (Supabase, **av i v1** via `FAMILY_SHARING_ENABLED = false`; ingenting vises i appen).
 Detaljer: `docs/MVP.md`. Status og plan: `docs/ROADMAP.md`.
 
 ## Stack
