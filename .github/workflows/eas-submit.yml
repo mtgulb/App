@@ -49,17 +49,25 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - run: npm ci
-      - name: Skriv App Store Connect-nøkkelen til en midlertidig fil
+      - name: Gjør App Store Connect-nøkkelen tilgjengelig for innsendingen (kun på kjøreren, committes aldri)
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
-          if [ -z "$ASC_KEY_P8" ] || [ -z "$EXPO_ASC_KEY_ID" ] || [ -z "$EXPO_ASC_ISSUER_ID" ] || [ -z "$EXPO_APPLE_TEAM_ID" ]; then
+          if [ -z "$ASC_KEY_P8" ] || [ -z "$EXPO_ASC_KEY_ID" ] || [ -z "$EXPO_ASC_ISSUER_ID" ]; then
             echo "::error::Mangler Apple-secrets i miljøet production."
             exit 1
           fi
           umask 077
-          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc-key.p8"
-          echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/asc-key.p8" >> "$GITHUB_ENV"
+          printf '%s\n' "$ASC_KEY_P8" > ./asc-key.p8
+          node -e "
+            const fs=require('fs');
+            const j=JSON.parse(fs.readFileSync('eas.json','utf8'));
+            const ios=j.submit.production.ios;
+            ios.ascApiKeyPath='./asc-key.p8';
+            ios.ascApiKeyId=process.env.EXPO_ASC_KEY_ID;
+            ios.ascApiKeyIssuerId=process.env.EXPO_ASC_ISSUER_ID;
+            fs.writeFileSync('eas.json',JSON.stringify(j,null,2));
+          "
       - name: Send til TestFlight
         env:
           BUILD_ID: ${{ inputs.build_id }}
