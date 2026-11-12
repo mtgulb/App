@@ -25,7 +25,8 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 ## C. Kontaktinfo og rettslig
 
 - [ ] 🔴 **[Eier]** Kontakt-e-post (foreløpig `panful@tande-gulbrandsen.no`) og **support-URL** (påkrevd i metadata; mangler fortsatt).
-- [ ] 🔴 **[Begge]** **Personvernerklæring på en offentlig URL.** Utkast finnes i `docs/PERSONVERN.md`. Du gir kontaktinfo og godkjenner; jeg setter den opp som en enkel nettside (f.eks. GitHub Pages, krever at repoet er offentlig eller betalt plan) og legger **lenke i appen**.
+- [ ] 🔴 **[Eier]** Slå på GitHub Pages i repoet `mtgulb/panful-legal` (Settings → Pages → Deploy from a branch → `main` / root). Sider er skrevet og pushet; URL: `https://mtgulb.github.io/panful-legal/personvern/` og `/stotte/`. Lenkene står i «Om appen». Flytt til eget domene senere ved å bytte URL i App Store Connect.
+- [x] **Personvernerklæring (skrevet, v1 uten konto):** Utkast finnes i `docs/PERSONVERN.md`. Du gir kontaktinfo og godkjenner; jeg setter den opp som en enkel nettside (f.eks. GitHub Pages, krever at repoet er offentlig eller betalt plan) og legger **lenke i appen**.
 - [x] 🟠 **[Claude]** «Om appen»-skjerm med kilder og lisenser (Open Food Facts krever kreditering), versjon og personvernlenke.
 - [ ] 🟠 **[Eier]** Vurdere enkle brukervilkår (valgfritt).
 - [ ] 🔴 **[Eier]** Besvare Content Rights (appen viser importerte oppskrifter med kilde og lenke).

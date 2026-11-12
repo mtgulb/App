@@ -164,6 +164,8 @@ export const settings = {
   'about.title': 'Om appen',
   'about.version': 'Versjon {version}',
   'about.contact': 'Kontakt',
+  'about.support': 'Støtte',
+  'about.privacy': 'Personvernerklæring',
   'about.sources': 'Kilder og lisenser',
   'about.sourcesBody':
     'Strekkodeoppslag bruker data fra Open Food Facts, tilgjengelig under Open Database License (ODbL). Innholdet i databasen er lisensiert under Database Contents License. Når du skanner en vare, sendes bare strekkodenummeret til Open Food Facts.',

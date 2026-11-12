@@ -5,6 +5,7 @@ import { Body, Card, Heading } from '@/components/ui';
 import { useTheme } from '@/theme/colors';
 import { t } from '@/i18n';
 
+const SITE = 'https://mtgulb.github.io/panful-legal';
 const OFF_URL = 'https://world.openfoodfacts.org';
 const ODBL_URL = 'https://opendatacommons.org/licenses/odbl/1-0/';
 
@@ -32,6 +33,8 @@ export default function About() {
       <Card>
         <Heading>{t('about.contact')}</Heading>
         <LinkText title="panful@tande-gulbrandsen.no" url="mailto:panful@tande-gulbrandsen.no" />
+        <LinkText title={t('about.support')} url={`${SITE}/stotte/`} />
+        <LinkText title={t('about.privacy')} url={`${SITE}/personvern/`} />
       </Card>
       <Card>
         <Heading>{t('about.sources')}</Heading>
