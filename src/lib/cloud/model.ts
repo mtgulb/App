@@ -113,7 +113,12 @@ export function stateToItems(shopping: ShoppingState, fridge: FridgeState): Map<
   for (const [k, text] of Object.entries(shopping.overrides)) put('override', k, { text });
   for (const e of shopping.extras) put('extra', e.id, { text: e.text, checked: e.checked });
   for (const i of fridge.items) {
-    put('fridge', i.id, { name: i.name, place: i.place ?? 'fridge', expires: i.expires ?? null });
+    put('fridge', i.id, {
+      name: i.name,
+      place: i.place ?? 'fridge',
+      expires: i.expires ?? null,
+      product: i.product ?? null,
+    });
   }
   for (const r of shopping.fromRecipes)
     put('recipeAdd', r.id, { recipeId: r.recipeId, servings: r.servings });
@@ -172,6 +177,7 @@ export function applyItem(
         name: String(value.name ?? ''),
         place: (value.place as FridgeItem['place']) ?? 'fridge',
         ...(value.expires ? { expires: String(value.expires) } : {}),
+        ...(value.product ? { product: String(value.product) } : {}),
       };
       const old = fridge.items.find((i) => i.id === key);
       const items = old ? fridge.items.map((i) => (i.id === key ? next : i)) : [...others, next];

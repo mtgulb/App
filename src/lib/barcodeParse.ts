@@ -21,7 +21,13 @@ export function normalizeGtin(code: string): string {
   return d;
 }
 
-export type BarcodeProduct = { name: string; brand?: string; quantity?: string };
+export type BarcodeProduct = {
+  name: string;
+  brand?: string;
+  quantity?: string;
+  /** Kategorier fra databasen (f.eks. «en:sweet-corn»). */
+  categories?: string[];
+};
 
 type OffResponse = {
   status?: number;
@@ -32,6 +38,7 @@ type OffResponse = {
     generic_name?: string;
     brands?: string;
     quantity?: string;
+    categories_tags?: string[];
   };
 };
 
@@ -49,7 +56,14 @@ export function parseOffProduct(json: unknown): BarcodeProduct | null {
     clean(p.generic_name);
   if (!name) return null;
   const brand = clean(p.brands).split(',')[0]?.trim() || undefined;
-  return { name, brand, quantity: clean(p.quantity) || undefined };
+  return {
+    name,
+    brand,
+    quantity: clean(p.quantity) || undefined,
+    ...(Array.isArray(p.categories_tags)
+      ? { categories: p.categories_tags.filter((c) => typeof c === 'string') }
+      : {}),
+  };
 }
 
 /** Navnet slik det foreslås lagt på lager: uten merkenavn hvis det står først, ellers uendret. */

@@ -68,6 +68,7 @@ export default function ShoppingScreen() {
   const router = useRouter();
   const { recipes, plan, shopping, settings } = useStore();
   const [draft, setDraft] = useState('');
+  const [showPlan, setShowPlan] = useState(false);
   const [from, setFrom] = useState(() => startOfDay(new Date()));
   const [to, setTo] = useState(() => addDays(startOfDay(new Date()), 6));
 
@@ -251,144 +252,164 @@ export default function ShoppingScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            <View style={[styles.rangeCard, shadow, { backgroundColor: t.card }]}>
-              <View style={styles.rangeRow}>
-                <Text style={[styles.rangeLabel, { color: t.text }]}>Fra</Text>
-                <DateTimePicker
-                  value={from}
-                  mode="date"
-                  display="compact"
-                  accentColor={t.tint}
-                  locale="nb-NO"
-                  onChange={(_, d) => {
-                    if (!d) return;
-                    setFrom(startOfDay(d));
-                    if (d > to) setTo(startOfDay(d));
-                  }}
-                />
-              </View>
-              <View style={styles.rangeRow}>
-                <Text style={[styles.rangeLabel, { color: t.text }]}>Til</Text>
-                <DateTimePicker
-                  value={to}
-                  mode="date"
-                  display="compact"
-                  accentColor={t.tint}
-                  locale="nb-NO"
-                  minimumDate={from}
-                  onChange={(_, d) => d && setTo(startOfDay(d))}
-                />
-              </View>
-              <View style={styles.quick}>
-                {[
-                  ['I dag', 1],
-                  ['3 dager', 3],
-                  ['7 dager', 7],
-                  ['14 dager', 14],
-                ].map(([label, days]) => (
-                  <Pressable
-                    key={label}
-                    accessibilityRole="button"
-                    onPress={() => setRange(days as number)}
-                  >
-                    <Chip>{label as string}</Chip>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.sortWrap}>
-              <SegmentedControl
-                value={settings.shoppingSort}
-                onChange={(shoppingSort) => updateSettings({ shoppingSort })}
-                options={[
-                  { value: 'recipe', label: 'Alfabetisk' },
-                  { value: 'department', label: 'Etter avdeling' },
-                ]}
-              />
-            </View>
-            {settings.shoppingSort === 'department' ? (
-              <View style={styles.storeRow}>
-                <Text style={[styles.hint, { color: t.textSecondary }]}>Butikk:</Text>
-                {[{ id: null as string | null, name: 'Standard' }, ...settings.stores].map((st) => (
-                  <Pressable
-                    key={st.id ?? 'std'}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: settings.activeStoreId === st.id }}
-                    onPress={() => updateSettings({ activeStoreId: st.id })}
-                  >
-                    <View
-                      style={[
-                        styles.storeChip,
-                        { backgroundColor: settings.activeStoreId === st.id ? t.tint : t.tintSoft },
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          color: settings.activeStoreId === st.id ? '#FFFFFF' : t.tint,
-                          fontWeight: '600',
-                          fontSize: 13,
-                        }}
-                      >
-                        {st.name}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ))}
-                <Pressable accessibilityRole="button" onPress={() => router.push('/stores')}>
-                  <Text style={{ color: t.tint, fontWeight: '700', fontSize: 13 }}>
-                    Rediger butikker
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-            <Text style={[styles.summary, { color: t.textSecondary }]}>
-              {inRange.length === 0
-                ? `Ingen middager ${dateFmt.format(from)} – ${dateFmt.format(to)}`
-                : `${inRange.length} ${inRange.length === 1 ? 'middag' : 'middager'} · ${dateFmt.format(from)} – ${dateFmt.format(to)}`}
-            </Text>
-            {inRange.map((e) => {
-              const r = recipes.find((x) => x.id === e.recipeId);
-              if (!r) return null;
-              return (
-                <Text key={e.id} style={[styles.summaryItem, { color: t.textSecondary }]}>
-                  {dateFmt.format(new Date(e.date))}: {r.title} ({e.servings ?? baseServings(r)}{' '}
-                  porsj.)
+            {/* Én linje som kan utvides: periode, middager, sortering */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: showPlan }}
+              onPress={() => setShowPlan((v) => !v)}
+              style={[styles.summaryBar, shadow, { backgroundColor: t.card }]}
+            >
+              <View style={styles.flex}>
+                <Text style={[styles.summaryTitle, { color: t.text }]}>
+                  {dateFmt.format(from)} – {dateFmt.format(to)}
                 </Text>
-              );
-            })}
+                <Text style={{ color: t.textSecondary, fontSize: 13 }}>
+                  {inRange.length} {inRange.length === 1 ? 'middag' : 'middager'}
+                  {shopping.fromRecipes.length > 0
+                    ? ` + ${shopping.fromRecipes.length} ${shopping.fromRecipes.length === 1 ? 'oppskrift' : 'oppskrifter'}`
+                    : ''}
+                  {' · '}
+                  {settings.shoppingSort === 'department' ? 'Etter avdeling' : 'Alfabetisk'}
+                </Text>
+              </View>
+              <Text style={{ color: t.tint, fontSize: 16 }}>{showPlan ? '▴' : '▾'}</Text>
+            </Pressable>
 
-            {shopping.fromRecipes.map((add) => {
-              const r = recipes.find((x) => x.id === add.recipeId);
-              if (!r) return null;
-              return (
-                <View key={add.id} style={styles.addedRow}>
-                  <Text style={[styles.summaryItem, styles.flex, { color: t.textSecondary }]}>
-                    Lagt til: {r.title} ({add.servings} porsj.)
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
-                    onPress={() => removeRecipeFromShopping(add.id)}
-                  >
-                    <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>Fjern</Text>
-                  </Pressable>
+            {showPlan ? (
+              <View style={[styles.panel, { backgroundColor: t.card, borderColor: t.border }]}>
+                <View style={styles.rangeRow}>
+                  <Text style={[styles.rangeLabel, { color: t.text }]}>Fra</Text>
+                  <DateTimePicker
+                    value={from}
+                    mode="date"
+                    display="compact"
+                    accentColor={t.tint}
+                    locale="nb-NO"
+                    onChange={(_, d) => {
+                      if (!d) return;
+                      setFrom(startOfDay(d));
+                      if (d > to) setTo(startOfDay(d));
+                    }}
+                  />
+                  <Text style={[styles.rangeLabel, { color: t.text }]}>Til</Text>
+                  <DateTimePicker
+                    value={to}
+                    mode="date"
+                    display="compact"
+                    accentColor={t.tint}
+                    locale="nb-NO"
+                    minimumDate={from}
+                    onChange={(_, d) => d && setTo(startOfDay(d))}
+                  />
                 </View>
-              );
-            })}
+                <View style={styles.quick}>
+                  {[
+                    ['I dag', 1],
+                    ['3 dager', 3],
+                    ['7 dager', 7],
+                    ['14 dager', 14],
+                  ].map(([label, days]) => (
+                    <Pressable
+                      key={label}
+                      accessibilityRole="button"
+                      onPress={() => setRange(days as number)}
+                    >
+                      <Chip>{label as string}</Chip>
+                    </Pressable>
+                  ))}
+                </View>
 
-            {todoMerged.length + todoExtras.length > 0 ? (
-              <Text style={[styles.hint, { color: t.textSecondary }]}>
-                Sveip mot høyre for å fjerne · mot venstre for å redigere
-              </Text>
+                <View style={styles.sortWrap}>
+                  <SegmentedControl
+                    value={settings.shoppingSort}
+                    onChange={(shoppingSort) => updateSettings({ shoppingSort })}
+                    options={[
+                      { value: 'recipe', label: 'Alfabetisk' },
+                      { value: 'department', label: 'Etter avdeling' },
+                    ]}
+                  />
+                </View>
+                {settings.shoppingSort === 'department' ? (
+                  <View style={styles.storeRow}>
+                    <Text style={[styles.hint, { color: t.textSecondary }]}>Butikk:</Text>
+                    {[{ id: null as string | null, name: 'Standard' }, ...settings.stores].map(
+                      (st) => (
+                        <Pressable
+                          key={st.id ?? 'std'}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: settings.activeStoreId === st.id }}
+                          onPress={() => updateSettings({ activeStoreId: st.id })}
+                        >
+                          <View
+                            style={[
+                              styles.storeChip,
+                              {
+                                backgroundColor:
+                                  settings.activeStoreId === st.id ? t.tint : t.tintSoft,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={{
+                                color: settings.activeStoreId === st.id ? '#FFFFFF' : t.tint,
+                                fontWeight: '600',
+                                fontSize: 13,
+                              }}
+                            >
+                              {st.name}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      ),
+                    )}
+                    <Pressable accessibilityRole="button" onPress={() => router.push('/stores')}>
+                      <Text style={{ color: t.tint, fontWeight: '700', fontSize: 13 }}>
+                        Rediger butikker
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+
+                {inRange.map((e) => {
+                  const r = recipes.find((x) => x.id === e.recipeId);
+                  if (!r) return null;
+                  return (
+                    <Text key={e.id} style={[styles.summaryItem, { color: t.textSecondary }]}>
+                      {dateFmt.format(new Date(e.date))}: {r.title} ({e.servings ?? baseServings(r)}{' '}
+                      porsj.)
+                    </Text>
+                  );
+                })}
+                {shopping.fromRecipes.map((add) => {
+                  const r = recipes.find((x) => x.id === add.recipeId);
+                  if (!r) return null;
+                  return (
+                    <View key={add.id} style={styles.addedRow}>
+                      <Text style={[styles.summaryItem, styles.flex, { color: t.textSecondary }]}>
+                        Lagt til: {r.title} ({add.servings} porsj.)
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
+                        onPress={() => removeRecipeFromShopping(add.id)}
+                      >
+                        <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>
+                          Fjern
+                        </Text>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </View>
             ) : null}
+
             <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
               <TextInput
                 accessibilityLabel="Legg til vare"
                 value={draft}
                 onChangeText={setDraft}
                 onSubmitEditing={submit}
-                placeholder="Legg til egen vare …"
+                placeholder="Legg til vare"
                 placeholderTextColor={t.textSecondary}
                 returnKeyType="done"
                 style={[styles.addInput, { color: t.text }]}
@@ -399,7 +420,7 @@ export default function ShoppingScreen() {
                 hitSlop={8}
                 onPress={() => router.push({ pathname: '/scan', params: { target: 'shopping' } })}
               >
-                <Text style={{ fontSize: 22 }}>📷</Text>
+                <SymbolView name="barcode.viewfinder" tintColor={t.textSecondary} size={24} />
               </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Legg til" onPress={submit}>
                 <SymbolView name="plus.circle.fill" tintColor={t.tint} size={28} />
@@ -535,6 +556,16 @@ const styles = StyleSheet.create({
   summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   storeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   storeChip: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
+  summaryBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: radius,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  summaryTitle: { fontSize: 15, fontWeight: '700' },
+  panel: { borderRadius: radius, borderWidth: 1, padding: 12, gap: 10 },
   addedRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   summaryItem: { fontSize: 13 },
   addRow: {

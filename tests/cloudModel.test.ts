@@ -62,7 +62,13 @@ const shopping: ShoppingState = {
 const fridge: FridgeState = {
   items: [
     { id: 'f1', name: 'egg', place: 'fridge' },
-    { id: 'f2', name: 'laks', place: 'freezer', expires: '2027-01-01' },
+    {
+      id: 'f2',
+      name: 'laks',
+      place: 'freezer',
+      expires: '2027-01-01',
+      product: 'Findus Laksefilet 400 g',
+    },
   ],
   storages: [
     { id: 'fridge', name: 'Kjøleskap' },

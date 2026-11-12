@@ -35,7 +35,14 @@ const found = parseOffProduct({
     quantity: '1 l',
   },
 });
-assert.deepEqual(found, { name: 'Lettmelk', brand: 'Tine', quantity: '1 l' }); // norsk navn foretrekkes
+assert.deepEqual(found, { name: 'Lettmelk', brand: 'Tine', quantity: '1 l' });
+assert.deepEqual(
+  parseOffProduct({
+    status: 1,
+    product: { product_name: 'Sweet corn', categories_tags: ['en:sweet-corn', 'en:vegetables'] },
+  })?.categories,
+  ['en:sweet-corn', 'en:vegetables'],
+); // norsk navn foretrekkes
 assert.equal(parseOffProduct({ status: 1, product: { generic_name: 'Smør' } })?.name, 'Smør');
 
 // Foreslått navn uten merkenavn først

@@ -55,6 +55,8 @@ export type FridgeItem = {
   place?: string;
   /** Valgfri utløpsdato, YYYY-MM-DD. */
   expires?: string;
+  /** Produktnavnet fra strekkoden, f.eks. «Green Giant Sweet Corn 200 g». Navnet er råvaren («Mais»). */
+  product?: string;
 };
 
 /** Et lager brukeren selv oppretter: «Kjøleskap», «Fryser», «Kjeller» eller bare ett felles «Lager». */

@@ -14,14 +14,13 @@
 8. **Strukturert ingrediensredigering** – felt for mengde, enhet og hva (og ett felt per steg) i stedet for ren tekst. _Skrevet, ikke kjørt på enhet._
 9. **Kjøleskap og forslag** – legg inn hva du har; oppskrifter rangeres etter færrest manglende ingredienser, med «legg manglende på handlelisten». Synonymer (mel/mjøl/hvetemel/flour …) brukes både her og ved sammenslåing. _Skrevet, ikke kjørt på enhet._
 10. **Sveip i lister** – høyre fjerner, venstre redigerer (handleliste og kjøleskap). _Ikke kjørt på enhet._
-11. **Lim inn / skann tekst** – iPhones «Skann tekst» i tastaturet fyller inn teksten; appen deler den opp. _Ikke kjørt på enhet._
-12. **Familiedeling (Supabase)** – forberedt, avslått til oppsett (`docs/SUPABASE.md`). Database og tilgangsregler er testet; synkkoden er ikke prøvd mot ekte server.
-13. **Lager** – permanente varer i egne lager du oppretter selv (ett felles eller flere), valgfri utløpsdato (hurtigvalg eller egen dato), og forslag fra lageret som kan slås av/på. _Ikke kjørt på enhet._
+11. **Familiedeling (Supabase)** – forberedt, avslått til oppsett (`docs/SUPABASE.md`). Database og tilgangsregler er testet; synkkoden er ikke prøvd mot ekte server.
+12. **Lager** – permanente varer i egne lager du oppretter selv (ett felles eller flere), valgfri utløpsdato (hurtigvalg eller egen dato), og forslag fra lageret som kan slås av/på. _Ikke kjørt på enhet._
     13b. **Forslag** («Hva kan jeg lage?») – midlertidig økt: hent inn lageret og/eller skriv inn ting akkurat nå. Det som skrives inn lagres aldri på lageret og forsvinner når økten avsluttes. _Ikke kjørt på enhet._
-14. **Innstillinger**: voksne/barn (alle oppskrifter tilpasser seg), sortering av handleliste etter avdeling (valg), valgfrie påminnelser (av som standard). _Ikke kjørt på enhet._
-15. **Kokemodus** med steg for steg, skjerm på, tidtakere fra stegene. _Ikke kjørt på enhet._
-16. **Kopiert lenke → importer** og dypkobling `oppskrifter://import`. Deling fra Safari krever ekte bygg (`docs/DELING.md`).
-17. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
+13. **Innstillinger**: voksne/barn (alle oppskrifter tilpasser seg), sortering av handleliste etter avdeling (valg), valgfrie påminnelser (av som standard). _Ikke kjørt på enhet._
+14. **Kokemodus** med steg for steg, skjerm på, tidtakere fra stegene. _Ikke kjørt på enhet._
+15. **Kopiert lenke → importer** og dypkobling `oppskrifter://import`. Deling fra Safari krever ekte bygg (`docs/DELING.md`).
+16. **Middagsplan** (liste eller månedskalender) – oversikt per dag, fjerne (fjerner også kalenderhendelsen). _Bygget._
 
 ## Skjermer
 
@@ -34,3 +33,7 @@ Oppskrifter (liste) · Ny oppskrift · Oppskrift (detalj) · Planlegg middag · 
 ## Beslutning: lese oppskrift fra bilde
 
 Valgt **B**: tekstgjenkjenning på enheten (Apple Vision via `expo-text-extractor`), deretter enkel strukturering til tittel/ingredienser/fremgangsmåte (`src/lib/structureText.ts`). Gratis og bildet forlater ikke telefonen. Krever ekte bygg (ikke Expo Go). Kvaliteten avhenger av bildet – brukeren kan rette opp før lagring. Alternativ A (Claude via backend) kan legges til senere.
+
+## Strekkoder → råvarer
+
+Produktnavn fra strekkoden («Green Giant Sweet Corn 200 g») renses for merke og mengde og slås opp i synonymlisten (norsk/engelsk, sammensatte ord, databasekategorier) → «Mais». Brukeren kan rette forslaget, og valget huskes per strekkode. Produktnavnet vises under varen på lageret. Skanning finnes på Lager, Handleliste og Forslag. Se `src/lib/productName.ts`.

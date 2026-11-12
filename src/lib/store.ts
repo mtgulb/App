@@ -290,7 +290,10 @@ export function removeCheckedExtras() {
 }
 
 /** Legger til varer på lager. Kommaseparert tekst gir flere varer; dubletter på samme sted hoppes over. */
-export function addFridgeItems(text: string, opts: { place?: string; expires?: string } = {}) {
+export function addFridgeItems(
+  text: string,
+  opts: { place?: string; expires?: string; product?: string } = {},
+) {
   const place = opts.place ?? state.fridge.storages[0].id;
   const names = text
     .split(/[,\n]/)
@@ -302,7 +305,13 @@ export function addFridgeItems(text: string, opts: { place?: string; expires?: s
     const key = `${place}|${name.toLowerCase()}`;
     if (existing.has(key)) continue;
     existing.add(key);
-    added.push({ id: newId(), name, place, ...(opts.expires ? { expires: opts.expires } : {}) });
+    added.push({
+      id: newId(),
+      name,
+      place,
+      ...(opts.expires ? { expires: opts.expires } : {}),
+      ...(opts.product && names.length === 1 ? { product: opts.product } : {}),
+    });
   }
   if (added.length === 0) return;
   commit({ ...state, fridge: { ...state.fridge, items: [...state.fridge.items, ...added] } });

@@ -1,3 +1,4 @@
+import { SymbolView } from 'expo-symbols';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -13,8 +14,7 @@ import {
   View,
 } from 'react-native';
 import { RecipeFitCard } from '@/components/RecipeFitCard';
-import { SwipeRow } from '@/components/SwipeRow';
-import { Button, Card, Heading, LargeTitle } from '@/components/ui';
+import { Heading, LargeTitle } from '@/components/ui';
 import { rankRecipes } from '@/lib/pantry';
 import {
   addSessionItems,
@@ -48,22 +48,27 @@ export default function SuggestScreen() {
     setDraft('');
   }
 
-  /** Flytter en midlertidig vare til lageret (bevisst valg) og tar den ut av økten. */
-  function saveToStock(item: SessionItem) {
+  /** Valg for en midlertidig vare: legg den på lageret (bevisst valg) eller fjern den. */
+  function itemMenu(item: SessionItem) {
     const put = (storageId: string) => {
       addFridgeItems(item.name, { place: storageId });
       removeSessionItem(item.id);
     };
-    if (fridge.storages.length === 1) {
-      put(fridge.storages[0].id);
+    if (Platform.OS !== 'ios') {
+      removeSessionItem(item.id);
       return;
     }
-    if (Platform.OS !== 'ios') return;
-    const options = [...fridge.storages.map((s) => `Legg i ${s.name}`), 'Avbryt'];
+    const options = [...fridge.storages.map((s) => `Legg på ${s.name}`), 'Fjern', 'Avbryt'];
     ActionSheetIOS.showActionSheetWithOptions(
-      { title: item.name, options, cancelButtonIndex: options.length - 1 },
+      {
+        title: item.name,
+        options,
+        cancelButtonIndex: options.length - 1,
+        destructiveButtonIndex: options.length - 2,
+      },
       (i) => {
         if (i < fridge.storages.length) put(fridge.storages[i].id);
+        else if (i === fridge.storages.length) removeSessionItem(item.id);
       },
     );
   }
@@ -83,61 +88,57 @@ export default function SuggestScreen() {
     );
   }
 
+  const active = session.items.length > 0 || !session.useStock || session.excluded.length > 0;
+
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
       <LargeTitle title="Forslag" />
       <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
         <Text style={[styles.hint, { color: t.textSecondary }]}>
-          Finn ut hva du kan lage nå. Det du skriver inn her er midlertidig: det lagres ikke på
-          lageret og forsvinner når du avslutter økten.
+          Midlertidig – det du skriver inn lagres ikke på lageret.
         </Text>
 
-        <Card>
-          <View style={styles.switchRow}>
-            <View style={styles.flex}>
-              <Text style={[styles.label, { color: t.text }]}>Ta med det jeg har på lager</Text>
-              <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-                {fridge.items.length} {fridge.items.length === 1 ? 'vare' : 'varer'} på lageret
-              </Text>
-            </View>
-            <Switch
-              value={session.useStock}
-              onValueChange={setUseStock}
-              trackColor={{ true: t.tint }}
-            />
+        {/* Lageret: én linje */}
+        <View style={styles.row}>
+          <Text style={[styles.label, { color: t.text }]}>
+            Ta med lageret ({fridge.items.length})
+          </Text>
+          <Switch
+            value={session.useStock}
+            onValueChange={setUseStock}
+            trackColor={{ true: t.tint }}
+          />
+        </View>
+        {session.useStock && fridge.storages.length > 1 ? (
+          <View style={styles.chips}>
+            {fridge.storages.map((s) => {
+              const on = !session.excluded.includes(s.id);
+              return (
+                <Pressable
+                  key={s.id}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: on }}
+                  onPress={() => toggleStorageIncluded(s.id)}
+                  style={[styles.chip, { backgroundColor: on ? t.tint : t.tintSoft }]}
+                >
+                  <Text style={{ color: on ? '#FFFFFF' : t.tint, fontWeight: '700', fontSize: 13 }}>
+                    {on ? '✓ ' : ''}
+                    {s.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-          {session.useStock && fridge.storages.length > 1 ? (
-            <View style={styles.chips}>
-              {fridge.storages.map((s) => {
-                const on = !session.excluded.includes(s.id);
-                return (
-                  <Pressable
-                    key={s.id}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: on }}
-                    onPress={() => toggleStorageIncluded(s.id)}
-                    style={[styles.chip, { backgroundColor: on ? t.tint : t.tintSoft }]}
-                  >
-                    <Text
-                      style={{ color: on ? '#FFFFFF' : t.tint, fontWeight: '700', fontSize: 13 }}
-                    >
-                      {on ? '✓ ' : ''}
-                      {s.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ) : null}
-        </Card>
+        ) : null}
 
+        {/* Legg til: tekst + skann */}
         <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
           <TextInput
             accessibilityLabel="Skriv inn det du har nå"
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={submit}
-            placeholder="Skriv inn det du har nå. F.eks. kylling, ris"
+            placeholder="Hva har du nå? F.eks. kylling, ris"
             placeholderTextColor={t.textSecondary}
             returnKeyType="done"
             autoCorrect={false}
@@ -145,58 +146,76 @@ export default function SuggestScreen() {
           />
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Skann strekkode"
+            hitSlop={8}
+            onPress={() => router.push({ pathname: '/scan', params: { target: 'session' } })}
+          >
+            <SymbolView name="barcode.viewfinder" tintColor={t.textSecondary} size={24} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel="Legg til"
             onPress={submit}
             style={[styles.addBtn, { backgroundColor: t.tint }]}
           >
-            <Text style={styles.addBtnText}>Legg til</Text>
+            <SymbolView name="plus" tintColor="#FFFFFF" size={16} />
           </Pressable>
         </View>
 
+        {/* Midlertidige varer som små merker */}
         {session.items.length > 0 ? (
-          <View style={styles.items}>
-            <Text style={[styles.section, { color: t.textSecondary }]}>
-              Midlertidig (lagres ikke) · sveip mot høyre for å fjerne, venstre for å legge på
-              lageret
-            </Text>
+          <View style={styles.chips}>
             {session.items.map((item) => (
-              <SwipeRow
+              <Pressable
                 key={item.id}
-                accessibilityLabel={item.name}
-                right={{ label: 'Fjern', color: t.danger, run: () => removeSessionItem(item.id) }}
-                left={{ label: 'Legg på lager', color: t.tint, run: () => saveToStock(item) }}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name}, trykk for valg`}
+                onPress={() => itemMenu(item)}
               >
-                <View style={[styles.item, { backgroundColor: t.card, borderColor: t.border }]}>
-                  <Text style={[styles.itemText, { color: t.text }]}>{item.name}</Text>
+                <View
+                  style={[
+                    styles.chip,
+                    { backgroundColor: t.card, borderWidth: 1, borderColor: t.border },
+                  ]}
+                >
+                  <Text style={{ color: t.text, fontSize: 14 }}>{item.name} ✕</Text>
                 </View>
-              </SwipeRow>
+              </Pressable>
             ))}
           </View>
         ) : null}
 
-        {session.items.length > 0 || !session.useStock || session.excluded.length > 0 ? (
-          <Button title="Avslutt økt" kind="secondary" onPress={confirmEnd} />
-        ) : null}
-
-        <Card>
-          <View style={styles.switchRow}>
-            <Text style={[styles.label, styles.flex, { color: t.text }]}>
-              Anta at salt, pepper, vann og olje finnes
+        <View style={styles.row}>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: fridge.assumeStaples }}
+            accessibilityLabel="Anta at salt, pepper, vann og olje finnes"
+            onPress={() => setAssumeStaples(!fridge.assumeStaples)}
+            style={[styles.pill, { backgroundColor: fridge.assumeStaples ? t.tint : t.tintSoft }]}
+          >
+            <Text
+              style={{
+                color: fridge.assumeStaples ? '#FFFFFF' : t.tint,
+                fontWeight: '600',
+                fontSize: 12,
+              }}
+            >
+              {fridge.assumeStaples ? '✓ ' : ''}Salt, pepper, vann og olje finnes
             </Text>
-            <Switch
-              value={fridge.assumeStaples}
-              onValueChange={setAssumeStaples}
-              trackColor={{ true: t.tint }}
-            />
-          </View>
-        </Card>
+          </Pressable>
+          {active ? (
+            <Pressable accessibilityRole="button" onPress={confirmEnd}>
+              <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>Avslutt økt</Text>
+            </Pressable>
+          ) : null}
+        </View>
 
         <Heading>Du kan lage</Heading>
         {recipes.length === 0 ? (
           <Text style={[styles.hint, { color: t.textSecondary }]}>Legg inn oppskrifter først.</Text>
         ) : names.length === 0 ? (
           <Text style={[styles.hint, { color: t.textSecondary }]}>
-            Skriv inn hva du har, eller ta med lageret, så rangerer vi oppskriftene dine.
+            Skriv inn hva du har, eller ta med lageret.
           </Text>
         ) : (
           ranked.map((fit) => (
@@ -216,26 +235,28 @@ export default function SuggestScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  list: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
+  list: { paddingHorizontal: 20, paddingBottom: 40, gap: 10 },
   hint: { fontSize: 13 },
-  section: { fontSize: 13, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   label: { fontSize: 15, fontWeight: '600' },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6 },
   addRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius,
-    paddingLeft: 16,
+    paddingLeft: 14,
     paddingRight: 8,
     paddingVertical: 6,
-    gap: 8,
+    gap: 12,
   },
-  addInput: { flex: 1, fontSize: 16, paddingVertical: 10 },
-  addBtn: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  addBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-  items: { gap: 6 },
-  item: { borderRadius: 14, borderWidth: 1, padding: 14 },
-  itemText: { fontSize: 16 },
+  addInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
+  addBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pill: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
 });

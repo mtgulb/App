@@ -4,7 +4,7 @@ Eier jobber fra iPhone (ingen PC/Mac). Svar på norsk, som til en produkteier. G
 
 ## Appen
 
-Norsk familie-app for oppskrifter og middagsplanlegging (arbeidstittel «Oppskrifter»). Native iOS (Expo/React Native), lokal-først. Funksjoner: import av oppskrift (lenke, bilde/tekst, manuelt), strukturerte ingredienser, middagsplan med kalender (liste/måned), handleliste (sammenslått, avdelinger, egne butikker), lager i egne lager med valgfri utløpsdato, «Forslag» (midlertidig økt), kokemodus med tidtakere, favoritter/tagger/tid/vurdering/notater, strekkodeskanning, valgfrie varsler, voksne/barn → porsjoner, familiedeling (Supabase, **avslått til oppsett**).
+Norsk familie-app for oppskrifter og middagsplanlegging (arbeidstittel «Oppskrifter»). Native iOS (Expo/React Native), lokal-først. Funksjoner: import av oppskrift (lenke, bilde, manuelt), strukturerte ingredienser, middagsplan med kalender (liste/måned), handleliste (sammenslått, avdelinger, egne butikker), lager i egne lager med valgfri utløpsdato, «Forslag» (midlertidig økt), kokemodus med tidtakere, favoritter/tagger/tid/vurdering/notater, strekkodeskanning, valgfrie varsler, voksne/barn → porsjoner, familiedeling (Supabase, **avslått til oppsett**).
 Detaljer: `docs/MVP.md`. Status og plan: `docs/ROADMAP.md`.
 
 ## Stack
@@ -21,7 +21,7 @@ Expo SDK 58 · React Native 0.88 · TypeScript (strict) · Expo Router (`src/app
 ## Arkitektur (`src/`)
 
 - `app/` skjermer (tabs: Oppskrifter, Middagsplan, Handleliste, Lager, Forslag; modaler: recipe/*, settings, family, stores, scan, import)
-- `lib/` ren logikk, **testbar uten React Native** (importer med `.ts`-endelse): `ingredients` (mengder, skalering, sammenslåing), `synonyms` + `pantry` (matching: synonymer, sammensatte ord, «lignende»), `departments`, `inventory`, `session`, `durations`, `reminders`, `recipeFilter`, `recipeParser`, `structureText`, `barcodeParse`, `urls`, `portions` (innstillinger)
+- `lib/` ren logikk, **testbar uten React Native** (importer med `.ts`-endelse): `ingredients` (mengder, skalering, sammenslåing), `synonyms` + `pantry` (matching: synonymer, sammensatte ord, «lignende»), `departments`, `inventory`, `session`, `durations`, `reminders`, `recipeFilter`, `recipeParser`, `structureText`, `barcodeParse`, `productName` (strekkode → råvare), `urls`, `portions` (innstillinger)
 - `lib/store.ts` lagring (kv-store) + `useStore`; `lib/cloud/` synk (model.ts er ren og testet; sync.ts og client.ts er ikke prøvd mot ekte server)
 - `components/` delte UI-deler, `theme/` farger
 - `supabase/migrations/` databaseskjema med RLS · `docs/` dokumentasjon

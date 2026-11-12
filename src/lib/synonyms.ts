@@ -147,6 +147,28 @@ const GROUPS: string[][] = [
   ['rødløk', 'redonion'],
   ['bacon'],
   ['nudler', 'noodles', 'nudel'],
+  ['ketchup'],
+  ['bønner', 'beans', 'kidneybønner', 'kidney', 'brunebønner', 'hvitebønner', 'butterbeans'],
+  ['cottage', 'cottagecheese'],
+  ['kremost', 'creamcheese', 'flødeost'],
+  ['peanøttsmør', 'peanutbutter'],
+  ['iskrem', 'icecream', 'is'],
+  ['soyadrikk', 'soymilk', 'soyamelk'],
+  ['cornflakes', 'frokostblanding'],
+  ['müsli', 'muesli'],
+  ['nøtter', 'nuts'],
+  ['rosiner', 'raisins'],
+  ['oliven', 'olives'],
+  ['kapers', 'capers'],
+  ['pesto'],
+  ['tabasco'],
+  ['sriracha'],
+  ['wasabi'],
+  ['dill'],
+  ['mynte', 'mint'],
+  ['gressløk', 'chives'],
+  ['laurbærblad', 'bayleaf'],
+  ['kyllinglår', 'chickenthigh'],
   ['oregano'],
   ['chili'],
   ['kardemomme', 'cardamom'],
@@ -190,6 +212,16 @@ const PHRASES: [string, string][] = [
   ['crème fraîche', 'cremefraiche'],
   ['fedd hvitløk', 'hvitløk'],
   ['rolled oats', 'havregryn'],
+  ['corn flakes', 'cornflakes'],
+  ['cottage cheese', 'cottage'],
+  ['cream cheese', 'kremost'],
+  ['peanut butter', 'peanøttsmør'],
+  ['ice cream', 'iskrem'],
+  ['soy milk', 'soyadrikk'],
+  ['kidney beans', 'bønner'],
+  ['butter beans', 'bønner'],
+  ['hvite bønner', 'bønner'],
+  ['brune bønner', 'bønner'],
 ];
 
 function stem(w: string): string {
@@ -226,3 +258,12 @@ export function normalizeTokens(name: string): string[] {
     .filter((w) => w && !STOP.has(w))
     .map(canonicalWord);
 }
+
+/** Standardformen for et ord hvis det er en kjent råvare, ellers null. */
+export function knownIngredient(word: string): string | null {
+  const w = word.toLowerCase();
+  return CANON.get(w) ?? CANON.get(stem(w)) ?? null;
+}
+
+/** Alle standardformer vi kjenner til (brukes til å gjenkjenne sammensatte ord). */
+export const KNOWN_INGREDIENTS: readonly string[] = [...new Set(CANON.values())];
