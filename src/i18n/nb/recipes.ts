@@ -1,4 +1,12 @@
 export const recipes = {
+  'welcome.title': 'Velkommen til Panful',
+  'welcome.intro': 'Oppskrifter, middagsplan og handleliste samlet på ett sted.',
+  'welcome.step1': 'Legg inn en oppskrift: lim inn en lenke, ta bilde eller skriv den selv.',
+  'welcome.step2': 'Planlegg middag: velg en dag, så havner den i kalenderen din.',
+  'welcome.step3': 'Handleliste: legg alle ingrediensene på listen med ett trykk.',
+  'welcome.step4': 'Lager og Forslag: legg inn hva du har, så finner appen oppskrifter som passer.',
+  'welcome.add': 'Legg inn første oppskrift',
+  'welcome.settings': 'Sett antall voksne og barn',
   'recipes.sort.newest': 'Nyeste',
   'recipes.sort.lastCooked': 'Sist laget',
   'recipes.sort.rating': 'Best vurdert',
@@ -22,9 +30,6 @@ export const recipes = {
   'recipes.reset': 'Nullstill',
   'recipes.noMatchTitle': 'Ingen treff',
   'recipes.noMatchText': 'Prøv et annet søkeord.',
-  'recipes.emptyTitle': 'Ingen oppskrifter ennå',
-  'recipes.emptyText':
-    'Trykk på + for å legge inn en lenke, ta bilde eller skrive inn en oppskrift.',
   'recipe.notFoundTitle': 'Fant ikke oppskriften',
   'recipe.notFoundText': 'Den kan ha blitt slettet.',
   'recipe.deleteTitle': 'Slette oppskriften?',

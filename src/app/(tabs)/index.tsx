@@ -14,6 +14,7 @@ import {
 import { ClipboardBanner } from '@/components/ClipboardBanner';
 import { RecipeImage } from '@/components/RecipeImage';
 import { EmptyState, LargeTitle } from '@/components/ui';
+import { Welcome } from '@/components/Welcome';
 import {
   allTags,
   filterRecipes,
@@ -214,10 +215,9 @@ export default function RecipesScreen() {
               text={tr('recipes.noMatchText')}
             />
           ) : (
-            <EmptyState
-              emoji="📖"
-              title={tr('recipes.emptyTitle')}
-              text={tr('recipes.emptyText')}
+            <Welcome
+              onAdd={() => router.push('/recipe/new')}
+              onSettings={() => router.push('/settings')}
             />
           )
         }

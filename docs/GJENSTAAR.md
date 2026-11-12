@@ -55,7 +55,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 - [x] 🟠 **[Claude]** **Backup og eksport/import** (gjort via del-meny og utklippstavle; bilder tatt på telefonen følger ikke med; ikke prøvd på telefon) (i dag finnes alt bare på telefonen; slettes appen, er det borte).
 - [x] 🟠 **[Claude]** **Nylig slettet** for oppskrifter (30 dager, Innstillinger → Nylig slettet). Lister har fortsatt «Angre» der det finnes. Ikke prøvd på telefon.
-- [ ] 🟠 **[Claude]** **Førstegangsveiledning** (i dag møter nye brukere tomme skjermer).
+- [x] 🟠 **[Claude]** **Førstegangsveiledning** (velkomstkort i stedet for tom oppskriftsliste). Ikke prøvd på telefon.
 - [ ] 🟠 **[Claude]** **Strekkodedatabase**: avgjøres av dekningstest (se strekkoderapporten), evt. flere kilder.
 - [ ] 🟢 **[Claude]** Deling fra Safari til appen (krever ekte bygg), widget, tekstgjenkjenning fra bilde (krever ekte bygg).
 - [ ] 🟢 Foreslå ukeplan, allergier per medlem, avstemning i familien.
