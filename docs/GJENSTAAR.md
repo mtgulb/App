@@ -95,3 +95,7 @@ Backup/eksport og angre, førstegangsveiledning, «Om appen» med kilder, tilgje
 
 - [x] Versjon satt til `1.0.0`. Unødvendige tillatelsestekster (mikrofon, påminnelser) fjernet fra bygget; eneste gjenværende utviklerstreng (lokalt nettverk) erstattet med norsk tekst. Verifisert ved å lese ut Info.plist-verdiene, ikke i et ekte bygg.
 - [ ] 🔴 **[Begge]** Etter at appen er opprettet i App Store Connect: legg appens numeriske **Apple ID** (App Information) i `eas.json` under `submit.production.ios.ascAppId`, ellers kan ikke innsending kjøres uten innlogging.
+
+- [x] Første iOS-produksjonsbygg fullført hos EAS (2026-11-12, versjon 1.0.0, bygg 2, id `8dc29a36-4678-4b38-8132-10b6afa8d399`). Sertifikater og provisioning profile ligger hos Expo (utløper 2027-11-12). Ikke installert eller prøvd på telefon.
+- [ ] 🔴 **[Eier]** Opprett appen i App Store Connect og send Apple ID (tall) til Claude. Deretter sendes bygget til TestFlight med `eas-submit.yml` (krever `ascAppId` i `eas.json`).
+- [ ] 🟠 **[Claude]** Sjekke om «Push Notifications»-rettigheten (satt av Expo hos Apple) kan fjernes; appen bruker bare lokale varsler.
