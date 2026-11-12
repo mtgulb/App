@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActionSheetIOS,
   FlatList,
@@ -70,7 +70,11 @@ function FilterChip({
 export default function RecipesScreen() {
   const t = useTheme();
   const router = useRouter();
-  const { recipes } = useStore();
+  const { recipes, settings } = useStore();
+  const introSeen = settings.introSeen;
+  useEffect(() => {
+    if (!introSeen) router.push('/intro');
+  }, [introSeen, router]);
   const [filters, setFilters] = useState<RecipeFilters>(NO_FILTERS);
   const [sort, setSort] = useState<SortMode>('newest');
   const query = filters.query;

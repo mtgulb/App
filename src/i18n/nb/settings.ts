@@ -1,4 +1,24 @@
 export const settings = {
+  'intro.1.title': 'Velkommen til Panful',
+  'intro.1.text': 'Oppskrifter, middagsplan og handleliste samlet på ett sted, for hele familien.',
+  'intro.2.title': 'Samle oppskrifter',
+  'intro.2.text':
+    'Lim inn en lenke, ta bilde av en oppskrift eller skriv den selv. Appen rydder ingredienser og steg for deg.',
+  'intro.3.title': 'Planlegg og handle',
+  'intro.3.text':
+    'Velg en dag, så havner middagen i kalenderen din. Legg alle ingrediensene på handlelisten med ett trykk. Like varer slås sammen.',
+  'intro.4.title': 'Lager og forslag',
+  'intro.4.text':
+    'Legg inn hva du har hjemme (du kan skanne strekkoder), så foreslår appen oppskrifter som passer.',
+  'intro.5.title': 'Du bestemmer',
+  'intro.5.text':
+    'Alt ligger på din telefon. Kamera, kalender og varsler er valgfritt. Ta en sikkerhetskopi under Innstillinger når du vil.',
+  'intro.next': 'Neste',
+  'intro.start': 'Kom i gang',
+  'intro.skip': 'Hopp over',
+  'intro.page': 'Side {n} av {total}',
+  'intro.show': 'Vis introduksjon',
+  'intro.showHint': 'Se en kort gjennomgang av appen igjen',
   'trash.title': 'Nylig slettet',
   'trash.subtitle': 'Hent tilbake slettede oppskrifter',
   'trash.empty': 'Ingen slettede oppskrifter.',

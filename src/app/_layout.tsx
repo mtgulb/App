@@ -31,6 +31,10 @@ export default function RootLayout() {
           name="recipe/new"
           options={{ title: tr('nav.newRecipe'), presentation: 'modal' }}
         />
+        <Stack.Screen
+          name="intro"
+          options={{ headerShown: false, presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
         <Stack.Screen name="trash" options={{ title: tr('trash.title') }} />
         <Stack.Screen name="about" options={{ title: tr('nav.about') }} />
         <Stack.Screen name="recipe/[id]" options={{ title: tr('nav.recipe') }} />

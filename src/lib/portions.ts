@@ -26,6 +26,8 @@ export type Settings = {
   /** Varsel når en tidtaker i kokemodus går ut. */
   timerAlerts: boolean;
   clipboardHint: boolean;
+  /** Introduksjonen er vist (første gang appen åpnes). */
+  introSeen: boolean;
   /** Foreslå oppskrifter ut fra det som ligger på lageret. */
   stockSuggestions: boolean;
   /** Basisvarer brukeren alltid har (brukes når «basisvarer finnes» er på). */
@@ -51,6 +53,7 @@ export const DEFAULT_SETTINGS: Settings = {
   expiryTime: '09:00',
   timerAlerts: true,
   clipboardHint: true,
+  introSeen: false,
   stockSuggestions: true,
   staples: ['salt', 'pepper', 'vann', 'olje'],
   stores: [],
