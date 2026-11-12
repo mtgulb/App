@@ -228,6 +228,16 @@ export default function StockScreen() {
             <Text style={styles.addBtnText}>Legg til</Text>
           </Pressable>
         </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({ pathname: '/scan', params: { target: 'stock', place: selected.id } })
+          }
+        >
+          <Text style={{ color: t.tint, fontWeight: '700' }}>
+            📷 Skann strekkode for å legge til i «{selected.name}»
+          </Text>
+        </Pressable>
         <View style={styles.chips}>
           <Text style={[styles.hint, { color: t.textSecondary }]}>Utløpsdato (valgfritt):</Text>
           {dateChips.map((c) => (

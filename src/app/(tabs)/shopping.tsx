@@ -393,6 +393,14 @@ export default function ShoppingScreen() {
                 returnKeyType="done"
                 style={[styles.addInput, { color: t.text }]}
               />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Skann strekkode"
+                hitSlop={8}
+                onPress={() => router.push({ pathname: '/scan', params: { target: 'shopping' } })}
+              >
+                <Text style={{ fontSize: 22 }}>📷</Text>
+              </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Legg til" onPress={submit}>
                 <SymbolView name="plus.circle.fill" tintColor={t.tint} size={28} />
               </Pressable>

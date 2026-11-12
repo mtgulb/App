@@ -14,6 +14,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Appen bruker kameraet til å skanne strekkoder på varer og til å ta bilder av oppskrifter."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Appen trenger tilgang til bildene dine for å legge dem ved oppskrifter.",

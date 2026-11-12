@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, Heading, SegmentedControl, Stepper } from '@/components/ui';
+import { getBarcodeStats } from '@/lib/barcode';
 import { isCloudConfigured } from '@/lib/cloud/config';
 import { requestNotifications } from '@/lib/notifications';
 import { parseHm } from '@/lib/reminders';
@@ -218,6 +219,20 @@ export default function SettingsScreen() {
           value={settings.stockSuggestions}
           onChange={(stockSuggestions) => updateSettings({ stockSuggestions })}
         />
+        {(() => {
+          const b = getBarcodeStats();
+          return b.scans > 0 ? (
+            <Body secondary>
+              Strekkoder: {b.scans} skannet. {b.found} funnet i databasen, {b.learned} husket fra
+              før, {b.notFound} ikke funnet. Dette viser hvor godt databasen dekker dine varer.
+            </Body>
+          ) : (
+            <Body secondary>
+              Prøv å skanne noen varer fra skapet (📷 på Lager). Da ser du her hvor mange som finnes
+              i databasen.
+            </Body>
+          );
+        })()}
       </Card>
 
       <Card>
