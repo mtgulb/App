@@ -192,3 +192,36 @@ console.log('compounds OK');
   assert.equal(soonPasta[0].recipe.title, 'Pasta'); // løftet foran alfabetisk rekkefølge
 }
 console.log('use-soon OK');
+
+// --- Egne basisvarer ---
+import { DEFAULT_STAPLES } from '../src/lib/pantry.ts';
+{
+  assert.ok(
+    isStaple('salt') &&
+      isStaple('sort pepper') &&
+      isStaple('olivenolje') &&
+      isStaple('rapsolje') &&
+      isStaple('vann'),
+  );
+  assert.ok(!isStaple('smør')); // ikke basisvare som standard
+  // Brukeren legger til smør
+  const mine = [...DEFAULT_STAPLES, 'smør'];
+  assert.ok(isStaple('smør', mine));
+  assert.ok(isStaple('butter', mine)); // synonym
+  assert.ok(!isStaple('peanøttsmør', mine)); // «smør» dekker ikke peanøttsmør
+  assert.ok(!isStaple('mel', mine));
+  // Fjerner alle: ingenting er basisvare
+  assert.ok(!isStaple('salt', []));
+  // Brukes i forslag
+  const r = analyzeRecipe(
+    mk('Brød', ['500 g mel', '50 g smør', '1 ts salt']),
+    ['mel'],
+    true,
+    [],
+    mine,
+  );
+  assert.deepEqual(r.missing, []);
+  const r2 = analyzeRecipe(mk('Brød', ['500 g mel', '50 g smør', '1 ts salt']), ['mel'], true);
+  assert.deepEqual(r2.missing, ['50 g smør']); // uten smør som basisvare
+}
+console.log('staples OK');

@@ -27,6 +27,8 @@ export type Settings = {
   clipboardHint: boolean;
   /** Foreslå oppskrifter ut fra det som ligger på lageret. */
   stockSuggestions: boolean;
+  /** Basisvarer brukeren alltid har (brukes når «basisvarer finnes» er på). */
+  staples: string[];
   /** Egne butikker med egen avdelingsrekkefølge. */
   stores: StoreProfile[];
   /** Valgt butikk for sortering etter avdeling; null = standard. */
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
   timerAlerts: true,
   clipboardHint: true,
   stockSuggestions: true,
+  staples: ['salt', 'pepper', 'vann', 'olje'],
   stores: [],
   activeStoreId: null,
 };

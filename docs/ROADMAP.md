@@ -5,7 +5,7 @@
 - Grunnmur: Expo + TS + Router, lint/format/typer/tester, CI som port, EAS Update til preview
 - Oppskrifter: import (lenke med reserver, bilde, manuelt), strukturerte ingredienser, favoritter, tid, tagger, vurdering, notater, filter og sortering, «laget sist»
 - Middagsplan (liste/kalender) med kalenderhendelser og ingredienser, porsjoner per dag, voksne/barn
-- Handleliste: sammenslåing, datoperiode, «legg alle ingredienser», sortering etter avdeling med egne butikker, sveip, redigering
+- Handleliste: manuell (legg alle ingredienser / handlekurv i planen / egne varer), sammenslåing, sortering etter avdeling med egne butikker, sveip, redigering, tøm
 - Strekkode → råvare (produktnavn rensed og knyttet til oppskriftsord, valget huskes)
 - Lager i egne lager med valgfri dato; Forslag (midlertidig økt); synonymer og sammensatte ord i matching
 - Kokemodus med tidtakere; strekkodeskanning (Open Food Facts + lært lokalt)

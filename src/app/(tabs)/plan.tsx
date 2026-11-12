@@ -1,11 +1,19 @@
 import { useRouter } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { CalendarMonth, dayKey } from '@/components/CalendarMonth';
 import { EmptyState, LargeTitle, SegmentedControl, Stepper } from '@/components/ui';
 import { removeDinnerEvent, updateDinnerEvent } from '@/lib/calendar';
 import { baseServings } from '@/lib/ingredients';
-import { getRecipe, removePlanEntry, setEntryServings, useStore } from '@/lib/store';
+import {
+  addRecipeToShopping,
+  getRecipe,
+  getState,
+  removePlanEntry,
+  setEntryServings,
+  useStore,
+} from '@/lib/store';
 import type { MealPlanEntry } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
 
@@ -68,7 +76,26 @@ function PlanRow({ item }: { item: MealPlanEntry }) {
         </Text>
       </View>
       {recipe ? (
-        <Stepper compact value={servings} onChange={changeServings} label="porsjoner" />
+        <>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Legg ingrediensene på handlelisten"
+            hitSlop={8}
+            onPress={() => {
+              const already = getState().shopping.fromRecipes.some((x) => x.recipeId === recipe.id);
+              addRecipeToShopping(recipe.id, servings);
+              Alert.alert(
+                already ? 'Oppdatert' : 'Lagt til',
+                already
+                  ? `${recipe.title} lå allerede på handlelisten. Porsjonene er satt til ${servings}.`
+                  : `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
+              );
+            }}
+          >
+            <SymbolView name="cart.badge.plus" tintColor={t.tint} size={24} />
+          </Pressable>
+          <Stepper compact value={servings} onChange={changeServings} label="porsjoner" />
+        </>
       ) : null}
     </Pressable>
   );

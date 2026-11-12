@@ -10,9 +10,9 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AddRow, IconButton } from '@/components/AddRow';
 import { DatePickerModal, formatDateLabel } from '@/components/DatePickerModal';
 import { RecipeFitCard } from '@/components/RecipeFitCard';
 import { SwipeRow } from '@/components/SwipeRow';
@@ -32,7 +32,7 @@ import {
   useStore,
 } from '@/lib/store';
 import type { FridgeItem, StorageDef } from '@/lib/types';
-import { radius, shadow, useTheme } from '@/theme/colors';
+import { radius, useTheme } from '@/theme/colors';
 
 export default function StockScreen() {
   const t = useTheme();
@@ -55,6 +55,7 @@ export default function StockScreen() {
         fridge.items.map((i) => i.name),
         fridge.assumeStaples,
         soonItems.map((i) => i.name),
+        settings.staples,
       )
     : [];
 
@@ -213,46 +214,25 @@ export default function StockScreen() {
           </Pressable>
         </View>
 
-        {/* Legg til: tekst, valgfri dato (kalender), skann */}
-        <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
-          <TextInput
-            accessibilityLabel={`Legg til vare i ${selected.name}`}
-            value={draft}
-            onChangeText={setDraft}
-            onSubmitEditing={submit}
-            placeholder={`Legg til i ${selected.name}`}
-            placeholderTextColor={t.textSecondary}
-            returnKeyType="done"
-            autoCorrect={false}
-            style={[styles.addInput, { color: t.text }]}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Utløpsdato (valgfritt)"
-            hitSlop={8}
-            onPress={() => setPickingFor('new')}
-          >
-            <SymbolView name="calendar" tintColor={expires ? t.tint : t.textSecondary} size={22} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Skann strekkode"
-            hitSlop={8}
-            onPress={() =>
-              router.push({ pathname: '/scan', params: { target: 'stock', place: selected.id } })
-            }
-          >
-            <SymbolView name="barcode.viewfinder" tintColor={t.textSecondary} size={24} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Legg til"
-            onPress={submit}
-            style={[styles.addBtn, { backgroundColor: t.tint }]}
-          >
-            <SymbolView name="plus" tintColor="#FFFFFF" size={16} />
-          </Pressable>
-        </View>
+        {/* Legg til: skriv + Enter. Valgfri dato og én skanneknapp. */}
+        <AddRow
+          value={draft}
+          onChangeText={setDraft}
+          onSubmit={submit}
+          label={`Legg til vare i ${selected.name}`}
+          placeholder={`Legg til i ${selected.name}`}
+          onScan={() =>
+            router.push({ pathname: '/scan', params: { target: 'stock', place: selected.id } })
+          }
+          extra={
+            <IconButton
+              name="calendar"
+              label="Utløpsdato (valgfritt)"
+              active={!!expires}
+              onPress={() => setPickingFor('new')}
+            />
+          }
+        />
         {expires ? (
           <Pressable accessibilityRole="button" onPress={() => setExpires(null)}>
             <Text style={{ color: t.tint, fontSize: 13, fontWeight: '600' }}>
@@ -349,7 +329,7 @@ export default function StockScreen() {
             <Pressable
               accessibilityRole="switch"
               accessibilityState={{ checked: fridge.assumeStaples }}
-              accessibilityLabel="Anta at salt, pepper, vann og olje finnes"
+              accessibilityLabel="Anta at basisvarene finnes (velges i Innstillinger)"
               onPress={() => setAssumeStaples(!fridge.assumeStaples)}
               style={[styles.pill, { backgroundColor: fridge.assumeStaples ? t.tint : t.tintSoft }]}
             >
@@ -360,7 +340,7 @@ export default function StockScreen() {
                   fontSize: 12,
                 }}
               >
-                {fridge.assumeStaples ? '✓ ' : ''}Salt, pepper, vann og olje finnes
+                {fridge.assumeStaples ? '✓ ' : ''}Basisvarer finnes ({settings.staples.length})
               </Text>
             </Pressable>
             {recipes.length === 0 || fridge.items.length === 0 ? (
@@ -421,6 +401,15 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingBottom: 40, gap: 10 },
   storageBar: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   storages: { gap: 8, paddingRight: 4 },
+  chipInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  countBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   storageChip: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   addRow: {
     flexDirection: 'row',

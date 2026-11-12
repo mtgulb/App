@@ -29,6 +29,7 @@ import {
   addExtras,
   addRecipeToShopping,
   deleteRecipe,
+  getState,
   markCooked,
   toggleFavorite,
   updateRecipe,
@@ -205,10 +206,13 @@ export default function RecipeDetail() {
           title="Legg alle ingredienser på handlelisten"
           kind="secondary"
           onPress={() => {
+            const already = getState().shopping.fromRecipes.some((x) => x.recipeId === recipe.id);
             addRecipeToShopping(recipe.id, servings);
             Alert.alert(
-              'Lagt til',
-              `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
+              already ? 'Oppdatert' : 'Lagt til',
+              already
+                ? `Oppskriften lå allerede på handlelisten. Porsjonene er satt til ${servings}.`
+                : `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
             );
           }}
         />

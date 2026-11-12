@@ -1,4 +1,3 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
@@ -11,11 +10,11 @@ import {
   Share,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AddRow } from '@/components/AddRow';
 import { SwipeRow } from '@/components/SwipeRow';
-import { Button, Chip, EmptyState, LargeTitle, SegmentedControl } from '@/components/ui';
+import { Button, EmptyState, LargeTitle, SegmentedControl, Stepper } from '@/components/ui';
 import { departmentOf, orderFor, type Department } from '@/lib/departments';
 import {
   baseServings,
@@ -25,6 +24,8 @@ import {
 } from '@/lib/ingredients';
 import {
   addExtra,
+  addRecipeToShopping,
+  clearShopping,
   hideItem,
   removeCheckedExtras,
   removeExtra,
@@ -38,7 +39,7 @@ import {
   updateSettings,
   useStore,
 } from '@/lib/store';
-import { radius, shadow, useTheme } from '@/theme/colors';
+import { radius, useTheme } from '@/theme/colors';
 
 type Row = {
   key: string;
@@ -54,51 +55,23 @@ type Row = {
 };
 type Section = { id: string; title: string; data: Row[]; collapsible?: boolean; count?: number };
 
-const dateFmt = new Intl.DateTimeFormat('nb-NO', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-});
-const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-const endOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-
 export default function ShoppingScreen() {
   const t = useTheme();
   const router = useRouter();
-  const { recipes, plan, shopping, settings } = useStore();
+  const { recipes, shopping, settings } = useStore();
   const [draft, setDraft] = useState('');
   const [showPlan, setShowPlan] = useState(false);
-  const [from, setFrom] = useState(() => startOfDay(new Date()));
-  const [to, setTo] = useState(() => addDays(startOfDay(new Date()), 6));
 
-  const inRange = useMemo(
-    () =>
-      plan
-        .filter((p) => {
-          const d = new Date(p.date);
-          return d >= startOfDay(from) && d <= endOfDay(to);
-        })
-        .sort((a, b) => a.date.localeCompare(b.date)),
-    [plan, from, to],
-  );
-
+  // Handlelisten fylles bare manuelt: oppskrifter du har lagt på listen, pluss egne varer.
   const merged: MergedItem[] = useMemo(() => {
-    const items = inRange.flatMap((entry) => {
-      const recipe = recipes.find((r) => r.id === entry.recipeId);
-      if (!recipe) return [];
-      const factor = (entry.servings ?? baseServings(recipe)) / baseServings(recipe);
-      return recipe.ingredients.map((line) => ({ parsed: parseIngredient(line), factor }));
-    });
-    // Oppskrifter lagt direkte på handlelisten tas med uansett datoperiode.
-    const direct = shopping.fromRecipes.flatMap((add) => {
+    const items = shopping.fromRecipes.flatMap((add) => {
       const recipe = recipes.find((r) => r.id === add.recipeId);
       if (!recipe) return [];
       const factor = add.servings / baseServings(recipe);
       return recipe.ingredients.map((line) => ({ parsed: parseIngredient(line), factor }));
     });
-    return mergeIngredients([...items, ...direct]);
-  }, [inRange, recipes, shopping.fromRecipes]);
+    return mergeIngredients(items);
+  }, [recipes, shopping.fromRecipes]);
 
   const [doneOpen, setDoneOpen] = useState(false);
   const [hiddenOpen, setHiddenOpen] = useState(false);
@@ -146,7 +119,7 @@ export default function ShoppingScreen() {
     }
   } else {
     if (todoMerged.length > 0) {
-      sections.push({ id: 'merged', title: 'Varer fra middagene', data: todoMerged });
+      sections.push({ id: 'merged', title: 'Fra oppskriftene', data: todoMerged });
     }
     if (todoExtras.length > 0) {
       sections.push({ id: 'extras', title: 'Egne varer', data: todoExtras });
@@ -220,10 +193,11 @@ export default function ShoppingScreen() {
     }
   }
 
-  function setRange(days: number) {
-    const start = startOfDay(new Date());
-    setFrom(start);
-    setTo(addDays(start, days - 1));
+  function confirmClear() {
+    Alert.alert('Tømme handlelisten?', 'Alle varer og oppskrifter på listen fjernes.', [
+      { text: 'Avbryt', style: 'cancel' },
+      { text: 'Tøm', style: 'destructive', onPress: clearShopping },
+    ]);
   }
 
   function submit() {
@@ -252,72 +226,72 @@ export default function ShoppingScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            {/* Én linje som kan utvides: periode, middager, sortering */}
+            {/* Skriv + Enter, eller skann */}
+            <AddRow
+              value={draft}
+              onChangeText={setDraft}
+              onSubmit={submit}
+              label="Legg til vare"
+              placeholder="Legg til vare"
+              onScan={() => router.push({ pathname: '/scan', params: { target: 'shopping' } })}
+            />
+
+            {/* Én linje: hvilke oppskrifter som er lagt til, og sortering. Utvides ved trykk. */}
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: showPlan }}
               onPress={() => setShowPlan((v) => !v)}
-              style={[styles.summaryBar, shadow, { backgroundColor: t.card }]}
+              style={[styles.summaryBar, { backgroundColor: t.card, borderColor: t.border }]}
             >
-              <View style={styles.flex}>
-                <Text style={[styles.summaryTitle, { color: t.text }]}>
-                  {dateFmt.format(from)} – {dateFmt.format(to)}
-                </Text>
-                <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-                  {inRange.length} {inRange.length === 1 ? 'middag' : 'middager'}
-                  {shopping.fromRecipes.length > 0
-                    ? ` + ${shopping.fromRecipes.length} ${shopping.fromRecipes.length === 1 ? 'oppskrift' : 'oppskrifter'}`
-                    : ''}
-                  {' · '}
-                  {settings.shoppingSort === 'department' ? 'Etter avdeling' : 'Alfabetisk'}
-                </Text>
-              </View>
-              <Text style={{ color: t.tint, fontSize: 16 }}>{showPlan ? '▴' : '▾'}</Text>
+              <Text style={[styles.summaryTitle, { color: t.text }]} numberOfLines={1}>
+                {shopping.fromRecipes.length === 0
+                  ? 'Ingen oppskrifter lagt til'
+                  : `${shopping.fromRecipes.length} ${shopping.fromRecipes.length === 1 ? 'oppskrift' : 'oppskrifter'}`}
+              </Text>
+              <Text style={{ color: t.textSecondary, fontSize: 13 }}>
+                {settings.shoppingSort === 'department' ? 'Etter avdeling' : 'Alfabetisk'}{' '}
+                {showPlan ? '▴' : '▾'}
+              </Text>
             </Pressable>
 
             {showPlan ? (
               <View style={[styles.panel, { backgroundColor: t.card, borderColor: t.border }]}>
-                <View style={styles.rangeRow}>
-                  <Text style={[styles.rangeLabel, { color: t.text }]}>Fra</Text>
-                  <DateTimePicker
-                    value={from}
-                    mode="date"
-                    display="compact"
-                    accentColor={t.tint}
-                    locale="nb-NO"
-                    onChange={(_, d) => {
-                      if (!d) return;
-                      setFrom(startOfDay(d));
-                      if (d > to) setTo(startOfDay(d));
-                    }}
-                  />
-                  <Text style={[styles.rangeLabel, { color: t.text }]}>Til</Text>
-                  <DateTimePicker
-                    value={to}
-                    mode="date"
-                    display="compact"
-                    accentColor={t.tint}
-                    locale="nb-NO"
-                    minimumDate={from}
-                    onChange={(_, d) => d && setTo(startOfDay(d))}
-                  />
-                </View>
-                <View style={styles.quick}>
-                  {[
-                    ['I dag', 1],
-                    ['3 dager', 3],
-                    ['7 dager', 7],
-                    ['14 dager', 14],
-                  ].map(([label, days]) => (
-                    <Pressable
-                      key={label}
-                      accessibilityRole="button"
-                      onPress={() => setRange(days as number)}
-                    >
-                      <Chip>{label as string}</Chip>
-                    </Pressable>
-                  ))}
-                </View>
+                {shopping.fromRecipes.map((add) => {
+                  const r = recipes.find((x) => x.id === add.recipeId);
+                  if (!r) return null;
+                  return (
+                    <View key={add.id} style={styles.addedRow}>
+                      <Text
+                        style={[styles.summaryItem, styles.flex, { color: t.text }]}
+                        numberOfLines={1}
+                      >
+                        {r.title}
+                      </Text>
+                      <Stepper
+                        compact
+                        value={add.servings}
+                        label="porsjoner"
+                        onChange={(n) => addRecipeToShopping(r.id, n)}
+                      />
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
+                        hitSlop={8}
+                        onPress={() => removeRecipeFromShopping(add.id)}
+                      >
+                        <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>
+                          Fjern
+                        </Text>
+                      </Pressable>
+                    </View>
+                  );
+                })}
+                {shopping.fromRecipes.length === 0 ? (
+                  <Text style={[styles.summaryItem, { color: t.textSecondary }]}>
+                    Legg til en oppskrift fra oppskriftssiden («Legg alle ingredienser på
+                    handlelisten»).
+                  </Text>
+                ) : null}
 
                 <View style={styles.sortWrap}>
                   <SegmentedControl
@@ -369,83 +343,31 @@ export default function ShoppingScreen() {
                     </Pressable>
                   </View>
                 ) : null}
-
-                {inRange.map((e) => {
-                  const r = recipes.find((x) => x.id === e.recipeId);
-                  if (!r) return null;
-                  return (
-                    <Text key={e.id} style={[styles.summaryItem, { color: t.textSecondary }]}>
-                      {dateFmt.format(new Date(e.date))}: {r.title} ({e.servings ?? baseServings(r)}{' '}
-                      porsj.)
-                    </Text>
-                  );
-                })}
-                {shopping.fromRecipes.map((add) => {
-                  const r = recipes.find((x) => x.id === add.recipeId);
-                  if (!r) return null;
-                  return (
-                    <View key={add.id} style={styles.addedRow}>
-                      <Text style={[styles.summaryItem, styles.flex, { color: t.textSecondary }]}>
-                        Lagt til: {r.title} ({add.servings} porsj.)
-                      </Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
-                        onPress={() => removeRecipeFromShopping(add.id)}
-                      >
-                        <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>
-                          Fjern
-                        </Text>
-                      </Pressable>
-                    </View>
-                  );
-                })}
               </View>
             ) : null}
-
-            <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
-              <TextInput
-                accessibilityLabel="Legg til vare"
-                value={draft}
-                onChangeText={setDraft}
-                onSubmitEditing={submit}
-                placeholder="Legg til vare"
-                placeholderTextColor={t.textSecondary}
-                returnKeyType="done"
-                style={[styles.addInput, { color: t.text }]}
-              />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Skann strekkode"
-                hitSlop={8}
-                onPress={() => router.push({ pathname: '/scan', params: { target: 'shopping' } })}
-              >
-                <SymbolView name="barcode.viewfinder" tintColor={t.textSecondary} size={24} />
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Legg til" onPress={submit}>
-                <SymbolView name="plus.circle.fill" tintColor={t.tint} size={28} />
-              </Pressable>
-            </View>
           </View>
         }
         ListEmptyComponent={
           <EmptyState
             emoji="🛒"
             title="Handlelisten er tom"
-            text="Velg en periode med planlagte middager, så samles og slås ingrediensene sammen her."
+            text="Skriv en vare ovenfor, skann en strekkode, eller legg en oppskrift på listen fra oppskriftssiden."
           />
         }
         ListFooterComponent={
-          doneRows.length > 0 ? (
+          doneRows.length > 0 || sections.length > 0 || shopping.fromRecipes.length > 0 ? (
             <View style={styles.footer}>
-              <Button title="Angre alle avkrysninger" kind="secondary" onPress={resetShopping} />
+              {doneRows.length > 0 ? (
+                <Button title="Angre alle avkrysninger" kind="secondary" onPress={resetShopping} />
+              ) : null}
               {extraRows.some((r) => shopping.extras.find((e) => e.id === r.id)?.checked) ? (
                 <Button
                   title="Fjern handlede egne varer"
-                  kind="destructive"
+                  kind="secondary"
                   onPress={removeCheckedExtras}
                 />
               ) : null}
+              <Button title="Tøm handleliste" kind="destructive" onPress={confirmClear} />
             </View>
           ) : undefined
         }
@@ -547,36 +469,24 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: 20, paddingBottom: 40, gap: 6, flexGrow: 1 },
   headerBlock: { gap: 8, marginBottom: 4 },
-  rangeCard: { borderRadius: radius, padding: 16, gap: 8 },
-  rangeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  rangeLabel: { fontSize: 16, fontWeight: '600' },
-  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   hint: { fontSize: 12 },
   sortWrap: { marginHorizontal: -20, marginBottom: -4 },
-  summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   storeRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   storeChip: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
   summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
-    borderRadius: radius,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
-  summaryTitle: { fontSize: 15, fontWeight: '700' },
+  summaryTitle: { flex: 1, fontSize: 14, fontWeight: '600' },
   panel: { borderRadius: radius, borderWidth: 1, padding: 12, gap: 10 },
   addedRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   summaryItem: { fontSize: 13 },
-  addRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius,
-    paddingLeft: 16,
-    paddingRight: 12,
-    marginTop: 4,
-  },
-  addInput: { flex: 1, fontSize: 16, paddingVertical: 14 },
   header: { fontSize: 14, fontWeight: '700', marginTop: 14, marginBottom: 4 },
   row: {
     flexDirection: 'row',

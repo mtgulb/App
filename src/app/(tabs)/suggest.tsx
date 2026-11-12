@@ -1,4 +1,3 @@
-import { SymbolView } from 'expo-symbols';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -10,9 +9,9 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AddRow } from '@/components/AddRow';
 import { RecipeFitCard } from '@/components/RecipeFitCard';
 import { Heading, LargeTitle } from '@/components/ui';
 import { rankRecipes } from '@/lib/pantry';
@@ -27,7 +26,7 @@ import {
   type SessionItem,
 } from '@/lib/session';
 import { addFridgeItems, setAssumeStaples, useStore } from '@/lib/store';
-import { radius, shadow, useTheme } from '@/theme/colors';
+import { useTheme } from '@/theme/colors';
 
 /**
  * «Hva kan jeg lage?» – en midlertidig økt. Det du skriver inn her lagres ikke på lageret,
@@ -36,12 +35,12 @@ import { radius, shadow, useTheme } from '@/theme/colors';
 export default function SuggestScreen() {
   const t = useTheme();
   const router = useRouter();
-  const { recipes, fridge } = useStore();
+  const { recipes, fridge, settings } = useStore();
   const session = useSession();
   const [draft, setDraft] = useState('');
 
   const { names, soon } = suggestionBasis(fridge, session);
-  const ranked = rankRecipes(recipes, names, fridge.assumeStaples, soon);
+  const ranked = rankRecipes(recipes, names, fridge.assumeStaples, soon, settings.staples);
 
   function submit() {
     addSessionItems(draft);
@@ -131,36 +130,15 @@ export default function SuggestScreen() {
           </View>
         ) : null}
 
-        {/* Legg til: tekst + skann */}
-        <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
-          <TextInput
-            accessibilityLabel="Skriv inn det du har nå"
-            value={draft}
-            onChangeText={setDraft}
-            onSubmitEditing={submit}
-            placeholder="Hva har du nå? F.eks. kylling, ris"
-            placeholderTextColor={t.textSecondary}
-            returnKeyType="done"
-            autoCorrect={false}
-            style={[styles.addInput, { color: t.text }]}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Skann strekkode"
-            hitSlop={8}
-            onPress={() => router.push({ pathname: '/scan', params: { target: 'session' } })}
-          >
-            <SymbolView name="barcode.viewfinder" tintColor={t.textSecondary} size={24} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Legg til"
-            onPress={submit}
-            style={[styles.addBtn, { backgroundColor: t.tint }]}
-          >
-            <SymbolView name="plus" tintColor="#FFFFFF" size={16} />
-          </Pressable>
-        </View>
+        {/* Legg til: skriv + Enter, eller skann */}
+        <AddRow
+          value={draft}
+          onChangeText={setDraft}
+          onSubmit={submit}
+          label="Skriv inn det du har nå"
+          placeholder="Hva har du nå? F.eks. kylling, ris"
+          onScan={() => router.push({ pathname: '/scan', params: { target: 'session' } })}
+        />
 
         {/* Midlertidige varer som små merker */}
         {session.items.length > 0 ? (
@@ -189,7 +167,7 @@ export default function SuggestScreen() {
           <Pressable
             accessibilityRole="switch"
             accessibilityState={{ checked: fridge.assumeStaples }}
-            accessibilityLabel="Anta at salt, pepper, vann og olje finnes"
+            accessibilityLabel="Anta at basisvarene finnes (velges i Innstillinger)"
             onPress={() => setAssumeStaples(!fridge.assumeStaples)}
             style={[styles.pill, { backgroundColor: fridge.assumeStaples ? t.tint : t.tintSoft }]}
           >
@@ -200,7 +178,7 @@ export default function SuggestScreen() {
                 fontSize: 12,
               }}
             >
-              {fridge.assumeStaples ? '✓ ' : ''}Salt, pepper, vann og olje finnes
+              {fridge.assumeStaples ? '✓ ' : ''}Basisvarer finnes ({settings.staples.length})
             </Text>
           </Pressable>
           {active ? (
@@ -241,22 +219,5 @@ const styles = StyleSheet.create({
   label: { fontSize: 15, fontWeight: '600' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { borderRadius: 14, paddingHorizontal: 11, paddingVertical: 6 },
-  addRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius,
-    paddingLeft: 14,
-    paddingRight: 8,
-    paddingVertical: 6,
-    gap: 12,
-  },
-  addInput: { flex: 1, fontSize: 16, paddingVertical: 8 },
-  addBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   pill: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
 });

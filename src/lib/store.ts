@@ -269,6 +269,14 @@ export function setOverride(key: string, text: string) {
   commit({ ...state, shopping: { ...state.shopping, overrides } });
 }
 
+/** Tømmer hele handlelisten: oppskrifter, egne varer, avkrysninger, «har fra før» og endringer. */
+export function clearShopping() {
+  commit({
+    ...state,
+    shopping: { checked: [], extras: [], hidden: [], overrides: {}, fromRecipes: [] },
+  });
+}
+
 /** Angrer alle avkrysninger. */
 export function resetShopping() {
   commit({
@@ -447,6 +455,36 @@ export function removeStoreProfile(id: string) {
       activeStoreId: state.settings.activeStoreId === id ? null : state.settings.activeStoreId,
     },
   });
+}
+
+/** Legger til basisvarer (kommaseparert). Dubletter hoppes over. */
+export function addStaples(text: string) {
+  const have = new Set(state.settings.staples.map((x) => x.toLowerCase()));
+  const added: string[] = [];
+  for (const raw of text.split(/[,\n]/)) {
+    const n = raw.trim().toLowerCase();
+    if (n && !have.has(n)) {
+      have.add(n);
+      added.push(n);
+    }
+  }
+  if (added.length) {
+    commit({
+      ...state,
+      settings: { ...state.settings, staples: [...state.settings.staples, ...added] },
+    });
+  }
+}
+
+export function removeStaple(name: string) {
+  commit({
+    ...state,
+    settings: { ...state.settings, staples: state.settings.staples.filter((x) => x !== name) },
+  });
+}
+
+export function resetStaples() {
+  commit({ ...state, settings: { ...state.settings, staples: [...DEFAULT_SETTINGS.staples] } });
 }
 
 export function updateSettings(patch: Partial<Settings>) {

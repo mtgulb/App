@@ -2,9 +2,6 @@ import { parseIngredient } from './ingredients.ts';
 import { normalizeTokens } from './synonyms.ts';
 import type { Recipe } from './types';
 
-/** Varer vi regner med at de fleste alltid har hjemme. */
-const STAPLES = ['salt', 'pepper', 'vann', 'olje', 'olivenolje', 'rapsolje', 'matolje'];
-
 export const tokens = normalizeTokens;
 
 /** Kjøttstykker, fiskestykker og former som kan henges på en råvare: laks → laksefilet. */
@@ -71,9 +68,19 @@ export function matchLevel(ingredientName: string, fridgeName: string): MatchLev
 export const matches = (ingredientName: string, fridgeName: string) =>
   matchLevel(ingredientName, fridgeName) === 'match';
 
-export function isStaple(name: string): boolean {
-  const t = tokens(name);
-  return t.length > 0 && t.every((w) => STAPLES.includes(w));
+/** Standard basisvarer. Brukeren kan bestemme selv i innstillinger (f.eks. legge til «smør»). */
+export const DEFAULT_STAPLES: readonly string[] = ['salt', 'pepper', 'vann', 'olje'];
+
+/**
+ * Er varen en basisvare? Synonymer og sammensatte ord gjelder (pepper = «sort pepper»).
+ * «olje» dekker også olivenolje, rapsolje osv. Andre basisvarer matcher bare tilsvarende vare,
+ * slik at «smør» ikke også dekker peanøttsmør.
+ */
+export function isStaple(name: string, staples: readonly string[] = DEFAULT_STAPLES): boolean {
+  return staples.some((st) => {
+    const level = matchLevel(name, st);
+    return level === 'match' || (level === 'similar' && st.trim().toLowerCase() === 'olje');
+  });
 }
 
 export type RecipeFit = {
@@ -98,6 +105,7 @@ export function analyzeRecipe(
   fridge: string[],
   assumeStaples: boolean,
   soon: string[] = [],
+  staples: readonly string[] = DEFAULT_STAPLES,
 ): RecipeFit {
   const have: string[] = [];
   const similar: { line: string; fridge: string }[] = [];
@@ -106,7 +114,7 @@ export function analyzeRecipe(
     const p = parseIngredient(line);
     if (
       fridge.some((f) => matchLevel(p.name, f) === 'match') ||
-      (assumeStaples && isStaple(p.name))
+      (assumeStaples && isStaple(p.name, staples))
     ) {
       have.push(line);
       continue;
@@ -130,11 +138,12 @@ export function rankRecipes(
   fridge: string[],
   assumeStaples: boolean,
   soon: string[] = [],
+  staples: readonly string[] = DEFAULT_STAPLES,
 ): RecipeFit[] {
   const gap = (f: RecipeFit) => f.missing.length + f.similar.length * 0.5 - f.usesSoon.length * 0.6;
   return recipes
     .filter((r) => r.ingredients.length > 0)
-    .map((r) => analyzeRecipe(r, fridge, assumeStaples, soon))
+    .map((r) => analyzeRecipe(r, fridge, assumeStaples, soon, staples))
     .sort(
       (a, b) =>
         gap(a) - gap(b) ||

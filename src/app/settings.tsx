@@ -1,6 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { Body, Button, Card, Heading, SegmentedControl, Stepper } from '@/components/ui';
 import { getBarcodeStats } from '@/lib/barcode';
@@ -8,7 +9,7 @@ import { isCloudConfigured } from '@/lib/cloud/config';
 import { requestNotifications } from '@/lib/notifications';
 import { parseHm } from '@/lib/reminders';
 import { householdLabel, householdPortions } from '@/lib/portions';
-import { updateSettings, useStore } from '@/lib/store';
+import { addStaples, removeStaple, resetStaples, updateSettings, useStore } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
 function Row({
@@ -72,6 +73,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { settings } = useStore();
   const portions = householdPortions(settings);
+  const [stapleDraft, setStapleDraft] = useState('');
 
   async function toggleReminder(
     key: 'remindEvening' | 'remindToday' | 'remindExpiry',
@@ -208,6 +210,49 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
+        <Heading>Basisvarer</Heading>
+        <Body secondary>
+          Ting du alltid har hjemme, for eksempel salt eller smør. De regnes som tilstede i
+          oppskriftsforslag når «Basisvarer finnes» er på.
+        </Body>
+        <View style={styles.chips}>
+          {settings.staples.map((st) => (
+            <Pressable
+              key={st}
+              accessibilityRole="button"
+              accessibilityLabel={`Fjern ${st} som basisvare`}
+              onPress={() => removeStaple(st)}
+              style={[styles.chip, { backgroundColor: t.tintSoft }]}
+            >
+              <Text style={{ color: t.tint, fontWeight: '600', fontSize: 14 }}>{st} ✕</Text>
+            </Pressable>
+          ))}
+          {settings.staples.length === 0 ? (
+            <Text style={{ color: t.textSecondary }}>Ingen basisvarer.</Text>
+          ) : null}
+        </View>
+        <TextInput
+          accessibilityLabel="Legg til basisvare"
+          value={stapleDraft}
+          onChangeText={setStapleDraft}
+          onSubmitEditing={() => {
+            addStaples(stapleDraft);
+            setStapleDraft('');
+          }}
+          submitBehavior="submit"
+          placeholder="Legg til, f.eks. smør, mel (trykk Enter)"
+          placeholderTextColor={t.textSecondary}
+          returnKeyType="done"
+          autoCorrect={false}
+          style={[
+            styles.stapleInput,
+            { color: t.text, backgroundColor: t.background, borderColor: t.border },
+          ]}
+        />
+        <Button title="Tilbakestill til standard" kind="secondary" onPress={resetStaples} />
+      </Card>
+
+      <Card>
         <Heading>Lager</Heading>
         <Row
           title="Foreslå oppskrifter ut fra lageret"
@@ -262,6 +307,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'space-between' },
   sub: { fontSize: 15 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { borderRadius: 14, paddingHorizontal: 11, paddingVertical: 7 },
+  stapleInput: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 16 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
   link: {
     flexDirection: 'row',
