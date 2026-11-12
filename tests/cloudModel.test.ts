@@ -50,7 +50,13 @@ const shopping: ShoppingState = {
   overrides: { 'm|melk': '2 l lettmelk' },
   extras: [{ id: 'e1', text: 'Kaffe', checked: true }],
 };
-const fridge: FridgeState = { items: [{ id: 'f1', name: 'egg' }], assumeStaples: false };
+const fridge: FridgeState = {
+  items: [
+    { id: 'f1', name: 'egg', place: 'fridge' },
+    { id: 'f2', name: 'laks', place: 'freezer', expires: '2027-01-01' },
+  ],
+  assumeStaples: false,
+};
 const items = stateToItems(shopping, fridge);
 let s: ShoppingState = { checked: [], hidden: [], overrides: {}, extras: [] };
 let f: FridgeState = { items: [], assumeStaples: true };
@@ -69,6 +75,7 @@ const del = (kind: StateRow['kind'], key: string): StateRow => ({
 ({ shopping: s, fridge: f } = applyItem(s, f, del('checked', 'm|mel')));
 ({ shopping: s, fridge: f } = applyItem(s, f, del('extra', 'e1')));
 ({ shopping: s, fridge: f } = applyItem(s, f, del('fridge', 'f1')));
+({ shopping: s, fridge: f } = applyItem(s, f, del('fridge', 'f2')));
 ({ shopping: s, fridge: f } = applyItem(s, f, del('override', 'm|melk')));
 assert.deepEqual(s.checked, []);
 assert.deepEqual(s.extras, []);

@@ -20,6 +20,7 @@ import {
   scaledLines,
 } from '@/lib/ingredients';
 import { analyzeRecipe } from '@/lib/pantry';
+import { defaultServings } from '@/lib/portions';
 import { addExtras, deleteRecipe, useStore } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
@@ -29,10 +30,10 @@ export default function RecipeDetail() {
   const t = useTheme();
   const { width } = useWindowDimensions();
   const hero = { width, height: 300 };
-  const { recipes, plan, fridge } = useStore();
+  const { recipes, plan, fridge, settings } = useStore();
   const recipe = recipes.find((r) => r.id === id);
   const [chosen, setChosen] = useState<number | null>(null);
-  const servings = chosen ?? (recipe ? baseServings(recipe) : 4);
+  const servings = chosen ?? (recipe ? defaultServings(settings, recipe) : 4);
 
   if (!recipe) {
     return <EmptyState emoji="🤷" title="Fant ikke oppskriften" text="Den kan ha blitt slettet." />;
@@ -126,6 +127,18 @@ export default function RecipeDetail() {
           </Card>
         ) : null}
 
+        {recipe.steps.length > 0 ? (
+          <Button
+            title="Start kokemodus"
+            kind="secondary"
+            onPress={() =>
+              router.push({
+                pathname: '/recipe/cook',
+                params: { id: recipe.id, servings: String(servings) },
+              })
+            }
+          />
+        ) : null}
         <Button
           title="Planlegg middag"
           onPress={() =>

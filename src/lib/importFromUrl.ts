@@ -1,4 +1,5 @@
 import { deleteImage, downloadImage, imageSize } from './images';
+import { normalizeUrl } from './urls';
 import { cleanImageCandidates, extractMetaImages, parseRecipeFromHtml } from './recipeParser';
 import type { Recipe } from './types';
 
@@ -65,3 +66,5 @@ async function pickBestImage(candidates: string[]): Promise<string[]> {
   for (const d of downloaded) if (d !== best || d.size < MIN_IMAGE_BYTES) deleteImage(d.uri);
   return best && best.size >= MIN_IMAGE_BYTES ? [best.uri] : [];
 }
+
+export { normalizeUrl };

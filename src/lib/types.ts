@@ -32,7 +32,14 @@ export type ShoppingState = {
   overrides: Record<string, string>;
 };
 
-export type FridgeItem = { id: string; name: string };
+export type FridgeItem = {
+  id: string;
+  name: string;
+  /** Kjøleskap (standard), fryser eller skap. */
+  place?: 'fridge' | 'freezer' | 'pantry';
+  /** Valgfri utløpsdato, YYYY-MM-DD. */
+  expires?: string;
+};
 
 export type FridgeState = {
   items: FridgeItem[];

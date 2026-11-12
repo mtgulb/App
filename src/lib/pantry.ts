@@ -85,13 +85,20 @@ export type RecipeFit = {
   similar: { line: string; fridge: string }[];
   /** Ingrediensene som mangler, som originale linjer. */
   missing: string[];
+  /** Varer som snart går ut og som denne oppskriften bruker opp. */
+  usesSoon: string[];
 };
 
 /**
  * `assumeStaples` regner salt, pepper, vann og olje som tilstede. Brukes bare i kjøleskap-visningen,
  * ikke på oppskriftssiden.
  */
-export function analyzeRecipe(recipe: Recipe, fridge: string[], assumeStaples: boolean): RecipeFit {
+export function analyzeRecipe(
+  recipe: Recipe,
+  fridge: string[],
+  assumeStaples: boolean,
+  soon: string[] = [],
+): RecipeFit {
   const have: string[] = [];
   const similar: { line: string; fridge: string }[] = [];
   const missing: string[] = [];
@@ -108,19 +115,26 @@ export function analyzeRecipe(recipe: Recipe, fridge: string[], assumeStaples: b
     if (near) similar.push({ line, fridge: near });
     else missing.push(line);
   }
-  return { recipe, total: recipe.ingredients.length, have, similar, missing };
+  const usesSoon = soon.filter((name) =>
+    recipe.ingredients.some((line) => matchLevel(parseIngredient(line).name, name) === 'match'),
+  );
+  return { recipe, total: recipe.ingredients.length, have, similar, missing, usesSoon };
 }
 
-/** Oppskrifter sortert etter færrest manglende ingredienser (lignende teller halvt). */
+/**
+ * Oppskrifter sortert etter færrest manglende ingredienser (lignende teller halvt).
+ * Oppskrifter som bruker opp noe som snart går ut, løftes litt frem.
+ */
 export function rankRecipes(
   recipes: Recipe[],
   fridge: string[],
   assumeStaples: boolean,
+  soon: string[] = [],
 ): RecipeFit[] {
-  const gap = (f: RecipeFit) => f.missing.length + f.similar.length * 0.5;
+  const gap = (f: RecipeFit) => f.missing.length + f.similar.length * 0.5 - f.usesSoon.length * 0.6;
   return recipes
     .filter((r) => r.ingredients.length > 0)
-    .map((r) => analyzeRecipe(r, fridge, assumeStaples))
+    .map((r) => analyzeRecipe(r, fridge, assumeStaples, soon))
     .sort(
       (a, b) =>
         gap(a) - gap(b) ||

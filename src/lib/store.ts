@@ -1,5 +1,6 @@
 import Storage from 'expo-sqlite/kv-store';
 import { useSyncExternalStore } from 'react';
+import { DEFAULT_SETTINGS, type Settings } from './portions';
 import type {
   FridgeItem,
   FridgeState,
@@ -14,6 +15,7 @@ export type State = {
   plan: MealPlanEntry[];
   shopping: ShoppingState;
   fridge: FridgeState;
+  settings: Settings;
 };
 
 function load<T>(key: string): T[] {
@@ -50,11 +52,21 @@ function loadFridge(): FridgeState {
   }
 }
 
+function loadSettings(): Settings {
+  try {
+    const raw = Storage.getItemSync('settings');
+    return { ...DEFAULT_SETTINGS, ...(raw ? (JSON.parse(raw) as Partial<Settings>) : {}) };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
 let state: State = {
   recipes: load<Recipe>('recipes'),
   plan: load<MealPlanEntry>('plan'),
   shopping: loadShopping(),
   fridge: loadFridge(),
+  settings: loadSettings(),
 };
 const listeners = new Set<() => void>();
 type ChangeListener = (prev: State, next: State, remote: boolean) => void;
@@ -64,6 +76,9 @@ function commit(next: State, remote = false) {
   if (next.recipes !== state.recipes) Storage.setItemSync('recipes', JSON.stringify(next.recipes));
   if (next.plan !== state.plan) Storage.setItemSync('plan', JSON.stringify(next.plan));
   if (next.fridge !== state.fridge) Storage.setItemSync('fridge', JSON.stringify(next.fridge));
+  if (next.settings !== state.settings) {
+    Storage.setItemSync('settings', JSON.stringify(next.settings));
+  }
   if (next.shopping !== state.shopping) {
     Storage.setItemSync('shopping', JSON.stringify(next.shopping));
   }
@@ -232,18 +247,25 @@ export function removeCheckedExtras() {
   });
 }
 
-/** Legger til varer i kjøleskapet. Kommaseparert tekst gir flere varer; dubletter hoppes over. */
-export function addFridgeItems(text: string) {
+/** Legger til varer på lager. Kommaseparert tekst gir flere varer; dubletter på samme sted hoppes over. */
+export function addFridgeItems(
+  text: string,
+  opts: { place?: FridgeItem['place']; expires?: string } = {},
+) {
+  const place = opts.place ?? 'fridge';
   const names = text
     .split(/[,\n]/)
     .map((n) => n.trim())
     .filter(Boolean);
-  const existing = new Set(state.fridge.items.map((i) => i.name.toLowerCase()));
+  const existing = new Set(
+    state.fridge.items.map((i) => `${i.place ?? 'fridge'}|${i.name.toLowerCase()}`),
+  );
   const added: FridgeItem[] = [];
   for (const name of names) {
-    if (existing.has(name.toLowerCase())) continue;
-    existing.add(name.toLowerCase());
-    added.push({ id: newId(), name });
+    const key = `${place}|${name.toLowerCase()}`;
+    if (existing.has(key)) continue;
+    existing.add(key);
+    added.push({ id: newId(), name, place, ...(opts.expires ? { expires: opts.expires } : {}) });
   }
   if (added.length === 0) return;
   commit({ ...state, fridge: { ...state.fridge, items: [...state.fridge.items, ...added] } });
@@ -256,20 +278,40 @@ export function removeFridgeItem(id: string) {
   });
 }
 
-export function renameFridgeItem(id: string, name: string) {
-  const n = name.trim();
-  if (!n) return;
+/** Endrer navn, sted eller utløpsdato. `expires: null` fjerner datoen. */
+export function updateFridgeItem(
+  id: string,
+  patch: { name?: string; place?: FridgeItem['place']; expires?: string | null },
+) {
   commit({
     ...state,
     fridge: {
       ...state.fridge,
-      items: state.fridge.items.map((i) => (i.id === id ? { ...i, name: n } : i)),
+      items: state.fridge.items.map((i) => {
+        if (i.id !== id) return i;
+        const next: FridgeItem = { ...i };
+        if (patch.name !== undefined && patch.name.trim()) next.name = patch.name.trim();
+        if (patch.place) next.place = patch.place;
+        if (patch.expires === null) delete next.expires;
+        else if (patch.expires) next.expires = patch.expires;
+        return next;
+      }),
     },
   });
 }
 
-export function clearFridge() {
-  commit({ ...state, fridge: { ...state.fridge, items: [] } });
+export function clearFridge(place?: FridgeItem['place']) {
+  commit({
+    ...state,
+    fridge: {
+      ...state.fridge,
+      items: place ? state.fridge.items.filter((i) => (i.place ?? 'fridge') !== place) : [],
+    },
+  });
+}
+
+export function updateSettings(patch: Partial<Settings>) {
+  commit({ ...state, settings: { ...state.settings, ...patch } });
 }
 
 export function setAssumeStaples(value: boolean) {

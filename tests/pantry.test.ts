@@ -177,3 +177,18 @@ assert.deepEqual(lax.missing, ['salt']); // uten antakelse mangler salt
 const lax2 = analyzeRecipe(mk('Laks', ['salt']), [], true);
 assert.deepEqual(lax2.have, ['salt']);
 console.log('compounds OK');
+
+// --- Bruk opp snart løfter relevante oppskrifter ---
+{
+  const a = mk('Pasta', ['400 g pasta', '2 dl fløte']);
+  const b = mk('Laksesuppe', ['400 g laksefilet', '2 dl fløte']);
+  const fr = ['pasta', 'laks', 'fløte'];
+  const plain = rankRecipes([a, b], fr, false).map((r) => r.recipe.title);
+  assert.deepEqual(plain, ['Laksesuppe', 'Pasta']); // likt gap → alfabetisk
+  const withSoon = rankRecipes([a, b], fr, false, ['laks']);
+  assert.deepEqual(withSoon[0].usesSoon, ['laks']);
+  assert.equal(withSoon[0].recipe.title, 'Laksesuppe');
+  const soonPasta = rankRecipes([a, b], fr, false, ['pasta']);
+  assert.equal(soonPasta[0].recipe.title, 'Pasta'); // løftet foran alfabetisk rekkefølge
+}
+console.log('use-soon OK');

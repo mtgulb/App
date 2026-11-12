@@ -39,7 +39,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="fridge"
         options={{
-          title: 'Kjøleskap',
+          title: 'Lager',
           tabBarIcon: ({ color }) => <SymbolView name="refrigerator" tintColor={color} size={24} />,
         }}
       />

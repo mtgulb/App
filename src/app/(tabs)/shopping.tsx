@@ -14,7 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SwipeRow } from '@/components/SwipeRow';
-import { Button, Chip, EmptyState, LargeTitle } from '@/components/ui';
+import { Button, Chip, EmptyState, LargeTitle, SegmentedControl } from '@/components/ui';
+import { DEPARTMENTS, departmentOf, type Department } from '@/lib/departments';
 import {
   baseServings,
   mergeIngredients,
@@ -32,6 +33,7 @@ import {
   toggleChecked,
   toggleExtra,
   updateExtra,
+  updateSettings,
   useStore,
 } from '@/lib/store';
 import { radius, shadow, useTheme } from '@/theme/colors';
@@ -44,6 +46,8 @@ type Row = {
   id?: string;
   /** Har varen en egen redigert tekst? */
   edited?: boolean;
+  /** Avdeling i butikken. */
+  dept?: Department;
   onToggle: () => void;
 };
 type Section = { id: string; title: string; data: Row[]; collapsible?: boolean; count?: number };
@@ -59,7 +63,7 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
 
 export default function ShoppingScreen() {
   const t = useTheme();
-  const { recipes, plan, shopping } = useStore();
+  const { recipes, plan, shopping, settings } = useStore();
   const [draft, setDraft] = useState('');
   const [from, setFrom] = useState(() => startOfDay(new Date()));
   const [to, setTo] = useState(() => addDays(startOfDay(new Date()), 6));
@@ -95,6 +99,7 @@ export default function ShoppingScreen() {
       text: shopping.overrides[key] ?? m.text,
       kind: 'merged',
       edited: key in shopping.overrides,
+      dept: departmentOf(m.key),
       onToggle: () => toggleChecked(key),
     };
   });
@@ -105,6 +110,7 @@ export default function ShoppingScreen() {
     id: e.id,
     text: e.text,
     kind: 'extra',
+    dept: departmentOf(e.text),
     onToggle: () => toggleExtra(e.id),
   }));
 
@@ -119,11 +125,21 @@ export default function ShoppingScreen() {
     .map((r) => ({ ...r, kind: 'hidden' as const, onToggle: () => restoreItem(r.key) }));
 
   const sections: Section[] = [];
-  if (todoMerged.length > 0) {
-    sections.push({ id: 'merged', title: 'Varer fra middagene', data: todoMerged });
-  }
-  if (todoExtras.length > 0) {
-    sections.push({ id: 'extras', title: 'Egne varer', data: todoExtras });
+  if (settings.shoppingSort === 'department') {
+    // Etter avdeling: i den rekkefølgen man går gjennom butikken.
+    for (const dep of DEPARTMENTS) {
+      const data = [...todoMerged, ...todoExtras]
+        .filter((r) => r.dept === dep)
+        .sort((a, b) => a.text.localeCompare(b.text, 'nb'));
+      if (data.length > 0) sections.push({ id: `dept-${dep}`, title: dep, data });
+    }
+  } else {
+    if (todoMerged.length > 0) {
+      sections.push({ id: 'merged', title: 'Varer fra middagene', data: todoMerged });
+    }
+    if (todoExtras.length > 0) {
+      sections.push({ id: 'extras', title: 'Egne varer', data: todoExtras });
+    }
   }
   if (doneRows.length > 0) {
     sections.push({
@@ -271,6 +287,16 @@ export default function ShoppingScreen() {
               </View>
             </View>
 
+            <View style={styles.sortWrap}>
+              <SegmentedControl
+                value={settings.shoppingSort}
+                onChange={(shoppingSort) => updateSettings({ shoppingSort })}
+                options={[
+                  { value: 'recipe', label: 'Alfabetisk' },
+                  { value: 'department', label: 'Etter avdeling' },
+                ]}
+              />
+            </View>
             <Text style={[styles.summary, { color: t.textSecondary }]}>
               {inRange.length === 0
                 ? `Ingen middager ${dateFmt.format(from)} – ${dateFmt.format(to)}`
@@ -433,6 +459,7 @@ const styles = StyleSheet.create({
   rangeLabel: { fontSize: 16, fontWeight: '600' },
   quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   hint: { fontSize: 12 },
+  sortWrap: { marginHorizontal: -20, marginBottom: -4 },
   summary: { fontSize: 14, fontWeight: '700', marginTop: 4 },
   summaryItem: { fontSize: 13 },
   addRow: {

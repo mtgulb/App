@@ -5,8 +5,8 @@ import { Alert, Linking, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { Body, Button, ErrorText, Heading, Stepper } from '@/components/ui';
 import { addDinnerEvent, CalendarError } from '@/lib/calendar';
-import { baseServings } from '@/lib/ingredients';
-import { addPlanEntry, getRecipe } from '@/lib/store';
+import { defaultServings } from '@/lib/portions';
+import { addPlanEntry, getRecipe, getState } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
 
 function defaultDinner(): Date {
@@ -26,7 +26,9 @@ export default function PlanDinner() {
   const recipe = getRecipe(recipeId);
   const [date, setDate] = useState(defaultDinner);
   const [servings, setServings] = useState(
-    () => parseInt(servingsParam ?? '', 10) || (recipe ? baseServings(recipe) : 4),
+    () =>
+      parseInt(servingsParam ?? '', 10) ||
+      (recipe ? defaultServings(getState().settings, recipe) : 4),
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ClipboardBanner } from '@/components/ClipboardBanner';
 import { RecipeImage } from '@/components/RecipeImage';
 import { EmptyState, LargeTitle } from '@/components/ui';
 import { useStore } from '@/lib/store';
@@ -64,9 +65,9 @@ export default function RecipesScreen() {
         actionIcon="plus"
         actionLabel="Ny oppskrift"
         onAction={() => router.push('/recipe/new')}
-        secondaryIcon="person.2"
-        secondaryLabel="Familie og deling"
-        onSecondary={() => router.push('/family')}
+        secondaryIcon="gearshape"
+        secondaryLabel="Innstillinger"
+        onSecondary={() => router.push('/settings')}
       />
       <FlatList
         data={toRows(shown)}
@@ -74,21 +75,24 @@ export default function RecipesScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          recipes.length > 0 ? (
-            <TextInput
-              accessibilityLabel="Søk i oppskrifter"
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Søk på navn eller ingrediens"
-              placeholderTextColor={t.textSecondary}
-              clearButtonMode="while-editing"
-              autoCorrect={false}
-              style={[
-                styles.search,
-                { backgroundColor: t.card, color: t.text, borderColor: t.border },
-              ]}
-            />
-          ) : undefined
+          <View style={styles.headerStack}>
+            <ClipboardBanner />
+            {recipes.length > 0 ? (
+              <TextInput
+                accessibilityLabel="Søk i oppskrifter"
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Søk på navn eller ingrediens"
+                placeholderTextColor={t.textSecondary}
+                clearButtonMode="while-editing"
+                autoCorrect={false}
+                style={[
+                  styles.search,
+                  { backgroundColor: t.card, color: t.text, borderColor: t.border },
+                ]}
+              />
+            ) : null}
+          </View>
         }
         ListEmptyComponent={
           recipes.length > 0 ? (
@@ -115,6 +119,7 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   list: { paddingHorizontal: PAD, paddingBottom: 32, gap: GAP, flexGrow: 1 },
+  headerStack: { gap: 12 },
   row: { flexDirection: 'row', gap: GAP },
   card: { flex: 1, borderRadius: radius, overflow: 'hidden' },
   spacer: { flex: 1 },

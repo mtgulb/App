@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
+  ActionSheetIOS,
   Alert,
   Platform,
   Pressable,
@@ -13,64 +14,129 @@ import {
 } from 'react-native';
 import { RecipeImage } from '@/components/RecipeImage';
 import { SwipeRow } from '@/components/SwipeRow';
-import { Button, Card, Chip, EmptyState, Heading, LargeTitle } from '@/components/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Heading,
+  LargeTitle,
+  SegmentedControl,
+} from '@/components/ui';
 import { parseIngredient } from '@/lib/ingredients';
+import {
+  dateInDays,
+  EXPIRY_PRESETS,
+  expiringSoon,
+  expiryLabel,
+  expiryState,
+  PLACES,
+  placeOf,
+  type Place,
+} from '@/lib/inventory';
 import { rankRecipes } from '@/lib/pantry';
 import {
   addFridgeItems,
   clearFridge,
   removeFridgeItem,
-  renameFridgeItem,
   setAssumeStaples,
+  updateFridgeItem,
   useStore,
 } from '@/lib/store';
 import type { FridgeItem } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
 
-export default function FridgeScreen() {
+const nameOf = (l: string) => parseIngredient(l).name.split(',')[0];
+
+export default function InventoryScreen() {
   const t = useTheme();
   const router = useRouter();
   const { recipes, fridge } = useStore();
+  const [place, setPlace] = useState<Place>('fridge');
   const [draft, setDraft] = useState('');
+  const [expiry, setExpiry] = useState<number | null>(null); // dager frem, eller ingen dato
 
+  const inPlace = fridge.items.filter((i) => placeOf(i) === place);
+  const soonItems = expiringSoon(fridge.items);
   const names = fridge.items.map((i) => i.name);
-  const ranked = rankRecipes(recipes, names, fridge.assumeStaples);
+  const ranked = rankRecipes(
+    recipes,
+    names,
+    fridge.assumeStaples,
+    soonItems.map((i) => i.name),
+  );
+  const placeLabel = PLACES.find((p) => p.id === place)!.label.toLowerCase();
 
   function submit() {
-    addFridgeItems(draft);
+    addFridgeItems(draft, {
+      place,
+      expires: expiry !== null ? dateInDays(expiry) : undefined,
+    });
     setDraft('');
+    setExpiry(null);
   }
 
-  function edit(item: FridgeItem) {
-    if (Platform.OS === 'ios') {
-      Alert.prompt(
-        'Rediger vare',
-        undefined,
-        (text) => text !== undefined && renameFridgeItem(item.id, text),
-        'plain-text',
-        item.name,
-      );
-    }
+  function pickExpiry(item: FridgeItem) {
+    const options = [...EXPIRY_PRESETS.map((p) => `Om ${p.label}`), 'Fjern utløpsdato', 'Avbryt'];
+    if (Platform.OS !== 'ios') return;
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: `Utløpsdato for ${item.name}`, options, cancelButtonIndex: options.length - 1 },
+      (i) => {
+        if (i < EXPIRY_PRESETS.length)
+          updateFridgeItem(item.id, { expires: dateInDays(EXPIRY_PRESETS[i].days) });
+        else if (i === EXPIRY_PRESETS.length) updateFridgeItem(item.id, { expires: null });
+      },
+    );
+  }
+
+  function menu(item: FridgeItem) {
+    if (Platform.OS !== 'ios') return;
+    const others = PLACES.filter((p) => p.id !== placeOf(item));
+    const options = [
+      'Endre navn',
+      item.expires ? 'Endre utløpsdato' : 'Sett utløpsdato (valgfritt)',
+      ...others.map((p) => `Flytt til ${p.label.toLowerCase()}`),
+      'Avbryt',
+    ];
+    ActionSheetIOS.showActionSheetWithOptions(
+      { title: item.name, options, cancelButtonIndex: options.length - 1 },
+      (i) => {
+        if (i === 0) {
+          Alert.prompt(
+            'Endre navn',
+            undefined,
+            (text) => text && updateFridgeItem(item.id, { name: text }),
+            'plain-text',
+            item.name,
+          );
+        } else if (i === 1) pickExpiry(item);
+        else if (i < options.length - 1) updateFridgeItem(item.id, { place: others[i - 2].id });
+      },
+    );
   }
 
   function confirmClear() {
-    Alert.alert('Tømme kjøleskapet?', 'Alle varene fjernes fra listen.', [
+    Alert.alert(`Tømme ${placeLabel}?`, 'Alle varene her fjernes fra listen.', [
       { text: 'Avbryt', style: 'cancel' },
-      { text: 'Tøm', style: 'destructive', onPress: clearFridge },
+      { text: 'Tøm', style: 'destructive', onPress: () => clearFridge(place) },
     ]);
   }
 
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
-      <LargeTitle title="Kjøleskap" />
-      <ScrollView
-        contentContainerStyle={styles.list}
-        keyboardShouldPersistTaps="handled"
-        contentInsetAdjustmentBehavior="never"
-      >
+      <LargeTitle title="Lager" />
+      <SegmentedControl
+        value={place}
+        onChange={setPlace}
+        options={PLACES.map((p) => ({
+          value: p.id,
+          label: `${p.label} (${fridge.items.filter((i) => placeOf(i) === p.id).length})`,
+        }))}
+      />
+      <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
         <View style={[styles.addRow, shadow, { backgroundColor: t.card }]}>
           <TextInput
-            accessibilityLabel="Legg til vare i kjøleskapet"
+            accessibilityLabel={`Legg til vare i ${placeLabel}`}
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={submit}
@@ -89,14 +155,107 @@ export default function FridgeScreen() {
             <Text style={styles.addBtnText}>Legg til</Text>
           </Pressable>
         </View>
-        <Text style={[styles.hint, { color: t.textSecondary }]}>
-          Skriv flere varer med komma mellom. Norsk og engelsk går bra, f.eks. «mel» og «flour».
-        </Text>
+        <View style={styles.chips}>
+          <Text style={[styles.hint, { color: t.textSecondary }]}>Utløpsdato (valgfritt):</Text>
+          {[{ label: 'Ingen', days: null as number | null }, ...EXPIRY_PRESETS].map((p) => (
+            <Pressable
+              key={p.label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: expiry === p.days }}
+              onPress={() => setExpiry(p.days)}
+            >
+              <View
+                style={[styles.chip, { backgroundColor: expiry === p.days ? t.tint : t.tintSoft }]}
+              >
+                <Text
+                  style={{
+                    color: expiry === p.days ? '#FFFFFF' : t.tint,
+                    fontWeight: '600',
+                    fontSize: 13,
+                  }}
+                >
+                  {p.label}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {soonItems.length > 0 ? (
+          <Card>
+            <Heading>Bruk opp snart</Heading>
+            {soonItems.map((i) => (
+              <Text
+                key={i.id}
+                style={{ color: expiryState(i) === 'expired' ? t.danger : t.text, fontSize: 15 }}
+              >
+                {i.name} · {expiryLabel(i.expires!)}
+              </Text>
+            ))}
+            {ranked.filter((r) => r.usesSoon.length > 0).length > 0 ? (
+              <Text style={{ color: t.textSecondary }}>
+                Forslag som bruker dem opp:{' '}
+                {ranked
+                  .filter((r) => r.usesSoon.length > 0)
+                  .slice(0, 3)
+                  .map((r) => r.recipe.title)
+                  .join(', ')}
+              </Text>
+            ) : null}
+          </Card>
+        ) : null}
+
+        <View style={styles.items}>
+          {inPlace.length === 0 ? (
+            <Text style={[styles.hint, { color: t.textSecondary }]}>
+              Ingenting i {placeLabel} ennå. Skriv flere varer med komma mellom. Norsk og engelsk
+              går bra.
+            </Text>
+          ) : (
+            <Text style={[styles.hint, { color: t.textSecondary }]}>
+              Sveip mot høyre for å fjerne, venstre for flere valg.
+            </Text>
+          )}
+          {inPlace.map((item) => {
+            const state = expiryState(item);
+            return (
+              <SwipeRow
+                key={item.id}
+                accessibilityLabel={item.name}
+                right={{ label: 'Fjern', color: t.danger, run: () => removeFridgeItem(item.id) }}
+                left={{ label: 'Valg', color: t.tint, run: () => menu(item) }}
+              >
+                <View style={[styles.item, { backgroundColor: t.card, borderColor: t.border }]}>
+                  <Text style={[styles.itemText, { color: t.text }]}>{item.name}</Text>
+                  {item.expires ? (
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color:
+                          state === 'expired'
+                            ? t.danger
+                            : state === 'soon'
+                              ? '#B26A00'
+                              : t.textSecondary,
+                      }}
+                    >
+                      {expiryLabel(item.expires)}
+                    </Text>
+                  ) : null}
+                </View>
+              </SwipeRow>
+            );
+          })}
+          {inPlace.length > 0 ? (
+            <Button title={`Tøm ${placeLabel}`} kind="destructive" onPress={confirmClear} />
+          ) : null}
+        </View>
 
         <Card>
           <View style={styles.switchRow}>
             <Text style={[styles.switchLabel, { color: t.text }]}>
-              Anta at salt, pepper, vann og olje finnes
+              Anta at salt, pepper, vann og olje finnes (kun i forslagene her)
             </Text>
             <Switch
               value={fridge.assumeStaples}
@@ -106,34 +265,12 @@ export default function FridgeScreen() {
           </View>
         </Card>
 
-        {fridge.items.length > 0 ? (
-          <View style={styles.items}>
-            <Text style={[styles.section, { color: t.textSecondary }]}>
-              Du har ({fridge.items.length}) · sveip mot høyre for å fjerne, venstre for å redigere
-            </Text>
-            {fridge.items.map((item) => (
-              <SwipeRow
-                key={item.id}
-                accessibilityLabel={item.name}
-                right={{ label: 'Fjern', color: t.danger, run: () => removeFridgeItem(item.id) }}
-                left={{ label: 'Rediger', color: t.tint, run: () => edit(item) }}
-              >
-                <View style={[styles.item, { backgroundColor: t.card, borderColor: t.border }]}>
-                  <Text style={[styles.itemText, { color: t.text }]}>{item.name}</Text>
-                </View>
-              </SwipeRow>
-            ))}
-            <Button title="Tøm kjøleskapet" kind="destructive" onPress={confirmClear} />
-          </View>
-        ) : null}
-
         <Heading>Forslag</Heading>
         {recipes.length === 0 ? (
           <EmptyState emoji="📖" title="Ingen oppskrifter" text="Legg inn oppskrifter først." />
         ) : fridge.items.length === 0 ? (
           <Text style={[styles.hint, { color: t.textSecondary }]}>
-            Legg inn hva du har i kjøleskapet, så rangerer vi oppskriftene etter hvor mye du
-            allerede har.
+            Legg inn hva du har, så rangerer vi oppskriftene etter hvor mye du allerede har.
           </Text>
         ) : (
           ranked.map((fit) => (
@@ -164,15 +301,19 @@ export default function FridgeScreen() {
                         : `Mangler ${fit.missing.length} av ${fit.total}`}
                   </Chip>
                 </View>
+                {fit.usesSoon.length > 0 ? (
+                  <Text style={{ color: t.tint, fontWeight: '600' }}>
+                    Bruker opp: {fit.usesSoon.join(', ')}
+                  </Text>
+                ) : null}
                 {fit.missing.length > 0 ? (
                   <Text style={{ color: t.textSecondary }} numberOfLines={2}>
-                    {fit.missing.map((l) => parseIngredient(l).name.split(',')[0]).join(', ')}
+                    {fit.missing.map(nameOf).join(', ')}
                   </Text>
                 ) : null}
                 {fit.similar.length > 0 ? (
                   <Text style={{ color: t.textSecondary }} numberOfLines={2}>
-                    Lignende:{' '}
-                    {fit.similar.map((x) => parseIngredient(x.line).name.split(',')[0]).join(', ')}
+                    Lignende: {fit.similar.map((x) => nameOf(x.line)).join(', ')}
                   </Text>
                 ) : null}
               </View>
@@ -199,13 +340,22 @@ const styles = StyleSheet.create({
   addInput: { flex: 1, fontSize: 16, paddingVertical: 10 },
   addBtn: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   addBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  chip: { borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
   hint: { fontSize: 13 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   switchLabel: { flex: 1, fontSize: 15 },
   items: { gap: 6 },
-  section: { fontSize: 13, fontWeight: '700' },
-  item: { borderRadius: 14, borderWidth: 1, padding: 14 },
-  itemText: { fontSize: 16 },
+  item: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  itemText: { fontSize: 16, flexShrink: 1 },
   fit: {
     flexDirection: 'row',
     borderRadius: radius,

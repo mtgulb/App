@@ -22,10 +22,23 @@ export function Heading({ children }: { children: ReactNode }) {
   return <Text style={[styles.heading, { color: t.text }]}>{children}</Text>;
 }
 
-export function Body({ children, secondary }: { children: ReactNode; secondary?: boolean }) {
+export function Body({
+  children,
+  secondary,
+  numberOfLines,
+}: {
+  children: ReactNode;
+  secondary?: boolean;
+  numberOfLines?: number;
+}) {
   const t = useTheme();
   return (
-    <Text style={[styles.body, { color: secondary ? t.textSecondary : t.text }]}>{children}</Text>
+    <Text
+      numberOfLines={numberOfLines}
+      style={[styles.body, { color: secondary ? t.textSecondary : t.text }]}
+    >
+      {children}
+    </Text>
   );
 }
 
@@ -53,7 +66,7 @@ export function LargeTitle({
   actionLabel?: string;
   onAction?: () => void;
   /** Valgfri andre knapp til venstre for hovedknappen. */
-  secondaryIcon?: 'person.2';
+  secondaryIcon?: 'person.2' | 'gearshape';
   secondaryLabel?: string;
   onSecondary?: () => void;
 }) {

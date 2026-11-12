@@ -2,7 +2,14 @@
  * Ren datamodell for synk: konverterer mellom appens lokale data og rader i databasen,
  * og beregner hva som er endret. Ingen nettverk eller lagring her, så alt kan testes.
  */
-import type { FridgeState, MealPlanEntry, Recipe, ShoppingExtra, ShoppingState } from '../types.ts';
+import type {
+  FridgeItem,
+  FridgeState,
+  MealPlanEntry,
+  Recipe,
+  ShoppingExtra,
+  ShoppingState,
+} from '../types.ts';
 
 export type ItemKind = 'checked' | 'hidden' | 'override' | 'extra' | 'fridge' | 'setting';
 
@@ -82,7 +89,9 @@ export function stateToItems(shopping: ShoppingState, fridge: FridgeState): Map<
   for (const k of shopping.hidden) put('hidden', k);
   for (const [k, text] of Object.entries(shopping.overrides)) put('override', k, { text });
   for (const e of shopping.extras) put('extra', e.id, { text: e.text, checked: e.checked });
-  for (const i of fridge.items) put('fridge', i.id, { name: i.name });
+  for (const i of fridge.items) {
+    put('fridge', i.id, { name: i.name, place: i.place ?? 'fridge', expires: i.expires ?? null });
+  }
   put('setting', 'assumeStaples', { value: fridge.assumeStaples });
   return m;
 }
@@ -131,7 +140,12 @@ export function applyItem(
     case 'fridge': {
       const others = fridge.items.filter((i) => i.id !== key);
       if (deleted) return { shopping, fridge: { ...fridge, items: others } };
-      const next = { id: key, name: String(value.name ?? '') };
+      const next: FridgeItem = {
+        id: key,
+        name: String(value.name ?? ''),
+        place: (value.place as FridgeItem['place']) ?? 'fridge',
+        ...(value.expires ? { expires: String(value.expires) } : {}),
+      };
       const old = fridge.items.find((i) => i.id === key);
       const items = old ? fridge.items.map((i) => (i.id === key ? next : i)) : [...others, next];
       return { shopping, fridge: { ...fridge, items } };
