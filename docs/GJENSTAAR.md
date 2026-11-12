@@ -33,7 +33,7 @@ Prioritet: 🔴 blokkerer innsending · 🟠 bør være på plass før publiseri
 
 ## D. Test på fysisk iPhone (hele matrisen i `docs/LANSERING.md`)
 
-- [ ] 🔴 **[Eier]** Gå gjennom alle funksjoner i Expo Go nå, og meld fra om feil. Mye kode er aldri sett på en telefon.
+- [ ] 🔴 **[Eier]** Gå gjennom alle funksjoner i Expo Go (følg `docs/TESTGUIDE.md`), og meld fra om feil. Mye kode er aldri sett på en telefon.
 - [ ] 🔴 **[Eier]** Test uten internett, med avslått kamera/bilder/kalender/varsler, og med ugyldige oppskriftslenker.
 - [ ] 🔴 **[Begge]** Første **TestFlight-bygg** (krever konto, bundle ID og API-nøkkel). Tekstgjenkjenning fra bilde og andre native deler testes først da.
 - [ ] 🔴 **[Eier]** Minst to personer tester i TestFlight i noen dager. Ingen krasj.

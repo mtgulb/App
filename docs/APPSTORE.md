@@ -58,13 +58,3 @@ Strekkodeoppslag bruker data fra Open Food Facts (ODbL).
 ## Notes for Review (til Apple)
 
 Appen krever ingen innlogging. Kamera brukes til å skanne strekkoder og ta bilde av oppskrifter, kalender til å legge middager i brukerens kalender, varsler til valgfrie påminnelser. Alle tillatelser er valgfrie. For å prøve import: Oppskrifter → «+» → lim inn en lenke til en oppskrift.
-
-## Svar i App Store Connect (må sjekkes av eier; _ikke verifisert_)
-
-- **Aldersgrense:** ingen støtende innhold, ingen nettlesing som ikke er knyttet til oppskrifter. Forventet laveste klasse.
-- **Personvern («App Privacy»):** foreslått «Data Not Collected». Appen har ingen konto, og strekkodenummer sendes bare for et oppslag. Kontroller mot Apples definisjon før du svarer.
-- **Eksport (kryptering):** `ITSAppUsesNonExemptEncryption = false` er satt (bruker bare standard HTTPS).
-- **Content Rights:** appen viser oppskrifter brukeren selv har hentet, med kilde og lenke.
-- **Pris:** gratis (avgjøres av eier).
-- **Utgiver (individuell konto):** ditt fulle navn vises offentlig som selger. EU-regelen DSA ber deg ta stilling til om du er «trader»; for en gratis hobbyapp svarer mange «ikke trader», men dette må du vurdere selv.
-- **Skjermbilder:** 6,9″ (iPhone) kreves. Tas fra TestFlight-bygget, ikke fra Expo Go.
