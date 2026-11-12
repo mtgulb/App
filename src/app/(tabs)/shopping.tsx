@@ -16,15 +16,10 @@ import { AddRow } from '@/components/AddRow';
 import { SwipeRow } from '@/components/SwipeRow';
 import { Button, EmptyState, LargeTitle, SegmentedControl, Stepper } from '@/components/ui';
 import { departmentOf, orderFor, type Department } from '@/lib/departments';
-import {
-  baseServings,
-  mergeIngredients,
-  parseIngredient,
-  type MergedItem,
-} from '@/lib/ingredients';
+import { type MergedItem } from '@/lib/ingredients';
+import { mergedFromRecipes } from '@/lib/shoppingList';
 import {
   addExtra,
-  addRecipeToShopping,
   clearShopping,
   hideItem,
   removeCheckedExtras,
@@ -33,6 +28,7 @@ import {
   resetShopping,
   restoreItem,
   setOverride,
+  setShoppingServings,
   toggleChecked,
   toggleExtra,
   updateExtra,
@@ -63,15 +59,10 @@ export default function ShoppingScreen() {
   const [showPlan, setShowPlan] = useState(false);
 
   // Handlelisten fylles bare manuelt: oppskrifter du har lagt på listen, pluss egne varer.
-  const merged: MergedItem[] = useMemo(() => {
-    const items = shopping.fromRecipes.flatMap((add) => {
-      const recipe = recipes.find((r) => r.id === add.recipeId);
-      if (!recipe) return [];
-      const factor = add.servings / baseServings(recipe);
-      return recipe.ingredients.map((line) => ({ parsed: parseIngredient(line), factor }));
-    });
-    return mergeIngredients(items);
-  }, [recipes, shopping.fromRecipes]);
+  const merged: MergedItem[] = useMemo(
+    () => mergedFromRecipes(shopping.fromRecipes, recipes),
+    [recipes, shopping.fromRecipes],
+  );
 
   const [doneOpen, setDoneOpen] = useState(false);
   const [hiddenOpen, setHiddenOpen] = useState(false);
@@ -271,7 +262,7 @@ export default function ShoppingScreen() {
                         compact
                         value={add.servings}
                         label="porsjoner"
-                        onChange={(n) => addRecipeToShopping(r.id, n)}
+                        onChange={(n) => setShoppingServings(add.id, n)}
                       />
                       <Pressable
                         accessibilityRole="button"

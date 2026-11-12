@@ -9,7 +9,6 @@ import { baseServings } from '@/lib/ingredients';
 import {
   addRecipeToShopping,
   getRecipe,
-  getState,
   removePlanEntry,
   setEntryServings,
   useStore,
@@ -82,12 +81,11 @@ function PlanRow({ item }: { item: MealPlanEntry }) {
             accessibilityLabel="Legg ingrediensene på handlelisten"
             hitSlop={8}
             onPress={() => {
-              const already = getState().shopping.fromRecipes.some((x) => x.recipeId === recipe.id);
-              addRecipeToShopping(recipe.id, servings);
+              const n = addRecipeToShopping(recipe.id, servings);
               Alert.alert(
-                already ? 'Oppdatert' : 'Lagt til',
-                already
-                  ? `${recipe.title} lå allerede på handlelisten. Porsjonene er satt til ${servings}.`
+                'Lagt til',
+                n > 1
+                  ? `Ligger nå ${n} ganger på handlelisten – ingrediensene er lagt sammen.`
                   : `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
               );
             }}

@@ -139,13 +139,27 @@ export function markCooked(id: string) {
   });
 }
 
-/** Legger alle ingredientene i en oppskrift på handlelisten. Oppdaterer porsjonene hvis den allerede ligger der. */
-export function addRecipeToShopping(recipeId: string, servings: number) {
-  const existing = state.shopping.fromRecipes.find((x) => x.recipeId === recipeId);
-  const fromRecipes = existing
-    ? state.shopping.fromRecipes.map((x) => (x.recipeId === recipeId ? { ...x, servings } : x))
-    : [...state.shopping.fromRecipes, { id: newId(), recipeId, servings }];
+/**
+ * Legger alle ingrediensene i en oppskrift på handlelisten. Hver gang er én middag:
+ * legges den på to ganger, dobles ingrediensene. Returnerer hvor mange ganger den nå ligger der.
+ */
+export function addRecipeToShopping(recipeId: string, servings: number): number {
+  const fromRecipes = [...state.shopping.fromRecipes, { id: newId(), recipeId, servings }];
   commit({ ...state, shopping: { ...state.shopping, fromRecipes } });
+  return fromRecipes.filter((x) => x.recipeId === recipeId).length;
+}
+
+/** Endrer porsjonene for én oppføring på handlelisten. */
+export function setShoppingServings(entryId: string, servings: number) {
+  commit({
+    ...state,
+    shopping: {
+      ...state.shopping,
+      fromRecipes: state.shopping.fromRecipes.map((x) =>
+        x.id === entryId ? { ...x, servings } : x,
+      ),
+    },
+  });
 }
 
 export function removeRecipeFromShopping(id: string) {
