@@ -14,6 +14,7 @@ import {
 import { defaultServings } from '@/lib/portions';
 import { useStore } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 /** Klokken hentes utenfor komponenten, siden den ikke skal kalles under rendering. */
 const clock = () => Date.now();
@@ -52,7 +53,7 @@ export default function CookMode() {
       if (finished.length > 0) {
         setAllTimers(timersRef.current.filter((x) => x.endAt > t0));
         Vibration.vibrate([0, 600, 300, 600]);
-        Alert.alert('Tidtaker ferdig', finished.map((f) => f.label).join(', '));
+        Alert.alert(tr('cook.timerDone'), finished.map((f) => f.label).join(', '));
       }
     }, 1000);
     return () => clearInterval(handle);
@@ -67,15 +68,11 @@ export default function CookMode() {
   );
 
   if (!recipe)
-    return <EmptyState emoji="🤷" title="Fant ikke oppskriften" text="Den kan ha blitt slettet." />;
-  if (recipe.steps.length === 0) {
     return (
-      <EmptyState
-        emoji="📝"
-        title="Ingen steg"
-        text="Legg inn fremgangsmåten under «Rediger oppskrift»."
-      />
+      <EmptyState emoji="🤷" title={tr('cook.notFoundTitle')} text={tr('cook.notFoundText')} />
     );
+  if (recipe.steps.length === 0) {
+    return <EmptyState emoji="📝" title={tr('cook.noStepsTitle')} text={tr('cook.noStepsText')} />;
   }
 
   const servings = parseInt(servingsParam ?? '', 10) || defaultServings(settings, recipe);
@@ -91,7 +88,7 @@ export default function CookMode() {
       if (!(await notificationsAllowed())) await requestNotifications();
       notificationId = await scheduleTimerNotification(
         seconds,
-        'Tidtaker ferdig',
+        tr('cook.timerDone'),
         `${recipe!.title}: ${label}`,
       );
     }
@@ -123,8 +120,8 @@ export default function CookMode() {
           value={view}
           onChange={setView}
           options={[
-            { value: 'steps', label: 'Steg' },
-            { value: 'ingredients', label: 'Ingredienser' },
+            { value: 'steps', label: tr('cook.tabSteps') },
+            { value: 'ingredients', label: tr('cook.tabIngredients') },
           ]}
         />
       </View>
@@ -132,7 +129,7 @@ export default function CookMode() {
       {view === 'steps' ? (
         <ScrollView contentContainerStyle={styles.body}>
           <Text style={[styles.progress, { color: t.textSecondary }]}>
-            Steg {index + 1} av {steps.length}
+            {tr('cook.progress', { n: index + 1, total: steps.length })}
           </Text>
           <Text style={[styles.step, { color: t.text }]} accessibilityRole="text">
             {step}
@@ -141,14 +138,14 @@ export default function CookMode() {
             <Button
               key={tm.label}
               kind="secondary"
-              title={`⏱ Start tidtaker: ${tm.label}`}
+              title={tr('cook.startTimer', { label: tm.label })}
               onPress={() => start(tm.label, tm.seconds)}
             />
           ))}
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.body}>
-          <Body secondary>For {servings} porsjoner. Trykk for å krysse av underveis.</Body>
+          <Body secondary>{tr('cook.ingredientsHelp', { servings })}</Body>
           {lines.map((line, i) => (
             <Pressable
               key={i}
@@ -184,10 +181,10 @@ export default function CookMode() {
               </Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Stopp ${tm.label}`}
+                accessibilityLabel={tr('cook.stopLabel', { label: tm.label })}
                 onPress={() => stop(tm)}
               >
-                <Text style={{ color: t.danger, fontWeight: '700' }}>Stopp</Text>
+                <Text style={{ color: t.danger, fontWeight: '700' }}>{tr('cook.stop')}</Text>
               </Pressable>
             </View>
           ))}
@@ -198,7 +195,7 @@ export default function CookMode() {
         <View style={styles.nav}>
           <View style={styles.flex}>
             <Button
-              title="Forrige"
+              title={tr('cook.prev')}
               kind="secondary"
               disabled={index === 0}
               onPress={() => setIndex(index - 1)}
@@ -206,9 +203,9 @@ export default function CookMode() {
           </View>
           <View style={styles.flex}>
             {index < steps.length - 1 ? (
-              <Button title="Neste" onPress={() => setIndex(index + 1)} />
+              <Button title={tr('cook.next')} onPress={() => setIndex(index + 1)} />
             ) : (
-              <Button title="Ferdig!" onPress={() => router.back()} />
+              <Button title={tr('cook.done')} onPress={() => router.back()} />
             )}
           </View>
         </View>

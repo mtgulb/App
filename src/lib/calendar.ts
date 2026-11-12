@@ -1,6 +1,7 @@
 import * as Calendar from 'expo-calendar/legacy';
 import { Platform } from 'react-native';
 import { scaledLines } from './ingredients';
+import { t } from '../i18n/index.ts';
 import type { Recipe } from './types';
 
 export class CalendarError extends Error {
@@ -13,26 +14,24 @@ export class CalendarError extends Error {
 }
 
 function buildNotes(recipe: Recipe, servings: number): string {
-  const parts: string[] = [`Porsjoner: ${servings}`];
+  const parts: string[] = [t('calendar.notesServings', { servings })];
   if (recipe.ingredients.length) {
     parts.push(
-      `Ingredienser (til ${servings}):\n` +
+      t('calendar.notesIngredients', { servings }) +
+        '\n' +
         scaledLines(recipe, servings)
           .map((i) => `• ${i}`)
           .join('\n'),
     );
   }
-  if (recipe.sourceUrl) parts.push(`Oppskrift: ${recipe.sourceUrl}`);
+  if (recipe.sourceUrl) parts.push(t('calendar.notesRecipe', { url: recipe.sourceUrl }));
   return parts.join('\n\n');
 }
 
 async function targetCalendarId(): Promise<string> {
   const perm = await Calendar.requestCalendarPermissionsAsync();
   if (perm.status !== 'granted') {
-    throw new CalendarError(
-      'Appen har ikke tilgang til kalenderen. Åpne Innstillinger, velg appen og slå på tilgang til Kalendere.',
-      true,
-    );
+    throw new CalendarError(t('calendar.noAccess'), true);
   }
   if (Platform.OS === 'ios') {
     const def = await Calendar.getDefaultCalendarAsync();
@@ -40,7 +39,7 @@ async function targetCalendarId(): Promise<string> {
   }
   const all = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
   const writable = all.find((c) => c.allowsModifications);
-  if (!writable) throw new CalendarError('Fant ingen kalender som kan endres.');
+  if (!writable) throw new CalendarError(t('calendar.noWritable'));
   return writable.id;
 }
 
@@ -54,7 +53,7 @@ export async function addDinnerEvent(
   const start = new Date(date);
   const end = new Date(start.getTime() + 60 * 60 * 1000);
   return Calendar.createEventAsync(calendarId, {
-    title: `Middag: ${recipe.title}`,
+    title: t('calendar.eventTitle', { title: recipe.title }),
     startDate: start,
     endDate: end,
     notes: buildNotes(recipe, servings),

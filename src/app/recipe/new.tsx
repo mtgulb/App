@@ -19,6 +19,7 @@ import { ocrAvailable, recipeFromImages } from '@/lib/ocr';
 import { pickImages } from '@/lib/pickImages';
 import { parseTags } from '@/lib/recipeFilter';
 import { addRecipe } from '@/lib/store';
+import { t as tr } from '@/i18n';
 
 export default function NewRecipeScreen() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function NewRecipeScreen() {
         router.replace({ pathname: '/recipe/edit', params: { id: recipe.id, review: '1' } });
       else router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
     } catch (e) {
-      setImportError(e instanceof ImportError ? e.message : 'Noe gikk galt under importen.');
+      setImportError(e instanceof ImportError ? e.message : tr('recipe.importFailed'));
     } finally {
       setImporting(false);
     }
@@ -59,7 +60,7 @@ export default function NewRecipeScreen() {
     try {
       saved = await pickImages(source);
     } catch {
-      setFormError('Kunne ikke lagre bildet.');
+      setFormError(tr('recipe.imageSaveFailed'));
       return;
     }
     if (saved.length === 0) return;
@@ -70,16 +71,14 @@ export default function NewRecipeScreen() {
   async function readText(uris: string[]) {
     setReadNote(null);
     if (!ocrAvailable()) {
-      setReadNote(
-        'Tekstgjenkjenning er ikke tilgjengelig i denne versjonen av appen. Skriv inn teksten selv.',
-      );
+      setReadNote(tr('recipe.ocrUnavailable'));
       return;
     }
     setReading(true);
     try {
       const r = await recipeFromImages(uris);
       if (!r || (!r.title && r.ingredients.length === 0 && r.steps.length === 0)) {
-        setReadNote('Fant ingen tekst i bildet. Prøv et skarpere bilde, eller skriv inn selv.');
+        setReadNote(tr('recipe.ocrNone'));
         return;
       }
       // Fyller bare ut felt som er tomme, så egne rettelser ikke overskrives.
@@ -93,9 +92,9 @@ export default function NewRecipeScreen() {
       setSteps((v) =>
         v.some((x) => x.text.trim()) || r.steps.length === 0 ? v : stepsFromLines(r.steps),
       );
-      setReadNote('Tekst lest fra bildet. Sjekk og rett opp før du lagrer.');
+      setReadNote(tr('recipe.ocrDone'));
     } catch {
-      setReadNote('Kunne ikke lese teksten i bildet. Skriv inn selv.');
+      setReadNote(tr('recipe.ocrFailed'));
     } finally {
       setReading(false);
     }
@@ -103,7 +102,7 @@ export default function NewRecipeScreen() {
 
   function save() {
     if (!title.trim()) {
-      setFormError('Gi oppskriften en tittel.');
+      setFormError(tr('recipe.titleRequired'));
       return;
     }
     const recipe = addRecipe({
@@ -121,9 +120,9 @@ export default function NewRecipeScreen() {
   return (
     <Screen>
       <Card>
-        <Heading>Fra lenke</Heading>
+        <Heading>{tr('recipe.fromLink')}</Heading>
         <Field
-          label="Lenke til oppskrift"
+          label={tr('recipe.linkLabel')}
           value={url}
           onChangeText={setUrl}
           placeholder="https://…"
@@ -135,7 +134,7 @@ export default function NewRecipeScreen() {
         />
         <ErrorText>{importError}</ErrorText>
         <Button
-          title="Hent oppskrift"
+          title={tr('recipe.fetch')}
           onPress={runImport}
           loading={importing}
           disabled={!url.trim()}
@@ -143,17 +142,22 @@ export default function NewRecipeScreen() {
       </Card>
 
       <Card>
-        <Heading>Fra bilde eller manuelt</Heading>
-        <Body secondary>
-          Ta bilde av en oppskrift eller velg fra bildene dine – teksten leses automatisk på
-          telefonen. Du kan også skrive inn selv.
-        </Body>
+        <Heading>{tr('recipe.fromImage')}</Heading>
+        <Body secondary>{tr('recipe.fromImageHelp')}</Body>
         <View style={styles.buttons}>
           <View style={styles.flex}>
-            <Button title="Ta bilde" kind="secondary" onPress={() => addPhotos('camera')} />
+            <Button
+              title={tr('recipe.takePhoto')}
+              kind="secondary"
+              onPress={() => addPhotos('camera')}
+            />
           </View>
           <View style={styles.flex}>
-            <Button title="Velg bilder" kind="secondary" onPress={() => addPhotos('library')} />
+            <Button
+              title={tr('recipe.pickPhotos')}
+              kind="secondary"
+              onPress={() => addPhotos('library')}
+            />
           </View>
         </View>
         <View style={styles.thumbs}>
@@ -161,43 +165,48 @@ export default function NewRecipeScreen() {
             <Pressable
               key={uri}
               accessibilityRole="button"
-              accessibilityLabel="Fjern bilde"
+              accessibilityLabel={tr('recipe.removeImage')}
               onPress={() => setImages((p) => p.filter((u) => u !== uri))}
             >
               <Image source={uri} style={styles.thumb} contentFit="cover" />
             </Pressable>
           ))}
         </View>
-        {reading ? <Body secondary>Leser tekst fra bildet …</Body> : null}
+        {reading ? <Body secondary>{tr('recipe.reading')}</Body> : null}
         {readNote ? <Body secondary>{readNote}</Body> : null}
-        <Field label="Tittel" value={title} onChangeText={setTitle} placeholder="F.eks. Lasagne" />
         <Field
-          label="Porsjoner (grunnlag for mengdene)"
+          label={tr('recipe.titleLabel')}
+          value={title}
+          onChangeText={setTitle}
+          placeholder={tr('recipe.titlePlaceholder')}
+        />
+        <Field
+          label={tr('recipe.servingsBaseLabel')}
           value={servings}
           onChangeText={setServings}
           keyboardType="number-pad"
-          placeholder="F.eks. 4"
+          placeholder={tr('recipe.servingsPlaceholder')}
         />
         <Field
-          label="Tid i minutter (valgfritt)"
+          label={tr('recipe.minutesLabel')}
           value={minutes}
           onChangeText={setMinutes}
           keyboardType="number-pad"
-          placeholder="F.eks. 30"
+          placeholder={tr('recipe.minutesPlaceholder')}
         />
         <Field
-          label="Tagger, adskilt med komma (valgfritt)"
+          label={tr('recipe.tagsLabel')}
           value={tags}
           onChangeText={setTags}
           autoCapitalize="none"
-          placeholder="F.eks. hverdag, barnevennlig"
+          placeholder={tr('recipe.tagsPlaceholder')}
         />
-        <Heading>Ingredienser</Heading>
+        <Heading>{tr('recipe.ingredients')}</Heading>
         <IngredientEditor rows={ingredients} onChange={setIngredients} />
-        <Heading>Fremgangsmåte</Heading>
+        <Heading>{tr('recipe.steps')}</Heading>
         <StepEditor rows={steps} onChange={setSteps} />
         <ErrorText>{formError}</ErrorText>
-        <Button title="Lagre oppskrift" onPress={save} />
+        <Button title={tr('recipe.save')} onPress={save} />
       </Card>
     </Screen>
   );

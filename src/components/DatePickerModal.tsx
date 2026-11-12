@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui';
+import { t, dateTag } from '@/i18n';
 import { dateInDays } from '@/lib/inventory';
 import { radius, useTheme } from '@/theme/colors';
 
@@ -13,12 +14,12 @@ export const parseYmd = (s: string) => {
   return new Date(y, m - 1, d);
 };
 
-const labelFmt = new Intl.DateTimeFormat('nb-NO', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
-export const formatDateLabel = (s: string) => labelFmt.format(parseYmd(s));
+export const formatDateLabel = (s: string) =>
+  new Intl.DateTimeFormat(dateTag(), {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(parseYmd(s));
 
 /** Velg en egen dato. Monteres bare mens den skal vises, og starter da på `value`. */
 export function DatePickerModal({
@@ -39,14 +40,18 @@ export function DatePickerModal({
   onClear?: () => void;
   onCancel: () => void;
 }) {
-  const t = useTheme();
+  const c = useTheme();
   const [date, setDate] = useState(() => (value ? parseYmd(value) : new Date()));
 
   return (
     <Modal transparent animationType="slide" onRequestClose={onCancel}>
-      <Pressable style={styles.backdrop} onPress={onCancel} accessibilityLabel="Lukk" />
-      <View style={[styles.sheet, { backgroundColor: t.card }]}>
-        <Text style={[styles.title, { color: t.text }]}>{title}</Text>
+      <Pressable
+        style={styles.backdrop}
+        onPress={onCancel}
+        accessibilityLabel={t('datepicker.close')}
+      />
+      <View style={[styles.sheet, { backgroundColor: c.card }]}>
+        <Text style={[styles.title, { color: c.text }]}>{title}</Text>
         {presets ? (
           <View style={styles.presets}>
             {presets.map((p) => (
@@ -55,8 +60,8 @@ export function DatePickerModal({
                 accessibilityRole="button"
                 onPress={() => onConfirm(dateInDays(p.days))}
               >
-                <View style={[styles.preset, { backgroundColor: t.tintSoft }]}>
-                  <Text style={{ color: t.tint, fontWeight: '700', fontSize: 14 }}>{p.label}</Text>
+                <View style={[styles.preset, { backgroundColor: c.tintSoft }]}>
+                  <Text style={{ color: c.tint, fontWeight: '700', fontSize: 14 }}>{p.label}</Text>
                 </View>
               </Pressable>
             ))}
@@ -66,13 +71,18 @@ export function DatePickerModal({
           value={date}
           mode="date"
           display="inline"
-          accentColor={t.tint}
-          locale="nb-NO"
+          accentColor={c.tint}
+          locale={dateTag()}
           onChange={(_, d) => d && setDate(d)}
         />
-        <Button title={`Bruk ${formatDateLabel(ymd(date))}`} onPress={() => onConfirm(ymd(date))} />
-        {onClear ? <Button title="Fjern dato" kind="destructive" onPress={onClear} /> : null}
-        <Button title="Avbryt" kind="secondary" onPress={onCancel} />
+        <Button
+          title={t('datepicker.use', { date: formatDateLabel(ymd(date)) })}
+          onPress={() => onConfirm(ymd(date))}
+        />
+        {onClear ? (
+          <Button title={t('datepicker.clear')} kind="destructive" onPress={onClear} />
+        ) : null}
+        <Button title={t('datepicker.cancel')} kind="secondary" onPress={onCancel} />
       </View>
     </Modal>
   );

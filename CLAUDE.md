@@ -23,6 +23,7 @@ Expo SDK 58 · React Native 0.88 · TypeScript (strict) · Expo Router (`src/app
 - `app/` skjermer (tabs: Oppskrifter, Middagsplan, Handleliste, Lager, Forslag; modaler: recipe/*, settings, family, stores, scan, import)
 - `lib/` ren logikk, **testbar uten React Native** (importer med `.ts`-endelse): `ingredients` (mengder, skalering, sammenslåing), `synonyms` + `pantry` (matching: synonymer, sammensatte ord, «lignende»), `departments`, `inventory`, `session`, `durations`, `reminders`, `recipeFilter`, `recipeParser`, `structureText`, `barcodeParse`, `productName` (strekkode → råvare), `urls`, `portions` (innstillinger)
 - `lib/store.ts` lagring (kv-store) + `useStore`; `lib/cloud/` synk (model.ts er ren og testet; sync.ts og client.ts er ikke prøvd mot ekte server)
+- `i18n/` alle brukertekster: `nb/*.ts` (kilde, norsk), `en/` (tom, klar), `t('område.nøkkel', {param})`, flertall `x_one`/`x_other`. Ingen hardkodet tekst i skjermer. Parsing/matching-data (`synonyms`, `departments`, enheter) er norsk og må ha eget register per språk.
 - `components/` delte UI-deler, `theme/` farger
 - `supabase/migrations/` databaseskjema med RLS · `docs/` dokumentasjon
 

@@ -14,6 +14,7 @@ import {
 import { AddRow } from '@/components/AddRow';
 import { RecipeFitCard } from '@/components/RecipeFitCard';
 import { Heading, LargeTitle } from '@/components/ui';
+import { t as tr } from '@/i18n';
 import { rankRecipes } from '@/lib/pantry';
 import {
   addSessionItems,
@@ -57,7 +58,11 @@ export default function SuggestScreen() {
       removeSessionItem(item.id);
       return;
     }
-    const options = [...fridge.storages.map((s) => `Legg på ${s.name}`), 'Fjern', 'Avbryt'];
+    const options = [
+      ...fridge.storages.map((s) => tr('suggest.putOn', { name: s.name })),
+      tr('suggest.remove'),
+      tr('suggest.cancel'),
+    ];
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title: item.name,
@@ -77,30 +82,24 @@ export default function SuggestScreen() {
       endSession();
       return;
     }
-    Alert.alert(
-      'Avslutte økten?',
-      `De ${session.items.length} midlertidige varene fjernes. Lageret berøres ikke.`,
-      [
-        { text: 'Avbryt', style: 'cancel' },
-        { text: 'Avslutt', style: 'destructive', onPress: endSession },
-      ],
-    );
+    Alert.alert(tr('suggest.endTitle'), tr('suggest.endMessage', { count: session.items.length }), [
+      { text: tr('suggest.cancel'), style: 'cancel' },
+      { text: tr('suggest.end'), style: 'destructive', onPress: endSession },
+    ]);
   }
 
   const active = session.items.length > 0 || !session.useStock || session.excluded.length > 0;
 
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
-      <LargeTitle title="Forslag" />
+      <LargeTitle title={tr('suggest.title')} />
       <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.hint, { color: t.textSecondary }]}>
-          Midlertidig – det du skriver inn lagres ikke på lageret.
-        </Text>
+        <Text style={[styles.hint, { color: t.textSecondary }]}>{tr('suggest.hint')}</Text>
 
         {/* Lageret: én linje */}
         <View style={styles.row}>
           <Text style={[styles.label, { color: t.text }]}>
-            Ta med lageret ({fridge.items.length})
+            {tr('suggest.includeStock', { count: fridge.items.length })}
           </Text>
           <Switch
             value={session.useStock}
@@ -135,8 +134,8 @@ export default function SuggestScreen() {
           value={draft}
           onChangeText={setDraft}
           onSubmit={submit}
-          label="Skriv inn det du har nå"
-          placeholder="Hva har du nå? F.eks. kylling, ris"
+          label={tr('suggest.addLabel')}
+          placeholder={tr('suggest.addPlaceholder')}
           onScan={() => router.push({ pathname: '/scan', params: { target: 'session' } })}
         />
 
@@ -147,7 +146,7 @@ export default function SuggestScreen() {
               <Pressable
                 key={item.id}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.name}, trykk for valg`}
+                accessibilityLabel={tr('suggest.itemTapForOptions', { name: item.name })}
                 onPress={() => itemMenu(item)}
               >
                 <View
@@ -167,7 +166,7 @@ export default function SuggestScreen() {
           <Pressable
             accessibilityRole="switch"
             accessibilityState={{ checked: fridge.assumeStaples }}
-            accessibilityLabel="Anta at basisvarene finnes (velges i Innstillinger)"
+            accessibilityLabel={tr('suggest.assumeStaplesLabel')}
             onPress={() => setAssumeStaples(!fridge.assumeStaples)}
             style={[styles.pill, { backgroundColor: fridge.assumeStaples ? t.tint : t.tintSoft }]}
           >
@@ -178,22 +177,27 @@ export default function SuggestScreen() {
                 fontSize: 12,
               }}
             >
-              {fridge.assumeStaples ? '✓ ' : ''}Basisvarer finnes ({settings.staples.length})
+              {fridge.assumeStaples ? '✓ ' : ''}
+              {tr('suggest.staplesExist', { count: settings.staples.length })}
             </Text>
           </Pressable>
           {active ? (
             <Pressable accessibilityRole="button" onPress={confirmEnd}>
-              <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>Avslutt økt</Text>
+              <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>
+                {tr('suggest.endSession')}
+              </Text>
             </Pressable>
           ) : null}
         </View>
 
-        <Heading>Du kan lage</Heading>
+        <Heading>{tr('suggest.canMake')}</Heading>
         {recipes.length === 0 ? (
-          <Text style={[styles.hint, { color: t.textSecondary }]}>Legg inn oppskrifter først.</Text>
+          <Text style={[styles.hint, { color: t.textSecondary }]}>
+            {tr('suggest.addRecipesFirst')}
+          </Text>
         ) : names.length === 0 ? (
           <Text style={[styles.hint, { color: t.textSecondary }]}>
-            Skriv inn hva du har, eller ta med lageret.
+            {tr('suggest.typeWhatYouHave')}
           </Text>
         ) : (
           ranked.map((fit) => (

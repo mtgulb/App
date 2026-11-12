@@ -3,6 +3,7 @@ import { matchLevel } from './pantry.ts';
 import { daysUntil } from './inventory.ts';
 import type { Settings } from './portions.ts';
 import type { FridgeItem, MealPlanEntry, Recipe } from './types.ts';
+import { t } from '../i18n/index.ts';
 
 export type PlannedReminder = { id: string; at: Date; title: string; body: string };
 
@@ -61,10 +62,10 @@ export function planReminders(input: {
         out.push({
           id: `evening-${entry.id}`,
           at,
-          title: `I morgen: ${recipe.title}`,
+          title: t('notif.tomorrow', { title: recipe.title }),
           body: frozen.length
-            ? `Husk å ta ut fra fryseren: ${frozen.map((f) => f.name).join(', ')}.`
-            : 'Sjekk at du har det du trenger.',
+            ? t('notif.takeOutFreezer', { items: frozen.map((f) => f.name).join(', ') })
+            : t('notif.checkSupplies'),
         });
       }
     }
@@ -78,8 +79,8 @@ export function planReminders(input: {
         out.push({
           id: `today-${entry.id}`,
           at,
-          title: `Middag i dag: ${recipe.title}`,
-          body: `${servings} porsjoner.`,
+          title: t('notif.today', { title: recipe.title }),
+          body: t('notif.servings', { servings }),
         });
       }
     }
@@ -117,11 +118,17 @@ export function planExpiryReminders(input: {
     .map(([key, { at, names }]) => ({
       id: `expiry-${key}`,
       at,
-      title: names.length === 1 ? `${names[0]} går snart ut` : 'Varer går snart ut',
+      title:
+        names.length === 1 ? t('notif.expiresOne', { name: names[0] }) : t('notif.expiresMany'),
       body:
         names.length === 1
-          ? 'Bruk den opp snart.'
-          : `${names.slice(0, 5).join(', ')}${names.length > 5 ? ` og ${names.length - 5} til` : ''}.`,
+          ? t('notif.useSoon')
+          : names.length > 5
+            ? t('notif.expiryListMore', {
+                items: names.slice(0, 5).join(', '),
+                rest: names.length - 5,
+              })
+            : t('notif.expiryList', { items: names.join(', ') }),
     }))
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 }

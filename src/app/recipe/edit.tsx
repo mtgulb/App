@@ -16,6 +16,7 @@ import { Body, Button, Card, ErrorText, Field, Heading } from '@/components/ui';
 import { pickImages } from '@/lib/pickImages';
 import { parseTags } from '@/lib/recipeFilter';
 import { getRecipe, updateRecipe } from '@/lib/store';
+import { t as tr } from '@/i18n';
 
 export default function EditRecipe() {
   const { id, review } = useLocalSearchParams<{ id: string; review?: string }>();
@@ -32,20 +33,20 @@ export default function EditRecipe() {
   const [images, setImages] = useState<string[]>(recipe?.images ?? []);
   const [error, setError] = useState<string | null>(null);
 
-  if (!recipe) return <Body>Fant ikke oppskriften.</Body>;
+  if (!recipe) return <Body>{tr('recipe.notFoundBody')}</Body>;
 
   async function add(source: 'camera' | 'library') {
     try {
       const saved = await pickImages(source);
       if (saved.length) setImages((prev) => [...prev, ...saved]);
     } catch {
-      setError('Kunne ikke lagre bildet.');
+      setError(tr('recipe.imageSaveFailed'));
     }
   }
 
   function save() {
     if (!title.trim()) {
-      setError('Oppskriften trenger en tittel.');
+      setError(tr('recipe.editTitleRequired'));
       return;
     }
     updateRecipe(id, {
@@ -64,23 +65,18 @@ export default function EditRecipe() {
     <Screen>
       {review ? (
         <Card>
-          <Heading>Sjekk oppskriften</Heading>
-          <Body secondary>
-            Siden hadde ikke oppskriftsdata, så ingredienser og fremgangsmåte er lest ut fra
-            teksten. Sjekk at det stemmer, og rett opp det som er feil, før du bruker den.
-          </Body>
+          <Heading>{tr('recipe.reviewTitle')}</Heading>
+          <Body secondary>{tr('recipe.reviewText')}</Body>
         </Card>
       ) : null}
       <Card>
-        <Body secondary>
-          Bilder – trykk på et bilde for å fjerne det. Første bilde vises på forsiden.
-        </Body>
+        <Body secondary>{tr('recipe.imagesHelp')}</Body>
         <View style={styles.thumbs}>
           {images.map((uri) => (
             <Pressable
               key={uri}
               accessibilityRole="button"
-              accessibilityLabel="Fjern bilde"
+              accessibilityLabel={tr('recipe.removeImage')}
               onPress={() => setImages((p) => p.filter((u) => u !== uri))}
             >
               <Image source={uri} style={styles.thumb} contentFit="cover" />
@@ -89,39 +85,43 @@ export default function EditRecipe() {
         </View>
         <View style={styles.buttons}>
           <View style={styles.flex}>
-            <Button title="Ta bilde" kind="secondary" onPress={() => add('camera')} />
+            <Button title={tr('recipe.takePhoto')} kind="secondary" onPress={() => add('camera')} />
           </View>
           <View style={styles.flex}>
-            <Button title="Velg bilde" kind="secondary" onPress={() => add('library')} />
+            <Button
+              title={tr('recipe.pickPhoto')}
+              kind="secondary"
+              onPress={() => add('library')}
+            />
           </View>
         </View>
-        <Field label="Tittel" value={title} onChangeText={setTitle} />
+        <Field label={tr('recipe.titleLabel')} value={title} onChangeText={setTitle} />
         <Field
-          label="Tid i minutter (valgfritt)"
+          label={tr('recipe.minutesLabel')}
           value={minutes}
           onChangeText={setMinutes}
           keyboardType="number-pad"
-          placeholder="F.eks. 30"
+          placeholder={tr('recipe.minutesPlaceholder')}
         />
         <Field
-          label="Tagger, adskilt med komma (valgfritt)"
+          label={tr('recipe.tagsLabel')}
           value={tags}
           onChangeText={setTags}
           autoCapitalize="none"
-          placeholder="F.eks. hverdag, barnevennlig"
+          placeholder={tr('recipe.tagsPlaceholder')}
         />
         <Field
-          label="Porsjoner"
+          label={tr('recipe.servingsLabel')}
           value={servings}
           onChangeText={setServings}
           keyboardType="number-pad"
         />
-        <Heading>Ingredienser</Heading>
+        <Heading>{tr('recipe.ingredients')}</Heading>
         <IngredientEditor rows={ingredients} onChange={setIngredients} />
-        <Heading>Fremgangsmåte</Heading>
+        <Heading>{tr('recipe.steps')}</Heading>
         <StepEditor rows={steps} onChange={setSteps} />
         <ErrorText>{error}</ErrorText>
-        <Button title="Lagre endringer" onPress={save} />
+        <Button title={tr('recipe.saveChanges')} onPress={save} />
       </Card>
     </Screen>
   );

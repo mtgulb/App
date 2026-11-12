@@ -32,6 +32,7 @@ import {
   type StateItem,
   type StateRow,
 } from './model';
+import { t } from '../../i18n/index.ts';
 
 const BUCKET = 'recipe-images';
 
@@ -83,19 +84,15 @@ const imageDirUri = () => imageDir().uri.replace(/\/$/, '');
 /** Gjør tekniske feil om til norske meldinger. */
 export function friendlyError(e: unknown): string {
   const m = String((e as { message?: string })?.message ?? e);
-  if (/Invalid login credentials/i.test(m)) return 'Feil e-post eller passord.';
-  if (/already registered|already been registered/i.test(m))
-    return 'Det finnes allerede en konto med denne e-posten. Logg inn i stedet.';
-  if (/Password should be at least/i.test(m)) return 'Passordet er for kort (minst 6 tegn).';
-  if (/valid email|invalid email|Unable to validate email/i.test(m))
-    return 'Ugyldig e-postadresse.';
-  if (/Email not confirmed/i.test(m))
-    return 'E-posten er ikke bekreftet ennå. Sjekk innboksen din.';
-  if (/already_member/.test(m)) return 'Du er allerede med i en husholdning.';
-  if (/too_many_attempts/.test(m)) return 'For mange forsøk. Prøv igjen om en time.';
-  if (/not_owner/.test(m)) return 'Bare eieren kan gjøre dette.';
-  if (/Failed to fetch|Network request failed|fetch failed/i.test(m))
-    return 'Ingen kontakt med serveren. Sjekk nettet.';
+  if (/Invalid login credentials/i.test(m)) return t('lib.cloudBadLogin');
+  if (/already registered|already been registered/i.test(m)) return t('lib.cloudExists');
+  if (/Password should be at least/i.test(m)) return t('lib.cloudShortPassword');
+  if (/valid email|invalid email|Unable to validate email/i.test(m)) return t('lib.cloudBadEmail');
+  if (/Email not confirmed/i.test(m)) return t('lib.cloudUnconfirmed');
+  if (/already_member/.test(m)) return t('lib.cloudAlreadyMember');
+  if (/too_many_attempts/.test(m)) return t('lib.cloudTooMany');
+  if (/not_owner/.test(m)) return t('lib.cloudNotOwner');
+  if (/Failed to fetch|Network request failed|fetch failed/i.test(m)) return t('lib.cloudOffline');
   return m;
 }
 
@@ -355,7 +352,7 @@ async function loadMembers(hid: string) {
     members: (data ?? []).map((m) => ({
       userId: m.user_id as string,
       role: m.role as 'owner' | 'member',
-      displayName: (m.display_name as string) || 'Uten navn',
+      displayName: (m.display_name as string) || t('lib.cloudNoName'),
     })),
   });
 }
@@ -515,7 +512,7 @@ export const signUp = (email: string, password: string) =>
     if (error) throw error;
     // Uten bekreftelse får vi økt med en gang. Ellers må e-posten bekreftes først.
     if (!data.session) {
-      throw new Error('Konto opprettet. Bekreft e-posten din, og logg inn etterpå.');
+      throw new Error(t('lib.cloudSignedUp'));
     }
   });
 
@@ -569,7 +566,7 @@ export async function joinHousehold(code: string, displayName: string): Promise<
       p_display_name: displayName,
     });
     if (error) throw error;
-    if (!data) throw new Error('Fant ingen husholdning med den koden.');
+    if (!data) throw new Error(t('lib.cloudCodeNotFound'));
     ok = true;
   });
   return ok;

@@ -1,16 +1,13 @@
+import { t } from '../i18n/index.ts';
 import { parseIngredient } from './ingredients.ts';
 import { matches } from './pantry.ts';
 import type { Recipe } from './types.ts';
 
 export type SortMode = 'newest' | 'lastCooked' | 'rating' | 'time' | 'alpha';
 
-export const SORT_LABELS: Record<SortMode, string> = {
-  newest: 'Nyeste',
-  lastCooked: 'Sist laget',
-  rating: 'Best vurdert',
-  time: 'Raskest',
-  alpha: 'A–Å',
-};
+export const SORT_MODES: SortMode[] = ['newest', 'lastCooked', 'rating', 'time', 'alpha'];
+
+export const sortLabel = (m: SortMode): string => t(`recipes.sort.${m}`);
 
 export type RecipeFilters = {
   query: string;
@@ -94,8 +91,8 @@ export function parseTags(input: string): string[] {
 }
 
 export function formatMinutes(m: number): string {
-  if (m < 60) return `${m} min`;
+  if (m < 60) return t('recipes.minutes', { m });
   const h = Math.floor(m / 60);
   const rest = m % 60;
-  return rest === 0 ? `${h} t` : `${h} t ${rest} min`;
+  return rest === 0 ? t('recipes.hours', { h }) : t('recipes.hoursMinutes', { h, m: rest });
 }

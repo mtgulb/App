@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { radius, shadow, useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 export function Card({ children }: { children: ReactNode }) {
   const t = useTheme();
@@ -130,7 +131,7 @@ export function Stepper({
   const btn = (name: 'minus' | 'plus', disabled: boolean, next: number) => (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${name === 'minus' ? 'Færre' : 'Flere'} ${label}`}
+      accessibilityLabel={tr(name === 'minus' ? 'ui.fewer' : 'ui.more', { label })}
       disabled={disabled}
       hitSlop={8}
       onPress={() => onChange(next)}

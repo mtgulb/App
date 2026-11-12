@@ -1,6 +1,7 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { radius, shadow, useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 /** Rund/firkantet knapp med stor trykkflate (44 pt, Apples anbefaling). */
 export function IconButton({
@@ -76,7 +77,7 @@ export function AddRow({
         style={[styles.input, { color: t.text }]}
       />
       {extra}
-      <IconButton name="barcode.viewfinder" label="Skann strekkode" onPress={onScan} filled />
+      <IconButton name="barcode.viewfinder" label={tr('ui.scanBarcode')} onPress={onScan} filled />
     </View>
   );
 }

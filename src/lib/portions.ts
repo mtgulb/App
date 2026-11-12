@@ -1,6 +1,7 @@
 import type { StoreProfile } from './departments.ts';
 import { baseServings } from './ingredients.ts';
 import type { Recipe } from './types.ts';
+import { t } from '../i18n/index.ts';
 
 export type Settings = {
   /** Er antall voksne og barn satt av brukeren? Hvis ikke brukes oppskriftens egne porsjoner. */
@@ -65,4 +66,9 @@ export const defaultServings = (s: Settings, recipe: Pick<Recipe, 'servings'>) =
   s.configured ? householdPortions(s) : baseServings(recipe);
 
 export const householdLabel = (s: Pick<Settings, 'adults' | 'children'>) =>
-  `${s.adults} ${s.adults === 1 ? 'voksen' : 'voksne'}${s.children > 0 ? ` og ${s.children} ${s.children === 1 ? 'barn' : 'barn'}` : ''}`;
+  s.children > 0
+    ? t('lib.householdWithChildren', {
+        adults: t('lib.adults', { count: s.adults }),
+        children: t('lib.children', { count: s.children }),
+      })
+    : t('lib.adults', { count: s.adults });

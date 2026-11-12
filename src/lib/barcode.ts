@@ -5,6 +5,7 @@
  */
 import Storage from 'expo-sqlite/kv-store';
 import { normalizeGtin, parseOffProduct, type BarcodeProduct } from './barcodeParse';
+import { t } from '../i18n/index.ts';
 
 export type LookupResult =
   | { status: 'learned'; product: BarcodeProduct; productText?: string }
@@ -63,7 +64,7 @@ export async function lookupBarcode(rawCode: string): Promise<LookupResult> {
       count('notFound');
       return { status: 'notFound' };
     }
-    if (!res.ok) return { status: 'error', message: `Databasen svarte med feil (${res.status}).` };
+    if (!res.ok) return { status: 'error', message: t('lib.barcodeHttp', { status: res.status }) };
     const product = parseOffProduct(await res.json());
     if (!product) {
       count('notFound');
@@ -72,6 +73,6 @@ export async function lookupBarcode(rawCode: string): Promise<LookupResult> {
     count('found');
     return { status: 'found', product };
   } catch {
-    return { status: 'error', message: 'Ingen kontakt med databasen. Sjekk nettet.' };
+    return { status: 'error', message: t('lib.barcodeOffline') };
   }
 }

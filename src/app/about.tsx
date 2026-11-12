@@ -3,6 +3,7 @@ import { Linking, Pressable, StyleSheet, Text } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { Body, Card, Heading } from '@/components/ui';
 import { useTheme } from '@/theme/colors';
+import { t } from '@/i18n';
 
 const OFF_URL = 'https://world.openfoodfacts.org';
 const ODBL_URL = 'https://opendatacommons.org/licenses/odbl/1-0/';
@@ -25,20 +26,16 @@ export default function About() {
   return (
     <Screen>
       <Card>
-        <Heading>Om appen</Heading>
-        <Body secondary>Versjon {version}</Body>
+        <Heading>{t('about.title')}</Heading>
+        <Body secondary>{t('about.version', { version })}</Body>
       </Card>
       <Card>
-        <Heading>Kontakt</Heading>
+        <Heading>{t('about.contact')}</Heading>
         <LinkText title="app@tande-gulbrandsen.no" url="mailto:app@tande-gulbrandsen.no" />
       </Card>
       <Card>
-        <Heading>Kilder og lisenser</Heading>
-        <Body>
-          Strekkodeoppslag bruker data fra Open Food Facts, tilgjengelig under Open Database License
-          (ODbL). Innholdet i databasen er lisensiert under Database Contents License. Når du
-          skanner en vare, sendes bare strekkodenummeret til Open Food Facts.
-        </Body>
+        <Heading>{t('about.sources')}</Heading>
+        <Body>{t('about.sourcesBody')}</Body>
         <LinkText title="Open Food Facts" url={OFF_URL} />
         <LinkText title="Open Database License (ODbL)" url={ODBL_URL} />
       </Card>

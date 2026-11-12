@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Body, Button, ErrorText, Field } from '@/components/ui';
+import { t as tr } from '@/i18n';
 import { lookupBarcode, rememberBarcode } from '@/lib/barcode';
 import { isValidGtin, suggestedName } from '@/lib/barcodeParse';
 import { displayIngredient, identifyIngredient } from '@/lib/productName';
@@ -39,13 +40,13 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <View style={[styles.center, { backgroundColor: t.background }]}>
-        <Body>Appen trenger kameraet for å skanne strekkoder.</Body>
+        <Body>{tr('scan.needCamera')}</Body>
         {permission.canAskAgain ? (
-          <Button title="Gi tilgang til kamera" onPress={requestPermission} />
+          <Button title={tr('scan.grantCamera')} onPress={requestPermission} />
         ) : (
-          <Button title="Åpne Innstillinger" onPress={() => Linking.openSettings()} />
+          <Button title={tr('scan.openSettings')} onPress={() => Linking.openSettings()} />
         )}
-        <Button title="Lukk" kind="secondary" onPress={() => router.back()} />
+        <Button title={tr('scan.close')} kind="secondary" onPress={() => router.back()} />
       </View>
     );
   }
@@ -120,10 +121,10 @@ export default function ScanScreen() {
 
   const verb =
     target === 'shopping'
-      ? 'Legg på handlelisten'
+      ? tr('scan.addToShopping')
       : target === 'session'
-        ? 'Legg til'
-        : 'Legg på lager';
+        ? tr('scan.add')
+        : tr('scan.addToStock');
 
   return (
     <View style={styles.flex}>
@@ -135,33 +136,31 @@ export default function ScanScreen() {
       />
       <View pointerEvents="none" style={styles.frameWrap}>
         <View style={styles.frame} />
-        <Text style={styles.hint}>Hold strekkoden innenfor rammen</Text>
+        <Text style={styles.hint}>{tr('scan.holdInFrame')}</Text>
       </View>
 
       <View style={[styles.sheet, { backgroundColor: t.card }]}>
         {busy ? (
           <View style={styles.row}>
             <ActivityIndicator color={t.tint} />
-            <Body secondary>Slår opp varen …</Body>
+            <Body secondary>{tr('scan.lookingUp')}</Body>
           </View>
         ) : scanned ? (
           <>
             {scanned.productText ? (
               <Text style={{ color: t.textSecondary, fontSize: 13 }} numberOfLines={2}>
-                Produkt: {scanned.productText}
-                {scanned.source === 'found' ? '\nKilde: Open Food Facts (ODbL)' : ''}
+                {tr('scan.product', { text: scanned.productText })}
+                {scanned.source === 'found' ? `\n${tr('scan.source')}` : ''}
               </Text>
             ) : (
-              <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-                Fant ikke varen. Skriv hva det er, så husker appen den.
-              </Text>
+              <Text style={{ color: t.textSecondary, fontSize: 13 }}>{tr('scan.notFound')}</Text>
             )}
             <ErrorText>{scanned.message}</ErrorText>
             <Field
-              label="Legg til som (råvare, slik den står i oppskrifter)"
+              label={tr('scan.fieldLabel')}
               value={name}
               onChangeText={setName}
-              placeholder="F.eks. mais"
+              placeholder={tr('scan.fieldPlaceholder')}
             />
             {scanned.candidates.length > 1 ? (
               <View style={styles.chips}>
@@ -181,16 +180,16 @@ export default function ScanScreen() {
               </View>
             ) : null}
             <Button title={verb} onPress={confirm} disabled={!name.trim()} />
-            <Button title="Hopp over" kind="secondary" onPress={next} />
+            <Button title={tr('scan.skip')} kind="secondary" onPress={next} />
           </>
         ) : (
           <Body secondary>
-            {added.length > 0 ? `Lagt til: ${added.join(', ')}. ` : ''}
-            Skann neste vare, eller lukk når du er ferdig.
+            {added.length > 0 ? tr('scan.added', { items: added.join(', ') }) : ''}
+            {tr('scan.next')}
           </Body>
         )}
         <Button
-          title="Ferdig"
+          title={tr('scan.done')}
           kind={scanned ? 'destructive' : 'secondary'}
           onPress={() => router.back()}
         />

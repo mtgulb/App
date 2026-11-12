@@ -1,6 +1,7 @@
 import Storage from 'expo-sqlite/kv-store';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isCloudConfigured } from './config';
+import { t } from '../../i18n/index.ts';
 
 let client: SupabaseClient | null = null;
 
@@ -9,7 +10,7 @@ let client: SupabaseClient | null = null;
  * ikke berøres når familiedeling er av.
  */
 export function getClient(): SupabaseClient {
-  if (!isCloudConfigured) throw new Error('Familiedeling er ikke satt opp.');
+  if (!isCloudConfigured) throw new Error(t('lib.cloudOff'));
   if (client) return client;
   /* eslint-disable @typescript-eslint/no-require-imports */
   require('react-native-url-polyfill/auto');

@@ -19,7 +19,8 @@ import {
   filterRecipes,
   hasActiveFilters,
   NO_FILTERS,
-  SORT_LABELS,
+  SORT_MODES,
+  sortLabel,
   sortRecipes,
   TIME_OPTIONS,
   type RecipeFilters,
@@ -28,6 +29,7 @@ import {
 import { useStore } from '@/lib/store';
 import type { Recipe } from '@/lib/types';
 import { radius, shadow, useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 const GAP = 14;
 const PAD = 20;
@@ -90,10 +92,10 @@ export default function RecipesScreen() {
 
   function pickSort() {
     if (Platform.OS !== 'ios') return;
-    const modes = Object.keys(SORT_LABELS) as SortMode[];
-    const options = [...modes.map((m) => SORT_LABELS[m]), 'Avbryt'];
+    const modes = SORT_MODES;
+    const options = [...modes.map((m) => sortLabel(m)), tr('recipes.cancel')];
     ActionSheetIOS.showActionSheetWithOptions(
-      { title: 'Sorter etter', options, cancelButtonIndex: options.length - 1 },
+      { title: tr('recipes.sortBy'), options, cancelButtonIndex: options.length - 1 },
       (i) => {
         if (i < modes.length) setSort(modes[i]);
       },
@@ -119,7 +121,7 @@ export default function RecipesScreen() {
             {item.title}
           </Text>
           <Text style={[styles.meta, { color: t.textSecondary }]}>
-            {item.ingredients.length} ingredienser
+            {tr('recipes.ingredientCount', { count: item.ingredients.length })}
           </Text>
         </View>
       </Pressable>
@@ -129,12 +131,12 @@ export default function RecipesScreen() {
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
       <LargeTitle
-        title="Oppskrifter"
+        title={tr('recipes.title')}
         actionIcon="plus"
-        actionLabel="Ny oppskrift"
+        actionLabel={tr('recipes.newRecipe')}
         onAction={() => router.push('/recipe/new')}
         secondaryIcon="gearshape"
-        secondaryLabel="Innstillinger"
+        secondaryLabel={tr('recipes.settings')}
         onSecondary={() => router.push('/settings')}
       />
       <FlatList
@@ -147,10 +149,10 @@ export default function RecipesScreen() {
             <ClipboardBanner />
             {recipes.length > 0 ? (
               <TextInput
-                accessibilityLabel="Søk i oppskrifter"
+                accessibilityLabel={tr('recipes.searchLabel')}
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Søk på navn eller ingrediens"
+                placeholder={tr('recipes.searchPlaceholder')}
                 placeholderTextColor={t.textSecondary}
                 clearButtonMode="while-editing"
                 autoCorrect={false}
@@ -167,12 +169,16 @@ export default function RecipesScreen() {
                 contentContainerStyle={styles.filterRow}
               >
                 <FilterChip
-                  label="♥ Favoritter"
+                  label={tr('recipes.favorites')}
                   active={filters.favoritesOnly}
                   onPress={() => setFilters((f) => ({ ...f, favoritesOnly: !f.favoritesOnly }))}
                 />
                 <FilterChip
-                  label={filters.maxMinutes ? `Opptil ${filters.maxMinutes} min` : 'Tid'}
+                  label={
+                    filters.maxMinutes
+                      ? tr('recipes.upToMinutes', { minutes: filters.maxMinutes })
+                      : tr('recipes.time')
+                  }
                   active={filters.maxMinutes !== null}
                   onPress={cycleTime}
                 />
@@ -185,13 +191,13 @@ export default function RecipesScreen() {
                   />
                 ))}
                 <FilterChip
-                  label={`Sorter: ${SORT_LABELS[sort]}`}
+                  label={tr('recipes.sortLabel', { sort: sortLabel(sort) })}
                   active={sort !== 'newest'}
                   onPress={pickSort}
                 />
                 {hasActiveFilters(filters) ? (
                   <FilterChip
-                    label="Nullstill"
+                    label={tr('recipes.reset')}
                     active={false}
                     onPress={() => setFilters(NO_FILTERS)}
                   />
@@ -202,12 +208,16 @@ export default function RecipesScreen() {
         }
         ListEmptyComponent={
           recipes.length > 0 ? (
-            <EmptyState emoji="🔍" title="Ingen treff" text="Prøv et annet søkeord." />
+            <EmptyState
+              emoji="🔍"
+              title={tr('recipes.noMatchTitle')}
+              text={tr('recipes.noMatchText')}
+            />
           ) : (
             <EmptyState
               emoji="📖"
-              title="Ingen oppskrifter ennå"
-              text="Trykk på + for å legge inn en lenke, ta bilde eller skrive inn en oppskrift."
+              title={tr('recipes.emptyTitle')}
+              text={tr('recipes.emptyText')}
             />
           )
         }

@@ -2,6 +2,7 @@ import { deleteImage, downloadImage, imageSize } from './images';
 import { normalizeUrl } from './urls';
 import { cleanImageCandidates, extractMetaImages, parseRecipeFromPage } from './recipeParser';
 import type { Recipe } from './types';
+import { t } from '../i18n/index.ts';
 
 /** Ingen oppskriftsside er større enn dette; unngår at en enorm side fryser appen. */
 const MAX_HTML_CHARS = 3_000_000;
@@ -20,24 +21,22 @@ export async function importRecipeFromUrl(rawUrl: string): Promise<ImportResult>
   try {
     new URL(url);
   } catch {
-    throw new ImportError('Dette ser ikke ut som en gyldig lenke.');
+    throw new ImportError(t('lib.importInvalid'));
   }
 
   let html: string;
   try {
     const res = await fetch(url, { headers: { Accept: 'text/html' } });
-    if (!res.ok) throw new ImportError(`Siden svarte med feil (${res.status}).`);
+    if (!res.ok) throw new ImportError(t('lib.importHttp', { status: res.status }));
     html = (await res.text()).slice(0, MAX_HTML_CHARS);
   } catch (e) {
     if (e instanceof ImportError) throw e;
-    throw new ImportError('Kunne ikke hente siden. Sjekk nettverket og lenken.');
+    throw new ImportError(t('lib.importFetch'));
   }
 
   const parsed = parseRecipeFromPage(html);
   if (!parsed) {
-    throw new ImportError(
-      'Fant ingen oppskrift på siden. Du kan legge den inn manuelt eller fra bilde.',
-    );
+    throw new ImportError(t('lib.importNone'));
   }
 
   const images = await pickBestImage(

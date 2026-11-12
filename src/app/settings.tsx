@@ -10,6 +10,7 @@ import { requestNotifications } from '@/lib/notifications';
 import { parseHm } from '@/lib/reminders';
 import { householdLabel, householdPortions } from '@/lib/portions';
 import { addStaples, removeStaple, resetStaples, updateSettings, useStore } from '@/lib/store';
+import { dateTag, t as tr } from '@/i18n';
 import { useTheme } from '@/theme/colors';
 
 function Row({
@@ -55,7 +56,7 @@ function TimeRow({
         mode="time"
         display="compact"
         accentColor={t.tint}
-        locale="nb-NO"
+        locale={dateTag()}
         minuteInterval={5}
         onChange={(_, d) =>
           d &&
@@ -80,10 +81,7 @@ export default function SettingsScreen() {
     on: boolean,
   ) {
     if (on && !(await requestNotifications())) {
-      Alert.alert(
-        'Varsler er slått av',
-        'Slå på varsler for appen i iPhone-innstillinger for å få påminnelser.',
-      );
+      Alert.alert(tr('settings.notificationsOffTitle'), tr('settings.notificationsOffBody'));
       return;
     }
     updateSettings({ [key]: on });
@@ -92,39 +90,36 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <Card>
-        <Heading>Husholdning</Heading>
-        <Body secondary>
-          Alle oppskrifter tilpasser seg dette automatisk. Du kan fortsatt justere én oppskrift
-          eller én dag når det trengs.
-        </Body>
+        <Heading>{tr('settings.household')}</Heading>
+        <Body secondary>{tr('settings.householdInfo')}</Body>
         <View style={styles.row}>
-          <Text style={[styles.rowTitle, { color: t.text }]}>Voksne</Text>
+          <Text style={[styles.rowTitle, { color: t.text }]}>{tr('settings.adults')}</Text>
           <Stepper
             value={settings.adults}
             min={0}
             max={12}
-            label="voksne"
+            label={tr('settings.adultsLabel')}
             onChange={(adults) => updateSettings({ adults, configured: true })}
           />
         </View>
         <View style={styles.row}>
-          <Text style={[styles.rowTitle, { color: t.text }]}>Barn</Text>
+          <Text style={[styles.rowTitle, { color: t.text }]}>{tr('settings.children')}</Text>
           <Stepper
             value={settings.children}
             min={0}
             max={12}
-            label="barn"
+            label={tr('settings.childrenLabel')}
             onChange={(children) => updateSettings({ children, configured: true })}
           />
         </View>
         <Text style={{ color: t.textSecondary }}>
           {settings.configured
-            ? `${householdLabel(settings)} = ${portions} porsjoner (et barn regnes som en halv voksen).`
-            : 'Ikke satt ennå – oppskriftene bruker sine egne porsjoner.'}
+            ? tr('settings.portionsSummary', { label: householdLabel(settings), portions })
+            : tr('settings.notConfigured')}
         </Text>
         {settings.configured ? (
           <Button
-            title="Bruk oppskriftenes egne porsjoner"
+            title={tr('settings.useRecipePortions')}
             kind="secondary"
             onPress={() => updateSettings({ configured: false })}
           />
@@ -132,107 +127,105 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
-        <Heading>Handleliste</Heading>
-        <Text style={[styles.rowTitle, { color: t.text }]}>Sorter varene</Text>
+        <Heading>{tr('settings.shopping')}</Heading>
+        <Text style={[styles.rowTitle, { color: t.text }]}>{tr('settings.sortItems')}</Text>
         <SegmentedControl
           value={settings.shoppingSort}
           onChange={(shoppingSort) => updateSettings({ shoppingSort })}
           options={[
-            { value: 'recipe', label: 'Alfabetisk' },
-            { value: 'department', label: 'Etter avdeling' },
+            { value: 'recipe', label: tr('settings.sortAlpha') },
+            { value: 'department', label: tr('settings.sortDepartment') },
           ]}
         />
       </Card>
 
       <Card>
-        <Heading>Varsler</Heading>
-        <Body secondary>
-          Du bestemmer selv hva du vil varsles om. Alt er av som standard, og du får aldri varsler
-          du ikke har bedt om.
-        </Body>
+        <Heading>{tr('settings.notifications')}</Heading>
+        <Body secondary>{tr('settings.notificationsInfo')}</Body>
         <Row
-          title="Kvelden før middag"
-          detail="Hva er til middag i morgen, og husk å ta ut fra fryseren."
+          title={tr('settings.remindEvening')}
+          detail={tr('settings.remindEveningDetail')}
           value={settings.remindEvening}
           onChange={(v) => toggleReminder('remindEvening', v)}
         />
         {settings.remindEvening ? (
           <TimeRow
-            label="Klokkeslett"
+            label={tr('settings.time')}
             value={settings.remindEveningTime}
             onChange={(remindEveningTime) => updateSettings({ remindEveningTime })}
           />
         ) : null}
         <Row
-          title="Samme dag som middagen"
-          detail="Påminnelse på dagen (en time før hvis middagen er tidlig)."
+          title={tr('settings.remindToday')}
+          detail={tr('settings.remindTodayDetail')}
           value={settings.remindToday}
           onChange={(v) => toggleReminder('remindToday', v)}
         />
         {settings.remindToday ? (
           <TimeRow
-            label="Klokkeslett"
+            label={tr('settings.time')}
             value={settings.remindTodayTime}
             onChange={(remindTodayTime) => updateSettings({ remindTodayTime })}
           />
         ) : null}
         <Row
-          title="Varer som snart går ut"
-          detail="Bare varer der du selv har lagt inn utløpsdato."
+          title={tr('settings.remindExpiry')}
+          detail={tr('settings.remindExpiryDetail')}
           value={settings.remindExpiry}
           onChange={(v) => toggleReminder('remindExpiry', v)}
         />
         {settings.remindExpiry ? (
           <>
             <View style={styles.row}>
-              <Text style={[styles.sub, { color: t.textSecondary }]}>Dager før utløp</Text>
+              <Text style={[styles.sub, { color: t.textSecondary }]}>
+                {tr('settings.expiryDaysBefore')}
+              </Text>
               <Stepper
                 value={settings.expiryDays}
                 min={0}
                 max={14}
-                label="dager"
+                label={tr('settings.daysLabel')}
                 onChange={(expiryDays) => updateSettings({ expiryDays })}
               />
             </View>
             <TimeRow
-              label="Klokkeslett"
+              label={tr('settings.time')}
               value={settings.expiryTime}
               onChange={(expiryTime) => updateSettings({ expiryTime })}
             />
           </>
         ) : null}
         <Row
-          title="Tidtakere i kokemodus"
-          detail="Varsel når en tidtaker er ferdig, også hvis du har lukket appen."
+          title={tr('settings.timerAlerts')}
+          detail={tr('settings.timerAlertsDetail')}
           value={settings.timerAlerts}
           onChange={(timerAlerts) => updateSettings({ timerAlerts })}
         />
       </Card>
 
       <Card>
-        <Heading>Basisvarer</Heading>
-        <Body secondary>
-          Ting du alltid har hjemme, for eksempel salt eller smør. De regnes som tilstede i
-          oppskriftsforslag når «Basisvarer finnes» er på.
-        </Body>
+        <Heading>{tr('settings.staples')}</Heading>
+        <Body secondary>{tr('settings.staplesInfo')}</Body>
         <View style={styles.chips}>
           {settings.staples.map((st) => (
             <Pressable
               key={st}
               accessibilityRole="button"
-              accessibilityLabel={`Fjern ${st} som basisvare`}
+              accessibilityLabel={tr('settings.stapleRemove', { name: st })}
               onPress={() => removeStaple(st)}
               style={[styles.chip, { backgroundColor: t.tintSoft }]}
             >
-              <Text style={{ color: t.tint, fontWeight: '600', fontSize: 14 }}>{st} ✕</Text>
+              <Text style={{ color: t.tint, fontWeight: '600', fontSize: 14 }}>
+                {tr('settings.stapleChip', { name: st })}
+              </Text>
             </Pressable>
           ))}
           {settings.staples.length === 0 ? (
-            <Text style={{ color: t.textSecondary }}>Ingen basisvarer.</Text>
+            <Text style={{ color: t.textSecondary }}>{tr('settings.stapleNone')}</Text>
           ) : null}
         </View>
         <TextInput
-          accessibilityLabel="Legg til basisvare"
+          accessibilityLabel={tr('settings.stapleAdd')}
           value={stapleDraft}
           onChangeText={setStapleDraft}
           onSubmitEditing={() => {
@@ -240,7 +233,7 @@ export default function SettingsScreen() {
             setStapleDraft('');
           }}
           submitBehavior="submit"
-          placeholder="Legg til, f.eks. smør, mel (trykk Enter)"
+          placeholder={tr('settings.stapleAddPlaceholder')}
           placeholderTextColor={t.textSecondary}
           returnKeyType="done"
           autoCorrect={false}
@@ -249,14 +242,14 @@ export default function SettingsScreen() {
             { color: t.text, backgroundColor: t.background, borderColor: t.border },
           ]}
         />
-        <Button title="Tilbakestill til standard" kind="secondary" onPress={resetStaples} />
+        <Button title={tr('settings.stapleReset')} kind="secondary" onPress={resetStaples} />
       </Card>
 
       <Card>
-        <Heading>Lager</Heading>
+        <Heading>{tr('settings.stock')}</Heading>
         <Row
-          title="Foreslå oppskrifter ut fra lageret"
-          detail="Gjelder fanen Lager og oppskriftssiden. Fanen Forslag virker uansett."
+          title={tr('settings.stockSuggestions')}
+          detail={tr('settings.stockSuggestionsDetail')}
           value={settings.stockSuggestions}
           onChange={(stockSuggestions) => updateSettings({ stockSuggestions })}
         />
@@ -264,23 +257,24 @@ export default function SettingsScreen() {
           const b = getBarcodeStats();
           return b.scans > 0 ? (
             <Body secondary>
-              Strekkoder: {b.scans} skannet. {b.found} funnet i databasen, {b.learned} husket fra
-              før, {b.notFound} ikke funnet. Dette viser hvor godt databasen dekker dine varer.
+              {tr('settings.barcodeStats', {
+                scans: b.scans,
+                found: b.found,
+                learned: b.learned,
+                notFound: b.notFound,
+              })}
             </Body>
           ) : (
-            <Body secondary>
-              Prøv å skanne noen varer fra skapet (📷 på Lager). Da ser du her hvor mange som finnes
-              i databasen.
-            </Body>
+            <Body secondary>{tr('settings.barcodeTry')}</Body>
           );
         })()}
       </Card>
 
       <Card>
-        <Heading>Import</Heading>
+        <Heading>{tr('settings.import')}</Heading>
         <Row
-          title="Foreslå import av kopierte lenker"
-          detail="Når du har kopiert en lenke, spør appen om den skal importeres som oppskrift."
+          title={tr('settings.clipboardHint')}
+          detail={tr('settings.clipboardHintDetail')}
           value={settings.clipboardHint}
           onChange={(clipboardHint) => updateSettings({ clipboardHint })}
         />
@@ -292,8 +286,8 @@ export default function SettingsScreen() {
         style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
       >
         <View style={styles.flex}>
-          <Text style={[styles.rowTitle, { color: t.text }]}>Om appen</Text>
-          <Text style={{ color: t.textSecondary }}>Versjon, kilder og lisenser</Text>
+          <Text style={[styles.rowTitle, { color: t.text }]}>{tr('settings.aboutLink')}</Text>
+          <Text style={{ color: t.textSecondary }}>{tr('settings.aboutLinkDetail')}</Text>
         </View>
         <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
       </Pressable>
@@ -305,8 +299,8 @@ export default function SettingsScreen() {
           style={[styles.link, { backgroundColor: t.card, borderColor: t.border }]}
         >
           <View style={styles.flex}>
-            <Text style={[styles.rowTitle, { color: t.text }]}>Familie og deling</Text>
-            <Text style={{ color: t.textSecondary }}>Logg inn og del med familien</Text>
+            <Text style={[styles.rowTitle, { color: t.text }]}>{tr('settings.familyLink')}</Text>
+            <Text style={{ color: t.textSecondary }}>{tr('settings.familyLinkDetail')}</Text>
           </View>
           <Text style={{ color: t.textSecondary, fontSize: 20 }}>›</Text>
         </Pressable>

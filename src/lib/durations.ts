@@ -1,3 +1,5 @@
+import { t } from '../i18n/index.ts';
+
 export type StepTimer = { seconds: number; label: string };
 
 const UNIT_SECONDS: Record<string, number> = {
@@ -36,7 +38,10 @@ export function findTimers(step: string): StepTimer[] {
     const cur = found[i];
     const next = found[i + 1];
     if (next && /^\s*(og|,)\s*$/i.test(step.slice(cur.end, next.start))) {
-      merged.push({ seconds: cur.seconds + next.seconds, label: `${cur.label} og ${next.label}` });
+      merged.push({
+        seconds: cur.seconds + next.seconds,
+        label: t('lib.timerJoin', { a: cur.label, b: next.label }),
+      });
       i++;
     } else {
       merged.push({ seconds: cur.seconds, label: cur.label });

@@ -14,26 +14,22 @@ import {
   useCloud,
 } from '@/lib/cloud/sync';
 import { useTheme } from '@/theme/colors';
+import { dateTag, t as tr } from '@/i18n';
 
-const timeFmt = new Intl.DateTimeFormat('nb-NO', { hour: '2-digit', minute: '2-digit' });
+const timeFmt = () => new Intl.DateTimeFormat(dateTag(), { hour: '2-digit', minute: '2-digit' });
 const groupCode = (c: string) => (c.length === 10 ? `${c.slice(0, 5)}-${c.slice(5)}` : c);
 
 function confirmDeleteAccount() {
-  Alert.alert(
-    'Slette kontoen?',
-    'Kontoen og dine data på serveren slettes for godt. Er du alene i husholdningen, slettes alt som er delt. Er andre med, beholder de de delte oppskriftene. Din egen kopi på telefonen beholdes. Dette kan ikke angres.',
-    [
-      { text: 'Avbryt', style: 'cancel' },
-      {
-        text: 'Slett kontoen',
-        style: 'destructive',
-        onPress: async () => {
-          if (await deleteAccount())
-            Alert.alert('Kontoen er slettet', 'Kontoen og dataene dine på serveren er fjernet.');
-        },
+  Alert.alert(tr('family.deleteTitle'), tr('family.deleteBody'), [
+    { text: tr('common.cancel'), style: 'cancel' },
+    {
+      text: tr('family.deleteConfirm'),
+      style: 'destructive',
+      onPress: async () => {
+        if (await deleteAccount()) Alert.alert(tr('family.deletedTitle'), tr('family.deletedBody'));
       },
-    ],
-  );
+    },
+  ]);
 }
 
 export default function FamilyScreen() {
@@ -59,12 +55,8 @@ export default function FamilyScreen() {
     return (
       <Screen>
         <Card>
-          <Heading>Familiedeling er ikke satt opp ennå</Heading>
-          <Body secondary>
-            Når familiedeling er koblet til, kan hele familien se de samme oppskriftene,
-            handlelisten, kjøleskapet og middagsplanen, og endringer vises hos alle med en gang. Alt
-            fungerer som vanlig på din telefon i mellomtiden.
-          </Body>
+          <Heading>{tr('family.offTitle')}</Heading>
+          <Body secondary>{tr('family.offBody')}</Body>
         </Card>
       </Screen>
     );
@@ -73,7 +65,7 @@ export default function FamilyScreen() {
   if (cloud.status === 'loading') {
     return (
       <Screen>
-        <Body secondary>Laster …</Body>
+        <Body secondary>{tr('family.loading')}</Body>
       </Screen>
     );
   }
@@ -82,13 +74,10 @@ export default function FamilyScreen() {
     return (
       <Screen>
         <Card>
-          <Heading>Logg inn eller opprett konto</Heading>
-          <Body secondary>
-            Kontoen brukes bare til å dele data med familien din. Oppskriftene på telefonen din
-            beholdes.
-          </Body>
+          <Heading>{tr('family.signInTitle')}</Heading>
+          <Body secondary>{tr('family.signInBody')}</Body>
           <Field
-            label="E-post"
+            label={tr('family.email')}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -97,7 +86,7 @@ export default function FamilyScreen() {
             textContentType="emailAddress"
           />
           <Field
-            label="Passord (minst 6 tegn)"
+            label={tr('family.password')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -105,13 +94,13 @@ export default function FamilyScreen() {
           />
           <ErrorText>{cloud.error}</ErrorText>
           <Button
-            title="Logg inn"
+            title={tr('family.signIn')}
             loading={busy}
             disabled={!email.trim() || password.length < 6}
             onPress={() => run(() => signIn(email, password))}
           />
           <Button
-            title="Opprett konto"
+            title={tr('family.signUp')}
             kind="secondary"
             disabled={busy || !email.trim() || password.length < 6}
             onPress={() => run(() => signUp(email, password))}
@@ -124,48 +113,45 @@ export default function FamilyScreen() {
   if (cloud.status === 'noHousehold') {
     return (
       <Screen>
-        <Body secondary>Innlogget som {cloud.email}</Body>
+        <Body secondary>{tr('family.signedInAs', { email: cloud.email ?? '' })}</Body>
         <Card>
-          <Heading>Opprett en husholdning</Heading>
-          <Body secondary>
-            De som får koden din kan dele alt: oppskrifter, handleliste, kjøleskap og plan. Det du
-            har fra før lastes opp.
-          </Body>
+          <Heading>{tr('family.createTitle')}</Heading>
+          <Body secondary>{tr('family.createBody')}</Body>
           <Field
-            label="Navn på husholdningen"
+            label={tr('family.houseName')}
             value={houseName}
             onChangeText={setHouseName}
-            placeholder="F.eks. Familien Hansen"
+            placeholder={tr('family.houseNamePlaceholder')}
           />
-          <Field label="Ditt navn" value={myName} onChangeText={setMyName} />
+          <Field label={tr('family.yourName')} value={myName} onChangeText={setMyName} />
           <Button
-            title="Opprett"
+            title={tr('family.create')}
             loading={busy}
             disabled={!houseName.trim()}
             onPress={() => run(() => createHousehold(houseName, myName))}
           />
         </Card>
         <Card>
-          <Heading>Bli med med kode</Heading>
+          <Heading>{tr('family.joinTitle')}</Heading>
           <Field
-            label="Invitasjonskode"
+            label={tr('family.inviteCode')}
             value={code}
             onChangeText={setCode}
             autoCapitalize="characters"
             autoCorrect={false}
             placeholder="ABCDE-12345"
           />
-          <Field label="Ditt navn" value={myName} onChangeText={setMyName} />
+          <Field label={tr('family.yourName')} value={myName} onChangeText={setMyName} />
           <Button
-            title="Bli med"
+            title={tr('family.join')}
             kind="secondary"
             disabled={busy || code.trim().length < 6}
             onPress={() => run(() => joinHousehold(code, myName))}
           />
         </Card>
         <ErrorText>{cloud.error}</ErrorText>
-        <Button title="Logg ut" kind="secondary" onPress={() => run(signOut)} />
-        <Button title="Slett kontoen min" kind="destructive" onPress={confirmDeleteAccount} />
+        <Button title={tr('family.signOut')} kind="secondary" onPress={() => run(signOut)} />
+        <Button title={tr('family.deleteMine')} kind="destructive" onPress={confirmDeleteAccount} />
       </Screen>
     );
   }
@@ -175,10 +161,10 @@ export default function FamilyScreen() {
   const status = cloud.error
     ? cloud.error
     : cloud.syncing
-      ? 'Synkroniserer …'
+      ? tr('family.syncing')
       : cloud.lastSync
-        ? `Synkronisert kl. ${timeFmt.format(new Date(cloud.lastSync))}`
-        : 'Venter på synk';
+        ? tr('family.syncedAt', { time: timeFmt().format(new Date(cloud.lastSync)) })
+        : tr('family.syncWaiting');
 
   return (
     <Screen>
@@ -188,72 +174,68 @@ export default function FamilyScreen() {
       </Card>
 
       <Card>
-        <Heading>Inviter familien</Heading>
-        <Body secondary>
-          Del koden. Den som skriver den inn under «Bli med» får tilgang til alt.
-        </Body>
+        <Heading>{tr('family.inviteTitle')}</Heading>
+        <Body secondary>{tr('family.inviteBody')}</Body>
         <Text
           style={[styles.code, { color: t.tint }]}
           selectable
-          accessibilityLabel={`Kode ${groupCode(h.inviteCode)}`}
+          accessibilityLabel={tr('family.codeLabel', { code: groupCode(h.inviteCode) })}
         >
           {groupCode(h.inviteCode)}
         </Text>
         <Button
-          title="Del koden"
+          title={tr('family.shareCode')}
           onPress={() =>
             Share.share({
-              message: `Bli med i «${h.name}» i oppskriftsappen vår. Kode: ${groupCode(h.inviteCode)}`,
+              message: tr('family.shareMessage', { name: h.name, code: groupCode(h.inviteCode) }),
             })
           }
         />
         {isOwner ? (
           <Button
-            title="Lag ny kode (den gamle slutter å virke)"
+            title={tr('family.newCode')}
             kind="secondary"
             onPress={() =>
-              Alert.alert(
-                'Lage ny kode?',
-                'Den gamle koden slutter å virke. De som allerede er med, beholder tilgangen.',
-                [
-                  { text: 'Avbryt', style: 'cancel' },
-                  { text: 'Lag ny', onPress: () => void regenerateInviteCode() },
-                ],
-              )
+              Alert.alert(tr('family.newCodeTitle'), tr('family.newCodeBody'), [
+                { text: tr('common.cancel'), style: 'cancel' },
+                { text: tr('family.newCodeConfirm'), onPress: () => void regenerateInviteCode() },
+              ])
             }
           />
         ) : null}
       </Card>
 
       <Card>
-        <Heading>Medlemmer ({cloud.members.length})</Heading>
+        <Heading>{tr('family.members', { count: cloud.members.length })}</Heading>
         {cloud.members.map((m) => (
           <View key={m.userId} style={styles.member}>
             <Text style={[styles.memberName, { color: t.text }]}>
               {m.displayName}
-              {m.userId === cloud.userId ? ' (deg)' : ''}
+              {m.userId === cloud.userId ? tr('family.you') : ''}
             </Text>
-            <Text style={{ color: t.textSecondary }}>{m.role === 'owner' ? 'Eier' : 'Medlem'}</Text>
+            <Text style={{ color: t.textSecondary }}>
+              {m.role === 'owner' ? tr('family.owner') : tr('family.member')}
+            </Text>
           </View>
         ))}
       </Card>
 
       <Button
-        title="Forlat husholdningen"
+        title={tr('family.leave')}
         kind="destructive"
         onPress={() =>
-          Alert.alert(
-            'Forlate husholdningen?',
-            'Du beholder din egen kopi av oppskriftene, men slutter å dele med familien.',
-            [
-              { text: 'Avbryt', style: 'cancel' },
-              { text: 'Forlat', style: 'destructive', onPress: () => void leaveHousehold() },
-            ],
-          )
+          Alert.alert(tr('family.leaveTitle'), tr('family.leaveBody'), [
+            { text: tr('common.cancel'), style: 'cancel' },
+            {
+              text: tr('family.leaveConfirm'),
+              style: 'destructive',
+              onPress: () => void leaveHousehold(),
+            },
+          ])
         }
       />
-      <Button title="Logg ut" kind="secondary" onPress={() => run(signOut)} />
-      <Button title="Slett kontoen min" kind="destructive" onPress={confirmDeleteAccount} />
+      <Button title={tr('family.signOut')} kind="secondary" onPress={() => run(signOut)} />
+      <Button title={tr('family.deleteMine')} kind="destructive" onPress={confirmDeleteAccount} />
     </Screen>
   );
 }

@@ -5,6 +5,7 @@ import { AppState, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/ui';
 import { useStore } from '@/lib/store';
 import { radius, shadow, useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 /**
  * Foreslår å importere en lenke brukeren har kopiert. «Har lenke?» sjekkes uten å lese innholdet,
@@ -51,14 +52,14 @@ export function ClipboardBanner() {
 
   return (
     <View style={[styles.card, shadow, { backgroundColor: t.card }]}>
-      <Text style={[styles.title, { color: t.text }]}>Du har kopiert en lenke</Text>
-      <Text style={{ color: t.textSecondary }}>Er det en oppskrift du vil legge inn?</Text>
+      <Text style={[styles.title, { color: t.text }]}>{tr('clip.title')}</Text>
+      <Text style={{ color: t.textSecondary }}>{tr('clip.text')}</Text>
       <View style={styles.buttons}>
         <View style={styles.flex}>
-          <Button title="Importer" onPress={importIt} />
+          <Button title={tr('clip.import')} onPress={importIt} />
         </View>
         <View style={styles.flex}>
-          <Button title="Ikke nå" kind="secondary" onPress={() => setHasUrl(false)} />
+          <Button title={tr('clip.notNow')} kind="secondary" onPress={() => setHasUrl(false)} />
         </View>
       </View>
     </View>

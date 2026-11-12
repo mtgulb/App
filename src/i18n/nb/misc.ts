@@ -1,1 +1,61 @@
-export const misc = {} as const;
+export const misc = {
+  // Varsler
+  'notif.tomorrow': 'I morgen: {title}',
+  'notif.takeOutFreezer': 'Husk å ta ut fra fryseren: {items}.',
+  'notif.checkSupplies': 'Sjekk at du har det du trenger.',
+  'notif.today': 'Middag i dag: {title}',
+  'notif.servings': '{servings} porsjoner.',
+  'notif.expiresOne': '{name} går snart ut',
+  'notif.expiresMany': 'Varer går snart ut',
+  'notif.useSoon': 'Bruk den opp snart.',
+  'notif.expiryList': '{items}.',
+  'notif.expiryListMore': '{items} og {rest} til.',
+
+  // Enheter og tidsvisning
+  'unit.preset3d': '3 dager',
+  'unit.preset1w': '1 uke',
+  'unit.preset2w': '2 uker',
+  'unit.preset1m': '1 måned',
+  'unit.preset3m': '3 måneder',
+
+  // Lager og husholdning
+  'lib.expiredYesterday': 'Utløp i går',
+  'lib.expiredDaysAgo': 'Utløpt for {days} dager siden',
+  'lib.expiresToday': 'Utløper i dag',
+  'lib.expiresTomorrow': 'Utløper i morgen',
+  'lib.expiresInDays': 'Utløper om {days} dager',
+  'lib.storageFridge': 'Kjøleskap',
+  'lib.storageFreezer': 'Fryser',
+  'lib.storagePantry': 'Skap',
+  'lib.storageMain': 'Lager',
+  'lib.adults_one': '{count} voksen',
+  'lib.adults_other': '{count} voksne',
+  'lib.children': '{count} barn',
+  'lib.householdWithChildren': '{adults} og {children}',
+  'lib.timerJoin': '{a} og {b}',
+
+  // Tilgang, kalender, import, strekkode
+  'lib.noAccessTitle': 'Mangler tilgang',
+  'lib.noAccessBody': 'Gi tilgang i Innstillinger › appen.',
+  'lib.importInvalid': 'Dette ser ikke ut som en gyldig lenke.',
+  'lib.importHttp': 'Siden svarte med feil ({status}).',
+  'lib.importFetch': 'Kunne ikke hente siden. Sjekk nettverket og lenken.',
+  'lib.importNone': 'Fant ingen oppskrift på siden. Du kan legge den inn manuelt eller fra bilde.',
+  'lib.barcodeHttp': 'Databasen svarte med feil ({status}).',
+  'lib.barcodeOffline': 'Ingen kontakt med databasen. Sjekk nettet.',
+
+  // Familiedeling
+  'lib.cloudOff': 'Familiedeling er ikke satt opp.',
+  'lib.cloudBadLogin': 'Feil e-post eller passord.',
+  'lib.cloudExists': 'Det finnes allerede en konto med denne e-posten. Logg inn i stedet.',
+  'lib.cloudShortPassword': 'Passordet er for kort (minst 6 tegn).',
+  'lib.cloudBadEmail': 'Ugyldig e-postadresse.',
+  'lib.cloudUnconfirmed': 'E-posten er ikke bekreftet ennå. Sjekk innboksen din.',
+  'lib.cloudAlreadyMember': 'Du er allerede med i en husholdning.',
+  'lib.cloudTooMany': 'For mange forsøk. Prøv igjen om en time.',
+  'lib.cloudNotOwner': 'Bare eieren kan gjøre dette.',
+  'lib.cloudOffline': 'Ingen kontakt med serveren. Sjekk nettet.',
+  'lib.cloudNoName': 'Uten navn',
+  'lib.cloudSignedUp': 'Konto opprettet. Bekreft e-posten din, og logg inn etterpå.',
+  'lib.cloudCodeNotFound': 'Fant ingen husholdning med den koden.',
+} as const;

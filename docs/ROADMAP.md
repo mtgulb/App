@@ -33,3 +33,5 @@
 - v1 uten innlogging (anbefalt, `docs/APPLE.md` §2) eller med familiedeling
 - Prismodell (gratis / engangskjøp / abonnement)
 - Nettsøk etter oppskrifter (ingen gratis, pålitelig API funnet)
+
+- Språk: alle tekster ligger i `src/i18n` (489 nøkler, norsk). Engelsk senere: oversett nøklene, legg `en` i `SUPPORTED`, og lag engelske synonymer/enheter/avdelinger. Ikke prøvd på telefon.

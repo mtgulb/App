@@ -12,6 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { t as tr, dateTag } from '@/i18n';
 import { AddRow } from '@/components/AddRow';
 import { SwipeRow } from '@/components/SwipeRow';
 import { Button, EmptyState, LargeTitle, SegmentedControl, Stepper } from '@/components/ui';
@@ -105,21 +106,21 @@ export default function ShoppingScreen() {
     for (const dep of orderFor(settings.stores, settings.activeStoreId)) {
       const data = [...todoMerged, ...todoExtras]
         .filter((r) => r.dept === dep)
-        .sort((a, b) => a.text.localeCompare(b.text, 'nb'));
+        .sort((a, b) => a.text.localeCompare(b.text, dateTag()));
       if (data.length > 0) sections.push({ id: `dept-${dep}`, title: dep, data });
     }
   } else {
     if (todoMerged.length > 0) {
-      sections.push({ id: 'merged', title: 'Fra oppskriftene', data: todoMerged });
+      sections.push({ id: 'merged', title: tr('shopping.sectionFromRecipes'), data: todoMerged });
     }
     if (todoExtras.length > 0) {
-      sections.push({ id: 'extras', title: 'Egne varer', data: todoExtras });
+      sections.push({ id: 'extras', title: tr('shopping.sectionExtras'), data: todoExtras });
     }
   }
   if (doneRows.length > 0) {
     sections.push({
       id: 'done',
-      title: `Handlet (${doneRows.length})`,
+      title: tr('shopping.sectionDone', { count: doneRows.length }),
       collapsible: true,
       count: doneRows.length,
       data: doneOpen ? doneRows : [],
@@ -128,7 +129,7 @@ export default function ShoppingScreen() {
   if (hiddenRows.length > 0) {
     sections.push({
       id: 'hidden',
-      title: `Har fra før (${hiddenRows.length})`,
+      title: tr('shopping.sectionHidden', { count: hiddenRows.length }),
       collapsible: true,
       count: hiddenRows.length,
       data: hiddenOpen ? hiddenRows : [],
@@ -144,7 +145,7 @@ export default function ShoppingScreen() {
       else setOverride(row.key, text);
     };
     if (Platform.OS === 'ios') {
-      Alert.prompt('Rediger vare', undefined, apply, 'plain-text', row.text);
+      Alert.prompt(tr('shopping.editItem'), undefined, apply, 'plain-text', row.text);
     }
   }
 
@@ -157,17 +158,17 @@ export default function ShoppingScreen() {
   function showMenu(row: Row) {
     const edit = () => editRow(row);
     const actions: { label: string; destructive?: boolean; run: () => void }[] = [
-      { label: 'Rediger', run: edit },
+      { label: tr('shopping.edit'), run: edit },
     ];
     if (row.kind === 'merged') {
-      actions.push({ label: 'Har fra før – ta bort fra listen', run: () => hideItem(row.key) });
+      actions.push({ label: tr('shopping.haveAlreadyAction'), run: () => hideItem(row.key) });
       if (row.edited)
-        actions.push({ label: 'Tilbakestill tekst', run: () => setOverride(row.key, '') });
+        actions.push({ label: tr('shopping.resetText'), run: () => setOverride(row.key, '') });
     } else if (row.id) {
       const id = row.id;
-      actions.push({ label: 'Slett', destructive: true, run: () => removeExtra(id) });
+      actions.push({ label: tr('shopping.delete'), destructive: true, run: () => removeExtra(id) });
     }
-    const options = [...actions.map((a) => a.label), 'Avbryt'];
+    const options = [...actions.map((a) => a.label), tr('shopping.cancel')];
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -185,9 +186,9 @@ export default function ShoppingScreen() {
   }
 
   function confirmClear() {
-    Alert.alert('Tømme handlelisten?', 'Alle varer og oppskrifter på listen fjernes.', [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Tøm', style: 'destructive', onPress: clearShopping },
+    Alert.alert(tr('shopping.clearTitle'), tr('shopping.clearMessage'), [
+      { text: tr('shopping.cancel'), style: 'cancel' },
+      { text: tr('shopping.clearConfirm'), style: 'destructive', onPress: clearShopping },
     ]);
   }
 
@@ -198,15 +199,15 @@ export default function ShoppingScreen() {
 
   function share() {
     const text = remaining.map((r) => `• ${r.text}`).join('\n');
-    if (text) Share.share({ message: `Handleliste\n\n${text}` });
+    if (text) Share.share({ message: `${tr('shopping.shareHeading')}\n\n${text}` });
   }
 
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
       <LargeTitle
-        title="Handleliste"
+        title={tr('shopping.title')}
         actionIcon={remaining.length > 0 ? 'square.and.arrow.up' : undefined}
-        actionLabel="Del handleliste"
+        actionLabel={tr('shopping.share')}
         onAction={share}
       />
       <SectionList
@@ -222,8 +223,8 @@ export default function ShoppingScreen() {
               value={draft}
               onChangeText={setDraft}
               onSubmit={submit}
-              label="Legg til vare"
-              placeholder="Legg til vare"
+              label={tr('shopping.addItem')}
+              placeholder={tr('shopping.addItem')}
               onScan={() => router.push({ pathname: '/scan', params: { target: 'shopping' } })}
             />
 
@@ -236,11 +237,13 @@ export default function ShoppingScreen() {
             >
               <Text style={[styles.summaryTitle, { color: t.text }]} numberOfLines={1}>
                 {shopping.fromRecipes.length === 0
-                  ? 'Ingen oppskrifter lagt til'
-                  : `${shopping.fromRecipes.length} ${shopping.fromRecipes.length === 1 ? 'oppskrift' : 'oppskrifter'}`}
+                  ? tr('shopping.noRecipes')
+                  : tr('shopping.recipes', { count: shopping.fromRecipes.length })}
               </Text>
               <Text style={{ color: t.textSecondary, fontSize: 13 }}>
-                {settings.shoppingSort === 'department' ? 'Etter avdeling' : 'Alfabetisk'}{' '}
+                {settings.shoppingSort === 'department'
+                  ? tr('shopping.sortDepartment')
+                  : tr('shopping.sortAlphabetical')}{' '}
                 {showPlan ? '▴' : '▾'}
               </Text>
             </Pressable>
@@ -261,17 +264,17 @@ export default function ShoppingScreen() {
                       <Stepper
                         compact
                         value={add.servings}
-                        label="porsjoner"
+                        label={tr('shopping.servings')}
                         onChange={(n) => setShoppingServings(add.id, n)}
                       />
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={`Fjern ${r.title} fra handlelisten`}
+                        accessibilityLabel={tr('shopping.removeRecipeLabel', { title: r.title })}
                         hitSlop={8}
                         onPress={() => removeRecipeFromShopping(add.id)}
                       >
                         <Text style={{ color: t.danger, fontWeight: '700', fontSize: 13 }}>
-                          Fjern
+                          {tr('shopping.remove')}
                         </Text>
                       </Pressable>
                     </View>
@@ -279,8 +282,7 @@ export default function ShoppingScreen() {
                 })}
                 {shopping.fromRecipes.length === 0 ? (
                   <Text style={[styles.summaryItem, { color: t.textSecondary }]}>
-                    Legg til en oppskrift fra oppskriftssiden («Legg alle ingredienser på
-                    handlelisten»).
+                    {tr('shopping.addRecipeHint')}
                   </Text>
                 ) : null}
 
@@ -289,47 +291,50 @@ export default function ShoppingScreen() {
                     value={settings.shoppingSort}
                     onChange={(shoppingSort) => updateSettings({ shoppingSort })}
                     options={[
-                      { value: 'recipe', label: 'Alfabetisk' },
-                      { value: 'department', label: 'Etter avdeling' },
+                      { value: 'recipe', label: tr('shopping.sortAlphabetical') },
+                      { value: 'department', label: tr('shopping.sortDepartment') },
                     ]}
                   />
                 </View>
                 {settings.shoppingSort === 'department' ? (
                   <View style={styles.storeRow}>
-                    <Text style={[styles.hint, { color: t.textSecondary }]}>Butikk:</Text>
-                    {[{ id: null as string | null, name: 'Standard' }, ...settings.stores].map(
-                      (st) => (
-                        <Pressable
-                          key={st.id ?? 'std'}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: settings.activeStoreId === st.id }}
-                          onPress={() => updateSettings({ activeStoreId: st.id })}
+                    <Text style={[styles.hint, { color: t.textSecondary }]}>
+                      {tr('shopping.store')}
+                    </Text>
+                    {[
+                      { id: null as string | null, name: tr('shopping.defaultStore') },
+                      ...settings.stores,
+                    ].map((st) => (
+                      <Pressable
+                        key={st.id ?? 'std'}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: settings.activeStoreId === st.id }}
+                        onPress={() => updateSettings({ activeStoreId: st.id })}
+                      >
+                        <View
+                          style={[
+                            styles.storeChip,
+                            {
+                              backgroundColor:
+                                settings.activeStoreId === st.id ? t.tint : t.tintSoft,
+                            },
+                          ]}
                         >
-                          <View
-                            style={[
-                              styles.storeChip,
-                              {
-                                backgroundColor:
-                                  settings.activeStoreId === st.id ? t.tint : t.tintSoft,
-                              },
-                            ]}
+                          <Text
+                            style={{
+                              color: settings.activeStoreId === st.id ? '#FFFFFF' : t.tint,
+                              fontWeight: '600',
+                              fontSize: 13,
+                            }}
                           >
-                            <Text
-                              style={{
-                                color: settings.activeStoreId === st.id ? '#FFFFFF' : t.tint,
-                                fontWeight: '600',
-                                fontSize: 13,
-                              }}
-                            >
-                              {st.name}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      ),
-                    )}
+                            {st.name}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    ))}
                     <Pressable accessibilityRole="button" onPress={() => router.push('/stores')}>
                       <Text style={{ color: t.tint, fontWeight: '700', fontSize: 13 }}>
-                        Rediger butikker
+                        {tr('shopping.editStores')}
                       </Text>
                     </Pressable>
                   </View>
@@ -341,24 +346,24 @@ export default function ShoppingScreen() {
         ListEmptyComponent={
           <EmptyState
             emoji="🛒"
-            title="Handlelisten er tom"
-            text="Skriv en vare ovenfor, skann en strekkode, eller legg en oppskrift på listen fra oppskriftssiden."
+            title={tr('shopping.emptyTitle')}
+            text={tr('shopping.emptyText')}
           />
         }
         ListFooterComponent={
           doneRows.length > 0 || sections.length > 0 || shopping.fromRecipes.length > 0 ? (
             <View style={styles.footer}>
               {doneRows.length > 0 ? (
-                <Button title="Angre alle avkrysninger" kind="secondary" onPress={resetShopping} />
+                <Button title={tr('shopping.undoAll')} kind="secondary" onPress={resetShopping} />
               ) : null}
               {extraRows.some((r) => shopping.extras.find((e) => e.id === r.id)?.checked) ? (
                 <Button
-                  title="Fjern handlede egne varer"
+                  title={tr('shopping.removeBoughtExtras')}
                   kind="secondary"
                   onPress={removeCheckedExtras}
                 />
               ) : null}
-              <Button title="Tøm handleliste" kind="destructive" onPress={confirmClear} />
+              <Button title={tr('shopping.clear')} kind="destructive" onPress={confirmClear} />
             </View>
           ) : undefined
         }
@@ -407,12 +412,16 @@ export default function ShoppingScreen() {
                 </Text>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${item.kind === 'done' ? 'Angre' : 'Legg tilbake'}: ${item.text}`}
+                  accessibilityLabel={
+                    item.kind === 'done'
+                      ? tr('shopping.undoLabel', { text: item.text })
+                      : tr('shopping.putBackLabel', { text: item.text })
+                  }
                   onPress={item.onToggle}
                   style={[styles.undo, { backgroundColor: t.tintSoft }]}
                 >
                   <Text style={[styles.undoText, { color: t.tint }]}>
-                    {item.kind === 'done' ? 'Angre' : 'Legg tilbake'}
+                    {item.kind === 'done' ? tr('shopping.undo') : tr('shopping.putBack')}
                   </Text>
                 </Pressable>
               </View>
@@ -422,11 +431,11 @@ export default function ShoppingScreen() {
             <SwipeRow
               accessibilityLabel={item.text}
               right={{
-                label: item.kind === 'extra' ? 'Slett' : 'Har fra før',
+                label: item.kind === 'extra' ? tr('shopping.delete') : tr('shopping.haveAlready'),
                 color: t.danger,
                 run: () => removeRow(item),
               }}
-              left={{ label: 'Rediger', color: t.tint, run: () => editRow(item) }}
+              left={{ label: tr('shopping.edit'), color: t.tint, run: () => editRow(item) }}
             >
               <View style={[styles.row, { backgroundColor: t.card, borderColor: t.border }]}>
                 <Pressable
@@ -441,7 +450,7 @@ export default function ShoppingScreen() {
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Flere valg for ${item.text}`}
+                  accessibilityLabel={tr('shopping.moreOptions', { text: item.text })}
                   hitSlop={10}
                   onPress={() => showMenu(item)}
                 >

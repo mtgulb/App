@@ -17,6 +17,7 @@ import { DatePickerModal, formatDateLabel } from '@/components/DatePickerModal';
 import { RecipeFitCard } from '@/components/RecipeFitCard';
 import { SwipeRow } from '@/components/SwipeRow';
 import { Heading, LargeTitle } from '@/components/ui';
+import { t as tr } from '@/i18n';
 import { EXPIRY_PRESETS, expiringSoon, expiryLabel, expiryState } from '@/lib/inventory';
 import { rankRecipes } from '@/lib/pantry';
 import {
@@ -68,8 +69,8 @@ export default function StockScreen() {
   function newStorage() {
     if (Platform.OS !== 'ios') return;
     Alert.prompt(
-      'Nytt lager',
-      'F.eks. Kjøleskap, Fryser, Skap eller Kjeller.',
+      tr('fridge.newStorage'),
+      tr('fridge.newStorageHint'),
       (name) => {
         const id = name ? addStorage(name) : null;
         if (id) setSelectedId(id);
@@ -83,17 +84,17 @@ export default function StockScreen() {
     if (Platform.OS !== 'ios') return;
     const n = fridge.items.filter((x) => x.place === s.id).length;
     const options = [
-      'Endre navn',
-      s.freezer ? 'Ikke marker som fryser' : 'Marker som fryser',
-      ...(n > 0 ? [`Tøm «${s.name}»`] : []),
-      'Slett lager',
-      'Avbryt',
+      tr('fridge.rename'),
+      s.freezer ? tr('fridge.unmarkFreezer') : tr('fridge.markFreezer'),
+      ...(n > 0 ? [tr('fridge.clearStorage', { name: s.name })] : []),
+      tr('fridge.deleteStorage'),
+      tr('fridge.cancel'),
     ];
     const deleteIndex = options.length - 2;
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title: s.name,
-        message: s.freezer ? 'Fryser (brukes til påminnelser om å tine)' : undefined,
+        message: s.freezer ? tr('fridge.freezerNote') : undefined,
         options,
         cancelButtonIndex: options.length - 1,
         destructiveButtonIndex: deleteIndex,
@@ -101,7 +102,7 @@ export default function StockScreen() {
       (i) => {
         if (i === 0) {
           Alert.prompt(
-            'Endre navn',
+            tr('fridge.rename'),
             undefined,
             (name) => name && updateStorage(s.id, { name }),
             'plain-text',
@@ -109,22 +110,22 @@ export default function StockScreen() {
           );
         } else if (i === 1) updateStorage(s.id, { freezer: !s.freezer });
         else if (n > 0 && i === 2) {
-          Alert.alert(`Tømme «${s.name}»?`, 'Alle varene her fjernes.', [
-            { text: 'Avbryt', style: 'cancel' },
-            { text: 'Tøm', style: 'destructive', onPress: () => clearFridge(s.id) },
+          Alert.alert(tr('fridge.clearTitle', { name: s.name }), tr('fridge.clearMessage'), [
+            { text: tr('fridge.cancel'), style: 'cancel' },
+            { text: tr('fridge.clear'), style: 'destructive', onPress: () => clearFridge(s.id) },
           ]);
         } else if (i === deleteIndex) {
           if (storages.length <= 1) {
-            Alert.alert('Kan ikke slettes', 'Du må ha minst ett lager.');
+            Alert.alert(tr('fridge.cannotDelete'), tr('fridge.needOne'));
             return;
           }
           Alert.alert(
-            `Slette «${s.name}»?`,
-            n > 0 ? `De ${n} varene i lageret slettes også.` : 'Lageret er tomt.',
+            tr('fridge.deleteTitle', { name: s.name }),
+            n > 0 ? tr('fridge.deleteWithItems', { count: n }) : tr('fridge.deleteEmpty'),
             [
-              { text: 'Avbryt', style: 'cancel' },
+              { text: tr('fridge.cancel'), style: 'cancel' },
               {
-                text: 'Slett',
+                text: tr('fridge.delete'),
                 style: 'destructive',
                 onPress: () => {
                   removeStorage(s.id);
@@ -142,17 +143,17 @@ export default function StockScreen() {
     if (Platform.OS !== 'ios') return;
     const others = storages.filter((s) => s.id !== item.place);
     const options = [
-      'Endre navn',
-      item.expires ? 'Endre dato' : 'Sett dato',
-      ...others.map((s) => `Flytt til ${s.name}`),
-      'Avbryt',
+      tr('fridge.rename'),
+      item.expires ? tr('fridge.changeDate') : tr('fridge.setDate'),
+      ...others.map((s) => tr('fridge.moveTo', { name: s.name })),
+      tr('fridge.cancel'),
     ];
     ActionSheetIOS.showActionSheetWithOptions(
       { title: item.name, message: item.product, options, cancelButtonIndex: options.length - 1 },
       (i) => {
         if (i === 0) {
           Alert.prompt(
-            'Endre navn',
+            tr('fridge.rename'),
             undefined,
             (text) => text && updateFridgeItem(item.id, { name: text }),
             'plain-text',
@@ -166,7 +167,7 @@ export default function StockScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: t.background }]}>
-      <LargeTitle title="Lager" />
+      <LargeTitle title={tr('fridge.title')} />
       <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
         {/* Lagre: små chips på én linje, alle valg bak ⋯ */}
         <View style={styles.storageBar}>
@@ -197,7 +198,7 @@ export default function StockScreen() {
             })}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Nytt lager"
+              accessibilityLabel={tr('fridge.newStorage')}
               onPress={newStorage}
               style={[styles.storageChip, { borderWidth: 1, borderColor: t.tint }]}
             >
@@ -206,7 +207,7 @@ export default function StockScreen() {
           </ScrollView>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Valg for ${selected.name}`}
+            accessibilityLabel={tr('fridge.optionsFor', { name: selected.name })}
             hitSlop={10}
             onPress={() => storageMenu(selected)}
           >
@@ -219,15 +220,15 @@ export default function StockScreen() {
           value={draft}
           onChangeText={setDraft}
           onSubmit={submit}
-          label={`Legg til vare i ${selected.name}`}
-          placeholder={`Legg til i ${selected.name}`}
+          label={tr('fridge.addItemTo', { name: selected.name })}
+          placeholder={tr('fridge.addTo', { name: selected.name })}
           onScan={() =>
             router.push({ pathname: '/scan', params: { target: 'stock', place: selected.id } })
           }
           extra={
             <IconButton
               name="calendar"
-              label="Utløpsdato (valgfritt)"
+              label={tr('fridge.expiryOptional')}
               active={!!expires}
               onPress={() => setPickingFor('new')}
             />
@@ -236,7 +237,7 @@ export default function StockScreen() {
         {expires ? (
           <Pressable accessibilityRole="button" onPress={() => setExpires(null)}>
             <Text style={{ color: t.tint, fontSize: 13, fontWeight: '600' }}>
-              Utløper {formatDateLabel(expires)} · trykk for å fjerne
+              {tr('fridge.expiresTapToRemove', { date: formatDateLabel(expires) })}
             </Text>
           </Pressable>
         ) : null}
@@ -249,8 +250,7 @@ export default function StockScreen() {
             style={[styles.soon, { backgroundColor: t.tintSoft }]}
           >
             <Text style={{ color: t.tint, fontWeight: '700', fontSize: 14 }}>
-              {soonItems.length} {soonItems.length === 1 ? 'vare går' : 'varer går'} snart ut{' '}
-              {showSoon ? '▴' : '▾'}
+              {tr('fridge.soon', { count: soonItems.length })} {showSoon ? '▴' : '▾'}
             </Text>
             {showSoon
               ? soonItems.map((i) => (
@@ -271,7 +271,9 @@ export default function StockScreen() {
         {/* Varer */}
         <View style={styles.items}>
           {inStorage.length === 0 ? (
-            <Text style={[styles.empty, { color: t.textSecondary }]}>Ingenting her ennå.</Text>
+            <Text style={[styles.empty, { color: t.textSecondary }]}>
+              {tr('fridge.nothingYet')}
+            </Text>
           ) : null}
           {inStorage.map((item) => {
             const state = expiryState(item);
@@ -279,8 +281,12 @@ export default function StockScreen() {
               <SwipeRow
                 key={item.id}
                 accessibilityLabel={item.name}
-                right={{ label: 'Fjern', color: t.danger, run: () => removeFridgeItem(item.id) }}
-                left={{ label: 'Valg', color: t.tint, run: () => itemMenu(item) }}
+                right={{
+                  label: tr('fridge.remove'),
+                  color: t.danger,
+                  run: () => removeFridgeItem(item.id),
+                }}
+                left={{ label: tr('fridge.options'), color: t.tint, run: () => itemMenu(item) }}
               >
                 <View style={[styles.item, { backgroundColor: t.card, borderColor: t.border }]}>
                   <View style={styles.flex}>
@@ -317,7 +323,7 @@ export default function StockScreen() {
 
         {/* Forslag: av/på rett i overskriften */}
         <View style={styles.sectionHead}>
-          <Heading>Forslag fra lageret</Heading>
+          <Heading>{tr('fridge.suggestionsFromStock')}</Heading>
           <Switch
             value={settings.stockSuggestions}
             onValueChange={(v) => updateSettings({ stockSuggestions: v })}
@@ -329,7 +335,7 @@ export default function StockScreen() {
             <Pressable
               accessibilityRole="switch"
               accessibilityState={{ checked: fridge.assumeStaples }}
-              accessibilityLabel="Anta at basisvarene finnes (velges i Innstillinger)"
+              accessibilityLabel={tr('fridge.assumeStaplesLabel')}
               onPress={() => setAssumeStaples(!fridge.assumeStaples)}
               style={[styles.pill, { backgroundColor: fridge.assumeStaples ? t.tint : t.tintSoft }]}
             >
@@ -340,14 +346,15 @@ export default function StockScreen() {
                   fontSize: 12,
                 }}
               >
-                {fridge.assumeStaples ? '✓ ' : ''}Basisvarer finnes ({settings.staples.length})
+                {fridge.assumeStaples ? '✓ ' : ''}
+                {tr('fridge.staplesExist', { count: settings.staples.length })}
               </Text>
             </Pressable>
             {recipes.length === 0 || fridge.items.length === 0 ? (
               <Text style={[styles.empty, { color: t.textSecondary }]}>
                 {recipes.length === 0
-                  ? 'Legg inn oppskrifter først.'
-                  : 'Legg inn varer for å få forslag.'}
+                  ? tr('fridge.addRecipesFirst')
+                  : tr('fridge.addItemsForSuggestions')}
               </Text>
             ) : (
               ranked.map((fit) => (
@@ -366,7 +373,11 @@ export default function StockScreen() {
 
       {pickingFor ? (
         <DatePickerModal
-          title={pickingFor === 'new' ? 'Utløpsdato (valgfritt)' : `Dato for ${pickingFor.name}`}
+          title={
+            pickingFor === 'new'
+              ? tr('fridge.expiryOptional')
+              : tr('fridge.dateFor', { name: pickingFor.name })
+          }
           value={pickingFor === 'new' ? (expires ?? undefined) : pickingFor.expires}
           presets={EXPIRY_PRESETS}
           onCancel={() => setPickingFor(null)}

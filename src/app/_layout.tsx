@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { initCloud } from '@/lib/cloud/sync';
 import { initReminders } from '@/lib/notifications';
 import { useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 export default function RootLayout() {
   const t = useTheme();
@@ -28,17 +29,17 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="recipe/new"
-          options={{ title: 'Ny oppskrift', presentation: 'modal' }}
+          options={{ title: tr('nav.newRecipe'), presentation: 'modal' }}
         />
-        <Stack.Screen name="about" options={{ title: 'Om appen' }} />
-        <Stack.Screen name="recipe/[id]" options={{ title: 'Oppskrift' }} />
+        <Stack.Screen name="about" options={{ title: tr('nav.about') }} />
+        <Stack.Screen name="recipe/[id]" options={{ title: tr('nav.recipe') }} />
         <Stack.Screen
           name="recipe/edit"
-          options={{ title: 'Rediger oppskrift', presentation: 'modal' }}
+          options={{ title: tr('nav.editRecipe'), presentation: 'modal' }}
         />
         <Stack.Screen
           name="recipe/plan"
-          options={{ title: 'Planlegg middag', presentation: 'modal' }}
+          options={{ title: tr('nav.planDinner'), presentation: 'modal' }}
         />
       </Stack>
     </>

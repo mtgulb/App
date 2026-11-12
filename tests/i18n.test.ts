@@ -42,3 +42,16 @@ for (const k of Object.keys(dict)) {
   if (k.endsWith('_other')) assert.ok(`${k.slice(0, -6)}_one` in dict, `mangler _one for ${k}`);
 }
 console.log('i18n OK');
+
+// Ingen nøkkel er definert i to områder (spread ville stille overstyrt den ene)
+import { common } from '../src/i18n/nb/common.ts';
+import { shopping } from '../src/i18n/nb/shopping.ts';
+import { stock } from '../src/i18n/nb/stock.ts';
+import { recipes } from '../src/i18n/nb/recipes.ts';
+import { plan } from '../src/i18n/nb/plan.ts';
+import { settings } from '../src/i18n/nb/settings.ts';
+import { misc } from '../src/i18n/nb/misc.ts';
+const areas = [common, shopping, stock, recipes, plan, settings, misc];
+const total = areas.reduce((n, a) => n + Object.keys(a).length, 0);
+assert.equal(Object.keys(nb).length, total, 'duplikate nøkler mellom språkfilene');
+console.log(`${total} tekster`);

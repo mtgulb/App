@@ -35,6 +35,7 @@ import {
   useStore,
 } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
+import { dateTag, t as tr } from '@/i18n';
 
 export default function RecipeDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,7 +49,9 @@ export default function RecipeDetail() {
   const servings = chosen ?? (recipe ? defaultServings(settings, recipe) : 4);
 
   if (!recipe) {
-    return <EmptyState emoji="🤷" title="Fant ikke oppskriften" text="Den kan ha blitt slettet." />;
+    return (
+      <EmptyState emoji="🤷" title={tr('recipe.notFoundTitle')} text={tr('recipe.notFoundText')} />
+    );
   }
 
   const fit = recipe
@@ -60,10 +63,10 @@ export default function RecipeDetail() {
     : null;
 
   function confirmDelete() {
-    Alert.alert('Slette oppskriften?', 'Planlagte middager med denne oppskriften fjernes også.', [
-      { text: 'Avbryt', style: 'cancel' },
+    Alert.alert(tr('recipe.deleteTitle'), tr('recipe.deleteMessage'), [
+      { text: tr('recipe.cancel'), style: 'cancel' },
       {
-        text: 'Slett',
+        text: tr('recipe.delete'),
         style: 'destructive',
         onPress: async () => {
           const events = plan.filter((p) => p.recipeId === id && p.calendarEventId);
@@ -98,7 +101,7 @@ export default function RecipeDetail() {
           <Text style={[styles.title, styles.flex, { color: t.text }]}>{recipe.title}</Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={recipe.favorite ? 'Fjern fra favoritter' : 'Legg til i favoritter'}
+            accessibilityLabel={recipe.favorite ? tr('recipe.favRemove') : tr('recipe.favAdd')}
             accessibilityState={{ selected: !!recipe.favorite }}
             hitSlop={10}
             onPress={() => toggleFavorite(recipe.id)}
@@ -112,8 +115,10 @@ export default function RecipeDetail() {
         </View>
         <View style={styles.chips}>
           {recipe.minutes ? <Chip>{formatMinutes(recipe.minutes)}</Chip> : null}
-          <Chip>{recipe.ingredients.length} ingredienser</Chip>
-          {recipe.steps.length > 0 ? <Chip>{recipe.steps.length} steg</Chip> : null}
+          <Chip>{tr('recipe.ingredientCount', { count: recipe.ingredients.length })}</Chip>
+          {recipe.steps.length > 0 ? (
+            <Chip>{tr('recipe.stepCount', { count: recipe.steps.length })}</Chip>
+          ) : null}
           {(recipe.tags ?? []).map((tag) => (
             <Chip key={tag}>{tag}</Chip>
           ))}
@@ -121,13 +126,13 @@ export default function RecipeDetail() {
         <View
           style={styles.stars}
           accessibilityRole="adjustable"
-          accessibilityLabel={`Vurdering ${recipe.rating ?? 0} av 5`}
+          accessibilityLabel={tr('recipe.ratingLabel', { rating: recipe.rating ?? 0 })}
         >
           {[1, 2, 3, 4, 5].map((n) => (
             <Pressable
               key={n}
               accessibilityRole="button"
-              accessibilityLabel={`${n} stjerner`}
+              accessibilityLabel={tr('recipe.starsLabel', { n })}
               hitSlop={6}
               onPress={() =>
                 updateRecipe(recipe.id, { rating: recipe.rating === n ? undefined : n })
@@ -143,46 +148,55 @@ export default function RecipeDetail() {
         </View>
         {recipe.cookCount ? (
           <Body secondary>
-            Laget {recipe.cookCount} {recipe.cookCount === 1 ? 'gang' : 'ganger'}
+            {tr('recipe.cooked', { count: recipe.cookCount })}
             {recipe.lastCookedAt
-              ? `, sist ${new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'long' }).format(new Date(recipe.lastCookedAt))}`
+              ? tr('recipe.lastCooked', {
+                  date: new Intl.DateTimeFormat(dateTag(), {
+                    day: 'numeric',
+                    month: 'long',
+                  }).format(new Date(recipe.lastCookedAt)),
+                })
               : ''}
           </Body>
         ) : null}
 
         {fit && settings.stockSuggestions && fridge.items.length > 0 ? (
           <Card>
-            <Heading>Lageret ditt</Heading>
+            <Heading>{tr('recipe.stockTitle')}</Heading>
             <Body>
               {fit.have.length === fit.total
-                ? 'Du har alt du trenger!'
-                : `Du har ${fit.have.length} av ${fit.total} ingredienser.`}
+                ? tr('recipe.haveAll')
+                : tr('recipe.haveSome', { have: fit.have.length, total: fit.total })}
             </Body>
             {fit.similar.length > 0 ? (
               <Body secondary>
-                Lignende (sjekk selv):{' '}
-                {fit.similar
-                  .map((x) => `${parseIngredient(x.line).name.split(',')[0]} – du har ${x.fridge}`)
-                  .join('; ')}
-                .
+                {tr('recipe.similar', {
+                  items: fit.similar
+                    .map((x) =>
+                      tr('recipe.similarItem', {
+                        name: parseIngredient(x.line).name.split(',')[0],
+                        have: x.fridge,
+                      }),
+                    )
+                    .join('; '),
+                })}
               </Body>
             ) : null}
             {fit.missing.length > 0 ? (
               <Body secondary>
-                Mangler: {fit.missing.map((l) => parseIngredient(l).name.split(',')[0]).join(', ')}.
+                {tr('recipe.missing', {
+                  items: fit.missing.map((l) => parseIngredient(l).name.split(',')[0]).join(', '),
+                })}
               </Body>
             ) : null}
             {fit.missing.length > 0 ? (
               <Button
-                title={`Legg ${fit.missing.length} manglende på handlelisten`}
+                title={tr('recipe.addMissing', { count: fit.missing.length })}
                 kind="secondary"
                 onPress={() => {
                   const f = servings / baseServings(recipe);
                   addExtras(fit.missing.map((l) => formatIngredient(parseIngredient(l), f)));
-                  Alert.alert(
-                    'Lagt til',
-                    'De manglende varene står nå under «Egne varer» i handlelisten.',
-                  );
+                  Alert.alert(tr('recipe.added'), tr('recipe.addedMissingMsg'));
                 }}
               />
             ) : null}
@@ -191,7 +205,7 @@ export default function RecipeDetail() {
 
         {recipe.steps.length > 0 ? (
           <Button
-            title="Start kokemodus"
+            title={tr('recipe.startCook')}
             kind="secondary"
             onPress={() =>
               router.push({
@@ -202,20 +216,18 @@ export default function RecipeDetail() {
           />
         ) : null}
         <Button
-          title="Legg alle ingredienser på handlelisten"
+          title={tr('recipe.addAll')}
           kind="secondary"
           onPress={() => {
             const n = addRecipeToShopping(recipe.id, servings);
             Alert.alert(
-              'Lagt til',
-              n > 1
-                ? `Ligger nå ${n} ganger på handlelisten – ingrediensene er lagt sammen.`
-                : `Ingrediensene til ${servings} porsjoner ligger nå på handlelisten.`,
+              tr('recipe.added'),
+              n > 1 ? tr('recipe.addedMany', { count: n }) : tr('recipe.addedOne', { servings }),
             );
           }}
         />
         <Button
-          title="Planlegg middag"
+          title={tr('recipe.plan')}
           onPress={() =>
             router.push({
               pathname: '/recipe/plan',
@@ -226,15 +238,14 @@ export default function RecipeDetail() {
 
         {recipe.ingredients.length > 0 && (
           <Card>
-            <Heading>Ingredienser</Heading>
+            <Heading>{tr('recipe.ingredients')}</Heading>
             <View style={styles.servingsRow}>
-              <Text style={[styles.servingsLabel, { color: t.text }]}>Porsjoner</Text>
-              <Stepper value={servings} onChange={setChosen} label="porsjoner" />
+              <Text style={[styles.servingsLabel, { color: t.text }]}>{tr('recipe.servings')}</Text>
+              <Stepper value={servings} onChange={setChosen} label={tr('recipe.servingsA11y')} />
             </View>
             {!hasKnownServings(recipe) ? (
               <Body secondary>
-                Oppskriften oppgir ikke porsjoner – {baseServings(recipe)} er antatt. Endre under
-                «Rediger oppskrift».
+                {tr('recipe.servingsUnknown', { servings: baseServings(recipe) })}
               </Body>
             ) : null}
             {scaledLines(recipe, servings).map((i, n) => (
@@ -254,7 +265,7 @@ export default function RecipeDetail() {
 
         {recipe.steps.length > 0 && (
           <Card>
-            <Heading>Fremgangsmåte</Heading>
+            <Heading>{tr('recipe.steps')}</Heading>
             {recipe.steps.map((s, n) => (
               <View key={n} style={styles.step}>
                 <View style={[styles.badge, { backgroundColor: t.tintSoft }]}>
@@ -267,31 +278,31 @@ export default function RecipeDetail() {
         )}
 
         {recipe.ingredients.length === 0 && recipe.steps.length === 0 ? (
-          <Body secondary>Ingen tekst lagt inn ennå – bare bilder.</Body>
+          <Body secondary>{tr('recipe.onlyImages')}</Body>
         ) : null}
 
         <Button
-          title="Rediger oppskrift"
+          title={tr('recipe.edit')}
           kind="secondary"
           onPress={() => router.push({ pathname: '/recipe/edit', params: { id: recipe.id } })}
         />
         {recipe.sourceUrl ? (
           <Button
-            title="Åpne original"
+            title={tr('recipe.openOriginal')}
             kind="secondary"
             onPress={() => Linking.openURL(recipe.sourceUrl!)}
           />
         ) : null}
         <Card>
-          <Heading>Mine notater</Heading>
+          <Heading>{tr('recipe.notes')}</Heading>
           <TextInput
-            accessibilityLabel="Notater"
+            accessibilityLabel={tr('recipe.notesLabel')}
             defaultValue={recipe.notes ?? ''}
             onEndEditing={(e) =>
               updateRecipe(recipe.id, { notes: e.nativeEvent.text.trim() || undefined })
             }
             multiline
-            placeholder="F.eks. «litt mindre salt neste gang»"
+            placeholder={tr('recipe.notesPlaceholder')}
             placeholderTextColor={t.textSecondary}
             style={[
               styles.notes,
@@ -300,11 +311,11 @@ export default function RecipeDetail() {
           />
         </Card>
         <Button
-          title="Merk som laget i dag"
+          title={tr('recipe.markCooked')}
           kind="secondary"
           onPress={() => markCooked(recipe.id)}
         />
-        <Button title="Slett oppskrift" kind="destructive" onPress={confirmDelete} />
+        <Button title={tr('recipe.deleteRecipe')} kind="destructive" onPress={confirmDelete} />
       </View>
     </ScrollView>
   );

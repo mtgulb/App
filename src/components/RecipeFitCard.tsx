@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '@/components/ui';
+import { t as tr } from '@/i18n';
 import { RecipeImage } from '@/components/RecipeImage';
 import { parseIngredient } from '@/lib/ingredients';
 import type { RecipeFit } from '@/lib/pantry';
@@ -13,7 +14,11 @@ export function RecipeFitCard({ fit, onPress }: { fit: RecipeFit; onPress: () =>
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${fit.recipe.title}, ${fit.missing.length === 0 ? 'alt finnes' : `mangler ${fit.missing.length}`}`}
+      accessibilityLabel={
+        fit.missing.length === 0
+          ? tr('fit.a11yAll', { title: fit.recipe.title })
+          : tr('fit.a11yMissing', { title: fit.recipe.title, count: fit.missing.length })
+      }
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
@@ -29,15 +34,15 @@ export function RecipeFitCard({ fit, onPress }: { fit: RecipeFit; onPress: () =>
         <View style={styles.chipRow}>
           <Chip>
             {fit.missing.length === 0 && fit.similar.length === 0
-              ? 'Alt du trenger!'
+              ? tr('fit.everything')
               : fit.missing.length === 0
-                ? `Nesten alt (${fit.similar.length} lignende)`
-                : `Mangler ${fit.missing.length} av ${fit.total}`}
+                ? tr('fit.almost', { n: fit.similar.length })
+                : tr('fit.missing', { n: fit.missing.length, total: fit.total })}
           </Chip>
         </View>
         {fit.usesSoon.length > 0 ? (
           <Text style={{ color: t.tint, fontWeight: '600' }}>
-            Bruker opp: {fit.usesSoon.join(', ')}
+            {tr('fit.usesUp', { items: fit.usesSoon.join(', ') })}
           </Text>
         ) : null}
         {fit.missing.length > 0 ? (
@@ -47,7 +52,7 @@ export function RecipeFitCard({ fit, onPress }: { fit: RecipeFit; onPress: () =>
         ) : null}
         {fit.similar.length > 0 ? (
           <Text style={{ color: t.textSecondary }} numberOfLines={2}>
-            Lignende: {fit.similar.map((x) => nameOf(x.line)).join(', ')}
+            {tr('fit.similar', { items: fit.similar.map((x) => nameOf(x.line)).join(', ') })}
           </Text>
         ) : null}
       </View>

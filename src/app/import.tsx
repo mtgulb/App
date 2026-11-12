@@ -6,6 +6,7 @@ import { Body, Button, ErrorText, Heading } from '@/components/ui';
 import { ImportError, importRecipeFromUrl, normalizeUrl } from '@/lib/importFromUrl';
 import { addRecipe, getState } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 /**
  * Importerer en lenke og åpner oppskriften. Brukes av «du har kopiert en lenke», og av dypkoblinger
@@ -39,7 +40,7 @@ export default function ImportScreen() {
         else router.replace({ pathname: '/recipe/[id]', params: { id: recipe.id } });
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof ImportError ? e.message : 'Noe gikk galt under importen.');
+          setError(e instanceof ImportError ? e.message : tr('import.failed'));
         }
       }
     })();
@@ -51,16 +52,16 @@ export default function ImportScreen() {
   if (!url) {
     return (
       <Screen>
-        <Heading>Ingen lenke</Heading>
-        <Body secondary>Fant ingen lenke å importere.</Body>
-        <Button title="Lukk" onPress={() => router.back()} />
+        <Heading>{tr('import.noUrlTitle')}</Heading>
+        <Body secondary>{tr('import.noUrlText')}</Body>
+        <Button title={tr('import.close')} onPress={() => router.back()} />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <Heading>Henter oppskrift</Heading>
+      <Heading>{tr('import.fetching')}</Heading>
       <Body secondary numberOfLines={2}>
         {url}
       </Body>
@@ -68,14 +69,14 @@ export default function ImportScreen() {
         <>
           <ErrorText>{error}</ErrorText>
           <Button
-            title="Prøv igjen"
+            title={tr('import.retry')}
             onPress={() => {
               setError(null);
               setAttempt((n) => n + 1);
             }}
           />
           <Button
-            title="Legg inn manuelt"
+            title={tr('import.manual')}
             kind="secondary"
             onPress={() => router.replace('/recipe/new')}
           />

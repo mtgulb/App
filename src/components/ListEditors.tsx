@@ -16,6 +16,7 @@ import {
   type IngredientRow,
 } from '@/lib/ingredients';
 import { useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 export { lineFromRow, rowFromLine };
 export type { IngredientRow };
@@ -61,9 +62,9 @@ function AddButton({ title, onPress }: { title: string; onPress: () => void }) {
 /** Velger enhet. På iOS som handlingsark; ellers bla gjennom enhetene. */
 function pickUnit(current: string, onPick: (unit: string) => void) {
   if (Platform.OS === 'ios') {
-    const options = ['Ingen enhet', ...UNIT_OPTIONS, 'Avbryt'];
+    const options = [tr('editors.noUnit'), ...UNIT_OPTIONS, tr('editors.cancel')];
     ActionSheetIOS.showActionSheetWithOptions(
-      { options, cancelButtonIndex: options.length - 1, title: 'Enhet' },
+      { options, cancelButtonIndex: options.length - 1, title: tr('editors.unit') },
       (i) => {
         if (i === options.length - 1) return;
         onPick(i === 0 ? '' : options[i]);
@@ -94,15 +95,21 @@ export function IngredientEditor({
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <Text style={[styles.head, styles.qtyCol, { color: t.textSecondary }]}>Mengde</Text>
-        <Text style={[styles.head, styles.unitCol, { color: t.textSecondary }]}>Enhet</Text>
-        <Text style={[styles.head, styles.flex, { color: t.textSecondary }]}>Hva</Text>
+        <Text style={[styles.head, styles.qtyCol, { color: t.textSecondary }]}>
+          {tr('editors.qty')}
+        </Text>
+        <Text style={[styles.head, styles.unitCol, { color: t.textSecondary }]}>
+          {tr('editors.unit')}
+        </Text>
+        <Text style={[styles.head, styles.flex, { color: t.textSecondary }]}>
+          {tr('editors.what')}
+        </Text>
         <View style={styles.removeCol} />
       </View>
       {rows.map((r, n) => (
         <View key={r.id} style={styles.row}>
           <TextInput
-            accessibilityLabel={`Mengde, ingrediens ${n + 1}`}
+            accessibilityLabel={tr('editors.qtyLabel', { n: n + 1 })}
             value={r.qty}
             onChangeText={(qty) => update(r.id, { qty })}
             placeholder="2"
@@ -112,7 +119,10 @@ export function IngredientEditor({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Enhet, ingrediens ${n + 1}: ${r.unit || 'ingen'}`}
+            accessibilityLabel={tr('editors.unitLabel', {
+              n: n + 1,
+              unit: r.unit || tr('editors.none'),
+            })}
             onPress={() => pickUnit(r.unit, (unit) => update(r.id, { unit }))}
             style={[...inputStyle, styles.unitCol, styles.unitBtn]}
           >
@@ -121,23 +131,23 @@ export function IngredientEditor({
             </Text>
           </Pressable>
           <TextInput
-            accessibilityLabel={`Hva, ingrediens ${n + 1}`}
+            accessibilityLabel={tr('editors.whatLabel', { n: n + 1 })}
             value={r.name}
             onChangeText={(name) => update(r.id, { name })}
-            placeholder="kjøttdeig"
+            placeholder={tr('editors.namePlaceholder')}
             placeholderTextColor={t.textSecondary}
             style={[...inputStyle, styles.flex]}
           />
           <View style={styles.removeCol}>
             <RemoveButton
-              label={`Fjern ingrediens ${n + 1}`}
+              label={tr('editors.removeIngredient', { n: n + 1 })}
               onPress={() => onChange(rows.filter((x) => x.id !== r.id))}
             />
           </View>
         </View>
       ))}
       <AddButton
-        title="Legg til ingrediens"
+        title={tr('editors.addIngredient')}
         onPress={() => onChange([...rows, emptyIngredientRow()])}
       />
     </View>
@@ -160,11 +170,11 @@ export function StepEditor({
             <Text style={[styles.badgeText, { color: t.tint }]}>{n + 1}</Text>
           </View>
           <TextInput
-            accessibilityLabel={`Steg ${n + 1}`}
+            accessibilityLabel={tr('editors.stepLabel', { n: n + 1 })}
             value={r.text}
             onChangeText={(text) => onChange(rows.map((x) => (x.id === r.id ? { ...x, text } : x)))}
             multiline
-            placeholder="Beskriv steget"
+            placeholder={tr('editors.stepPlaceholder')}
             placeholderTextColor={t.textSecondary}
             style={[
               styles.input,
@@ -174,13 +184,13 @@ export function StepEditor({
             ]}
           />
           <RemoveButton
-            label={`Fjern steg ${n + 1}`}
+            label={tr('editors.removeStep', { n: n + 1 })}
             onPress={() => onChange(rows.filter((x) => x.id !== r.id))}
           />
         </View>
       ))}
       <AddButton
-        title="Legg til steg"
+        title={tr('editors.addStep')}
         onPress={() => onChange([...rows, { id: newRowId(), text: '' }])}
       />
     </View>

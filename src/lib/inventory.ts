@@ -1,4 +1,5 @@
 import type { FridgeItem, FridgeState, StorageDef } from './types.ts';
+import { t } from '../i18n/index.ts';
 
 /** Ids til lagrene som er frysere (brukes av påminnelser). */
 export const freezerIds = (storages: { id: string; freezer?: boolean }[]) =>
@@ -29,11 +30,36 @@ export function expiryState(
 }
 
 export const EXPIRY_PRESETS = [
-  { label: '3 dager', days: 3 },
-  { label: '1 uke', days: 7 },
-  { label: '2 uker', days: 14 },
-  { label: '1 måned', days: 30 },
-  { label: '3 måneder', days: 90 },
+  {
+    get label() {
+      return t('unit.preset3d');
+    },
+    days: 3,
+  },
+  {
+    get label() {
+      return t('unit.preset1w');
+    },
+    days: 7,
+  },
+  {
+    get label() {
+      return t('unit.preset2w');
+    },
+    days: 14,
+  },
+  {
+    get label() {
+      return t('unit.preset1m');
+    },
+    days: 30,
+  },
+  {
+    get label() {
+      return t('unit.preset3m');
+    },
+    days: 90,
+  },
 ] as const;
 
 export function dateInDays(days: number, now: Date = new Date()): string {
@@ -53,16 +79,16 @@ export function expiringSoon(
 
 export function expiryLabel(date: string, now: Date = new Date()): string {
   const d = daysUntil(date, now);
-  if (d < 0) return d === -1 ? 'Utløp i går' : `Utløpt for ${-d} dager siden`;
-  if (d === 0) return 'Utløper i dag';
-  if (d === 1) return 'Utløper i morgen';
-  return `Utløper om ${d} dager`;
+  if (d < 0) return d === -1 ? t('lib.expiredYesterday') : t('lib.expiredDaysAgo', { days: -d });
+  if (d === 0) return t('lib.expiresToday');
+  if (d === 1) return t('lib.expiresTomorrow');
+  return t('lib.expiresInDays', { days: d });
 }
 
-const LEGACY_STORAGES: StorageDef[] = [
-  { id: 'fridge', name: 'Kjøleskap' },
-  { id: 'freezer', name: 'Fryser', freezer: true },
-  { id: 'pantry', name: 'Skap' },
+const legacyStorages = (): StorageDef[] => [
+  { id: 'fridge', name: t('lib.storageFridge') },
+  { id: 'freezer', name: t('lib.storageFreezer'), freezer: true },
+  { id: 'pantry', name: t('lib.storagePantry') },
 ];
 
 /** Nye brukere starter med ett felles lager. Eldre data (kjøleskap/fryser/skap) flyttes over uten tap. */
@@ -73,9 +99,9 @@ export function migrateFridge(v: Partial<FridgeState>): FridgeState {
     const used = new Set(items.map((i) => i.place));
     storages =
       used.size === 0
-        ? [{ id: 'main', name: 'Lager' }]
-        : LEGACY_STORAGES.filter((l) => used.has(l.id));
-    if (storages.length === 0) storages = [{ id: 'main', name: 'Lager' }];
+        ? [{ id: 'main', name: t('lib.storageMain') }]
+        : legacyStorages().filter((l) => used.has(l.id));
+    if (storages.length === 0) storages = [{ id: 'main', name: t('lib.storageMain') }];
   }
   const first = storages[0].id;
   // Varer som peker på et lager som ikke finnes lenger, havner i det første.

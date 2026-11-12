@@ -11,6 +11,7 @@ import {
   useStore,
 } from '@/lib/store';
 import { useTheme } from '@/theme/colors';
+import { t as tr } from '@/i18n';
 
 /** Egne butikker: velg rekkefølgen på avdelingene slik at handlelisten følger veien du går. */
 export default function StoresScreen() {
@@ -20,7 +21,7 @@ export default function StoresScreen() {
 
   function create() {
     if (Platform.OS !== 'ios') return;
-    Alert.prompt('Ny butikk', 'F.eks. Kiwi Majorstua eller Meny sentrum.', (name) => {
+    Alert.prompt(tr('stores.newTitle'), tr('stores.newBody'), (name) => {
       const id = name ? addStoreProfile(name) : null;
       if (id) setOpenId(id);
     });
@@ -29,7 +30,7 @@ export default function StoresScreen() {
   function rename(id: string, current: string) {
     if (Platform.OS !== 'ios') return;
     Alert.prompt(
-      'Endre navn',
+      tr('stores.renameTitle'),
       undefined,
       (name) => name && updateStoreProfile(id, { name }),
       'plain-text',
@@ -38,24 +39,21 @@ export default function StoresScreen() {
   }
 
   function confirmDelete(id: string, name: string) {
-    Alert.alert(`Slette «${name}»?`, 'Rekkefølgen for denne butikken fjernes.', [
-      { text: 'Avbryt', style: 'cancel' },
-      { text: 'Slett', style: 'destructive', onPress: () => removeStoreProfile(id) },
+    Alert.alert(tr('stores.deleteTitle', { name }), tr('stores.deleteBody'), [
+      { text: tr('common.cancel'), style: 'cancel' },
+      { text: tr('stores.delete'), style: 'destructive', onPress: () => removeStoreProfile(id) },
     ]);
   }
 
   return (
     <Screen>
-      <Body secondary>
-        Lag en butikk og flytt avdelingene opp og ned slik de kommer i den butikken. Velg butikken
-        på handlelisten når den er sortert etter avdeling.
-      </Body>
+      <Body secondary>{tr('stores.intro')}</Body>
 
       <Card>
-        <Heading>Standard</Heading>
+        <Heading>{tr('stores.default')}</Heading>
         <Body secondary>{DEPARTMENTS.join(' → ')}</Body>
         <Button
-          title={settings.activeStoreId === null ? 'Valgt' : 'Bruk standard'}
+          title={settings.activeStoreId === null ? tr('stores.selected') : tr('stores.useDefault')}
           kind="secondary"
           disabled={settings.activeStoreId === null}
           onPress={() => updateSettings({ activeStoreId: null })}
@@ -71,7 +69,9 @@ export default function StoresScreen() {
             <View style={styles.buttons}>
               <View style={styles.flex}>
                 <Button
-                  title={settings.activeStoreId === st.id ? 'Valgt' : 'Bruk'}
+                  title={
+                    settings.activeStoreId === st.id ? tr('stores.selected') : tr('stores.use')
+                  }
                   kind="secondary"
                   disabled={settings.activeStoreId === st.id}
                   onPress={() => updateSettings({ activeStoreId: st.id })}
@@ -79,7 +79,7 @@ export default function StoresScreen() {
               </View>
               <View style={styles.flex}>
                 <Button
-                  title={open ? 'Lukk' : 'Endre rekkefølge'}
+                  title={open ? tr('stores.close') : tr('stores.reorder')}
                   kind="secondary"
                   onPress={() => setOpenId(open ? null : st.id)}
                 />
@@ -93,7 +93,7 @@ export default function StoresScreen() {
                     <Text style={[styles.dep, { color: t.text }]}>{dep}</Text>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Flytt ${dep} opp`}
+                      accessibilityLabel={tr('stores.moveUp', { dep })}
                       disabled={i === 0}
                       hitSlop={8}
                       onPress={() =>
@@ -104,7 +104,7 @@ export default function StoresScreen() {
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Flytt ${dep} ned`}
+                      accessibilityLabel={tr('stores.moveDown', { dep })}
                       disabled={i === order.length - 1}
                       hitSlop={8}
                       onPress={() =>
@@ -123,12 +123,12 @@ export default function StoresScreen() {
                   </View>
                 ))}
                 <Button
-                  title="Endre navn"
+                  title={tr('stores.rename')}
                   kind="secondary"
                   onPress={() => rename(st.id, st.name)}
                 />
                 <Button
-                  title="Slett butikk"
+                  title={tr('stores.deleteStore')}
                   kind="destructive"
                   onPress={() => confirmDelete(st.id, st.name)}
                 />
@@ -138,7 +138,7 @@ export default function StoresScreen() {
         );
       })}
 
-      <Button title="Ny butikk" onPress={create} />
+      <Button title={tr('stores.add')} onPress={create} />
     </Screen>
   );
 }
